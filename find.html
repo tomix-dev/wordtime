@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Game Mobile</title>
+    <script src="translator.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #050505; 
+            --gold: #D4AF37; 
+            --gold-light: #FFD700; 
+            --glass: rgba(255, 255, 255, 0.03); 
+            --glass-border: rgba(212, 175, 55, 0.2); 
+            --green: #00ff88; 
+            --red: #ff4b4b; 
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none;
+        }
+        
+        body { 
+            background-color: var(--bg); 
+            color: #fff; 
+            font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-x: hidden; 
+            padding-bottom: 90px;
+        }
+
+        .bg-pattern { 
+            position: fixed; inset: 0; 
+            background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); 
+            background-size: 32px 32px; 
+            z-index: -1; 
+        }
+
+        /* --- НИЖНЯЯ ПАНЕЛЬ (TAB BAR) --- */
+        .tab-bar-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 110px;
+            background: linear-gradient(to top, var(--bg) 60%, transparent);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 25px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .tab-bar {
+            pointer-events: auto;
+            width: 90%;
+            max-width: 350px;
+            height: 65px;
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #444;
+            transition: 0.3s;
+            flex: 1;
+        }
+
+        .tab-item.active { color: var(--gold); }
+        .tab-icon { font-size: 18px; margin-bottom: 3px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+
+        /* --- АНИМАЦИЯ КОНТЕНТА --- */
+        main { 
+            flex: 1; 
+            width: 100%; 
+            max-width: 480px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            opacity: 0; 
+            transform: translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 10px;
+            visibility: hidden;
+        }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        /* --- КНОПКА НАЗАД --- */
+        .back-btn { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 5px; 
+            color: #888; 
+            font-size: 10px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            text-decoration: none; 
+            margin-bottom: 15px; 
+            transition: 0.2s; 
+            cursor: pointer; 
+        }
+        .back-btn:active { color: var(--gold); }
+
+        .progress-section { 
+            margin-bottom: 25px; 
+            background: var(--glass); 
+            padding: 15px; 
+            border-radius: 20px; 
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+        .lvl-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 900; color: var(--gold); font-size: 11px; letter-spacing: 1px; }
+        .bar-bg { height: 6px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .bar-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--gold), var(--gold-light)); 
+            width: 0%; 
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .col { display: flex; flex-direction: column; gap: 10px; }
+
+        .card { 
+            background: var(--glass); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 14px; 
+            padding: 20px 8px; 
+            text-align: center; 
+            cursor: pointer; 
+            font-weight: 700; 
+            transition: all 0.15s ease; 
+            backdrop-filter: blur(10px); 
+            font-size: clamp(12px, 3.5vw, 14px); 
+            color: #aaa;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .card.selected { 
+            border-color: var(--gold); 
+            background: rgba(212, 175, 55, 0.12); 
+            color: #fff; 
+            transform: scale(0.98);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+        }
+        
+        .card.correct { 
+            border-color: var(--green); 
+            background: rgba(0, 255, 136, 0.08); 
+            color: var(--green); 
+            pointer-events: none;
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+        }
+        
+        .card.wrong { 
+            border-color: var(--red); 
+            background: rgba(255, 75, 75, 0.12); 
+            color: var(--red); 
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar" id="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings"></span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content">
+    <div onclick="fadeNavigate('mode.html')" class="back-btn">
+        <span>◀</span> <span data-i18n="back_to_modes"></span>
+    </div>
+
+    <div class="progress-section">
+        <div class="lvl-info">
+            <span id="lvl-label">LVL ...</span>
+            <span id="prog-label">0 / 5</span>
+        </div>
+        <div class="bar-bg"><div id="bar-fill" class="bar-fill"></div></div>
+    </div>
+    <div class="game-grid">
+        <div class="col" id="eng-col"></div>
+        <div class="col" id="lang-col"></div>
+    </div>
+</main>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    let user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    // Определяем текущий язык для карточек
+    const appLang = localStorage.getItem('appLang') || 'rus';
+
+    let currentLevel = localStorage.getItem('wt_last_lvl') || 1;
+    let matchedInLevel = localStorage.getItem('wt_last_prog') || 0;
+    let pool = [], selE = null, selR = null;
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => {
+            window.location.href = url;
+        }, 400); 
+    }
+
+    async function syncData() {
+        try {
+            // Ждем инициализации переводчика интерфейса
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            let { data: prog } = await sb.from('user_progress').select('*').eq('username', user).single();
+            if(prog) {
+                currentLevel = prog.current_level;
+                matchedInLevel = prog.matched_count;
+                localStorage.setItem('wt_last_lvl', currentLevel);
+                localStorage.setItem('wt_last_prog', matchedInLevel);
+                
+                // Запрашиваем из базы английское слово и перевод в зависимости от языка (eng, rus/ukr)
+                const { data: words } = await sb.from('words')
+                    .select(`id, level, eng, ${appLang}`)
+                    .eq('level', currentLevel)
+                    .order('id', { ascending: true })
+                    .limit(5);
+
+                if(words && words.length > 0) {
+                    pool = words;
+                    initBoard();
+                    requestAnimationFrame(() => {
+                        document.getElementById('main-content').classList.add('ready');
+                    });
+                }
+            }
+        } catch(e) {
+            console.error("Ошибка при загрузке данных уровня:", e);
+        }
+    }
+
+    function initBoard() {
+        const eCol = document.getElementById('eng-col');
+        const lCol = document.getElementById('lang-col');
+        eCol.innerHTML = ''; lCol.innerHTML = '';
+        
+        // Английские карточки
+        pool.forEach(w => eCol.appendChild(createCard(w.eng, w.id, 'eng')));
+        
+        // Карточки с переводом (rus или ukr) перемешиваем
+        [...pool].sort(() => Math.random() - 0.5).forEach(w => lCol.appendChild(createCard(w[appLang], w.id, 'lang')));
+        
+        updateUI();
+    }
+
+    function createCard(text, id, type) {
+        const d = document.createElement('div');
+        d.className = 'card'; d.innerText = text; d.dataset.id = id;
+        d.onclick = () => selectCard(d, type);
+        return d;
+    }
+
+    function selectCard(d, type) {
+        if(d.classList.contains('correct')) return;
+        if(window.navigator.vibrate) window.navigator.vibrate(5);
+
+        if(type === 'eng') { if(selE) selE.classList.remove('selected'); selE = d; }
+        else { if(selR) selR.classList.remove('selected'); selR = d; }
+        d.classList.add('selected');
+
+        if(selE && selR) {
+            const e = selE; const r = selR;
+            selE = null; selR = null; 
+            checkMatch(e, r);
+        }
+    }
+
+    async function checkMatch(cardE, cardR) {
+        if(cardE.dataset.id === cardR.dataset.id) {
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+            
+            cardE.className = 'card correct'; 
+            cardR.className = 'card correct';
+            matchedInLevel++;
+            localStorage.setItem('wt_last_prog', matchedInLevel);
+            sb.from('user_progress').update({ matched_count: matchedInLevel }).eq('username', user);
+            updateUI();
+            if(matchedInLevel === 5) setTimeout(nextLevel, 400);
+        } else {
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 80, 50]);
+            
+            cardE.classList.add('wrong'); cardR.classList.add('wrong');
+            setTimeout(() => { 
+                cardE.classList.remove('wrong', 'selected'); 
+                cardR.classList.remove('wrong', 'selected'); 
+            }, 400);
+        }
+    }
+
+    async function nextLevel() {
+        const nextLvl = parseInt(currentLevel) + 1;
+        
+        let { data: stats } = await sb.from('user_progress').select('total_pairs_found, global_exp, global_level').eq('username', user).single();
+        let newTotal = (stats?.total_pairs_found || 0) + 5;
+        
+        let gExp = (stats?.global_exp || 0) + 5; 
+        let gLvl = stats?.global_level || 1;
+
+        let neededExp = gLvl * 10;
+        if (gExp >= neededExp) {
+            gExp -= neededExp;
+            gLvl += 1;
+        }
+
+        localStorage.setItem('wt_last_lvl', nextLvl);
+        localStorage.setItem('wt_last_prog', 0);
+
+        await sb.from('user_progress').update({ 
+            current_level: nextLvl, 
+            matched_count: 0,
+            total_pairs_found: newTotal,
+            global_exp: gExp,
+            global_level: gLvl
+        }).eq('username', user);
+        
+        location.reload();
+    }
+
+    function updateUI() {
+        document.getElementById('lvl-label').innerText = `LVL ${currentLevel}`;
+        document.getElementById('prog-label').innerText = `${matchedInLevel} / 5`;
+        document.getElementById('bar-fill').style.width = (matchedInLevel / 5 * 100) + '%';
+    }
+
+    syncData();
+</script>
+</body>
+</html>

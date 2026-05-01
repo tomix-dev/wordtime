@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Brain Clicker</title>
+    <script src="translator.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700; 
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2); 
+            --green: #00ff88; --red: #ff4b4b; --purple: #b026ff;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; display: flex; flex-direction: column; overflow-x: hidden; 
+            padding-bottom: 90px; position: relative;
+        }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
+        .tab-item.active { color: var(--gold); }
+        .tab-icon { font-size: 18px; margin-bottom: 3px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+
+        /* --- КОНТЕНТ --- */
+        main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px; display: flex; flex-direction: column; visibility: hidden; }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: 0.2s; cursor: pointer; }
+        .back-btn:active { color: var(--gold); }
+        
+        .shop-btn { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); color: var(--gold); font-size: 9px; font-weight: 900; padding: 8px 15px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
+        .shop-btn:active { background: var(--gold); color: #000; transform: scale(0.95); }
+
+        /* --- ПАНЕЛЬ СТАТИСТИКИ --- */
+        .stats-panel { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px 10px; display: flex; justify-content: center; backdrop-filter: blur(10px); margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .stat-block { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .stat-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; text-align: center; }
+        #spark-count { color: var(--purple); text-shadow: 0 0 15px rgba(176, 38, 255, 0.5); }
+        #power-count { color: var(--gold-light); }
+        .stat-divider { width: 1px; background: var(--glass-border); margin: 0 15px; }
+
+        /* --- КЛИКЕР (МОЗГ) --- */
+        .clicker-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        
+        .brain-btn {
+            width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(176,38,255,0.2) 0%, rgba(0,0,0,0) 70%);
+            border: 2px solid rgba(176,38,255,0.5); display: flex; justify-content: center; align-items: center;
+            font-size: 70px; cursor: pointer; box-shadow: 0 0 50px rgba(176,38,255,0.2), inset 0 0 30px rgba(176,38,255,0.2);
+            transition: transform 0.05s ease, box-shadow 0.1s ease; user-select: none; -webkit-user-select: none; position: relative;
+        }
+        .brain-btn:active { transform: scale(0.92); box-shadow: 0 0 80px rgba(176,38,255,0.6), inset 0 0 50px rgba(176,38,255,0.4); }
+        
+        .progress-to-boss { margin-top: 40px; text-align: center; width: 100%; max-width: 250px; }
+        .ptb-text { font-size: 9px; color: #666; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+        .ptb-bar { width: 100%; height: 4px; background: rgba(0,0,0,0.5); border-radius: 5px; overflow: hidden; border: 1px solid var(--glass-border); }
+        .ptb-fill { height: 100%; width: 0%; background: var(--red); transition: width 0.2s; box-shadow: 0 0 10px var(--red); }
+
+        /* --- ПЛАВАЮЩИЙ ТЕКСТ (+ ИСКРЫ) --- */
+        .floating-text { position: absolute; font-size: 20px; font-weight: 900; color: var(--purple); pointer-events: none; animation: floatUp 0.6s ease-out forwards; text-shadow: 0 0 10px rgba(176,38,255,0.8); z-index: 50; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(1.5); } }
+
+        /* --- ОТСЧЕТ ПЕРЕД БОССОМ --- */
+        .countdown-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            z-index: 2100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .countdown-overlay.show { opacity: 1; pointer-events: auto; }
+        .countdown-text {
+            font-size: 120px; font-weight: 900; color: var(--gold); 
+            text-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+            font-variant-numeric: tabular-nums;
+            transition: opacity 0.2s ease;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            40% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- БОСС-ФАЙТ (OVERLAY) --- */
+        .boss-overlay {
+            position: fixed; inset: 0; background: rgba(20, 5, 5, 0.95); backdrop-filter: blur(15px);
+            z-index: 2200; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; 
+            transition: opacity 0.4s ease, transform 0.4s ease; 
+            transform: scale(0.95); 
+            padding: 20px;
+        }
+        .boss-overlay.show { 
+            opacity: 1; pointer-events: auto; 
+            transform: scale(1); 
+        }
+        
+        .boss-title { color: var(--red); font-size: 14px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 30px; animation: pulseRed 1s infinite; }
+        .boss-word { font-size: 36px; font-weight: 900; color: #fff; margin-bottom: 40px; text-align: center; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        
+        .boss-timer { width: 100%; max-width: 300px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 30px; overflow: hidden; }
+        .boss-timer-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--gold), var(--red)); transition: width linear; }
+
+        .boss-options { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 300px; }
+        .boss-btn {
+            background: rgba(0,0,0,0.5); border: 2px solid var(--glass-border); padding: 20px;
+            border-radius: 15px; color: #fff; font-size: 16px; font-weight: 800; text-transform: uppercase;
+            cursor: pointer; transition: 0.2s;
+        }
+        .boss-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
+        .boss-btn.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.2); }
+        .boss-btn.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.2); }
+
+        @keyframes pulseRed { 0%, 100% { text-shadow: 0 0 10px var(--red); } 50% { text-shadow: 0 0 30px var(--red), 0 0 50px var(--red); } }
+
+        /* --- МАГАЗИН ОБМЕНА --- */
+        .shop-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+            z-index: 2500; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .shop-overlay.show { opacity: 1; pointer-events: auto; }
+        .shop-card { background: var(--glass); border: 1px solid var(--gold); border-radius: 25px; padding: 30px; width: 90%; max-width: 350px; text-align: center; }
+        .shop-title { font-size: 18px; font-weight: 900; color: var(--gold); margin-bottom: 20px; text-transform: uppercase; }
+        .shop-desc { font-size: 11px; color: #aaa; margin-bottom: 20px; line-height: 1.5; font-weight: 700; }
+        .exchange-btn { background: var(--gold); border: none; color: #000; font-weight: 900; font-size: 14px; padding: 15px; border-radius: 15px; width: 100%; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .exchange-btn:active { transform: scale(0.95); }
+        .exchange-btn:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; }
+        .close-shop { background: transparent; border: 1px solid #555; color: #888; font-weight: 800; font-size: 12px; padding: 12px; border-radius: 15px; width: 100%; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .close-shop:active { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar" id="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings"></span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content">
+    <div class="top-header">
+        <div onclick="fadeNavigate('mode.html')" class="back-btn"><span>◀</span> <span data-i18n="back_to_modes"></span></div>
+        <button class="shop-btn" onclick="openShop()" data-i18n="shop_btn"></button>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stat-block">
+            <div class="stat-label" data-i18n="stat_sparks"></div>
+            <div class="stat-val" id="spark-count">0</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-block">
+            <div class="stat-label" data-i18n="stat_power"></div>
+            <div class="stat-val" id="power-count">1</div>
+        </div>
+    </div>
+
+    <div class="clicker-area" id="clicker-area">
+        <div class="brain-btn" id="brain-btn" onpointerdown="handleClick(event)">🧠</div>
+        
+        <div class="progress-to-boss">
+            <div class="ptb-text"><span data-i18n="progress_boss"></span> <span id="taps-left">50</span></div>
+            <div class="ptb-bar"><div class="ptb-fill" id="ptb-fill"></div></div>
+        </div>
+    </div>
+</main>
+
+<!-- ОКНО ОТСЧЕТА -->
+<div class="countdown-overlay" id="countdown-overlay">
+    <div class="countdown-text" id="countdown-text">3</div>
+</div>
+
+<!-- БОСС ФАЙТ -->
+<div class="boss-overlay" id="boss-overlay">
+    <div class="boss-title" data-i18n="boss_title"></div>
+    <div class="boss-word" id="boss-word">Loading...</div>
+    <div class="boss-timer"><div class="boss-timer-fill" id="boss-timer-fill"></div></div>
+    <div class="boss-options" id="boss-options">
+        <!-- Кнопки JS -->
+    </div>
+</div>
+
+<!-- МАГАЗИН ОБМЕНА -->
+<div class="shop-overlay" id="shop-overlay">
+    <div class="shop-card">
+        <div class="shop-title" data-i18n="shop_title"></div>
+        <div class="shop-desc" data-i18n="shop_desc"></div>
+        <button class="exchange-btn" id="exchange-btn" onclick="buyExp()">Loading...</button>
+        <button class="close-shop" onclick="closeShop()" data-i18n="close_btn"></button>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    let user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    const appLang = localStorage.getItem('appLang') || 'rus';
+
+    // Внутренние переменные игры
+    let sparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
+    let clickPower = parseInt(localStorage.getItem('wt_click_power')) || 1;
+    let clicksToBoss = parseInt(localStorage.getItem('wt_clicks_to_boss')) || 50;
+
+    let pool = [];
+    let isBossFight = false;
+    let isCountingDown = false; 
+    let isExchanging = false; 
+    let bossTimerInterval;
+    let currentBossWord = null;
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function loadWords() {
+        try {
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            // Подтягиваем слова с переводом нужного языка
+            const { data: words } = await sb.from('words').select(`id, eng, ${appLang}`).limit(100);
+            if(words && words.length >= 3) {
+                pool = words;
+                updateUI();
+                requestAnimationFrame(() => {
+                    document.getElementById('main-content').classList.add('ready');
+                });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('spark-count').innerText = sparks;
+        document.getElementById('power-count').innerText = clickPower;
+        document.getElementById('taps-left').innerText = clicksToBoss;
+        
+        let progressPercent = ((50 - clicksToBoss) / 50) * 100;
+        document.getElementById('ptb-fill').style.width = `${progressPercent}%`;
+
+        localStorage.setItem('wt_sparks', sparks);
+        localStorage.setItem('wt_click_power', clickPower);
+        localStorage.setItem('wt_clicks_to_boss', clicksToBoss);
+    }
+
+    // --- ЛОГИКА КЛИКЕРА ---
+    function handleClick(e) {
+        if(isBossFight || isCountingDown) return;
+        
+        if(window.navigator.vibrate) window.navigator.vibrate(5);
+        
+        sparks += clickPower;
+        clicksToBoss--;
+        
+        showFloatingText(e, `+${clickPower}`);
+        updateUI();
+
+        if(clicksToBoss <= 0) {
+            startBossCountdown();
+        }
+    }
+
+    function showFloatingText(e, text) {
+        const brain = document.getElementById('brain-btn');
+        const rect = brain.getBoundingClientRect();
+        
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-text';
+        floatEl.innerText = text;
+        
+        const offsetX = (Math.random() - 0.5) * 60;
+        const offsetY = (Math.random() - 0.5) * 60;
+        
+        floatEl.style.left = `${rect.left + rect.width / 2 + offsetX - 10}px`;
+        floatEl.style.top = `${rect.top + rect.height / 2 + offsetY - 20}px`;
+        
+        document.body.appendChild(floatEl);
+        
+        setTimeout(() => { floatEl.remove(); }, 600);
+    }
+
+    // --- ЛОГИКА ОТСЧЕТА ---
+    function startBossCountdown() {
+        isCountingDown = true;
+        const overlay = document.getElementById('countdown-overlay');
+        const textEl = document.getElementById('countdown-text');
+        overlay.classList.add('show');
+        
+        let count = 3;
+        
+        function tick() {
+            if (count > 0) {
+                textEl.innerText = count;
+                textEl.style.animation = 'none';
+                void textEl.offsetWidth; 
+                textEl.style.animation = 'popIn 0.4s ease-out forwards'; 
+                
+                if(window.navigator.vibrate) window.navigator.vibrate(50);
+                
+                count--;
+                setTimeout(tick, 500); 
+            } else {
+                textEl.style.opacity = '0';
+                startBossFight(); 
+                
+                setTimeout(() => {
+                    overlay.classList.remove('show');
+                    isCountingDown = false;
+                    setTimeout(() => textEl.style.opacity = '1', 300);
+                }, 400);
+            }
+        }
+        
+        tick(); 
+    }
+
+    // --- ЛОГИКА БОССА ---
+    function startBossFight() {
+        isBossFight = true;
+        if(window.navigator.vibrate) window.navigator.vibrate([30, 50, 30, 50, 100]);
+        
+        currentBossWord = pool[Math.floor(Math.random() * pool.length)];
+        document.getElementById('boss-word').innerText = currentBossWord.eng;
+
+        let options = [currentBossWord];
+        while(options.length < 3) {
+            let rnd = pool[Math.floor(Math.random() * pool.length)];
+            if(!options.find(w => w.id === rnd.id)) options.push(rnd);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const grid = document.getElementById('boss-options');
+        grid.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'boss-btn';
+            // Используем динамический язык
+            btn.innerText = opt[appLang];
+            btn.onclick = () => answerBoss(opt.id, btn);
+            grid.appendChild(btn);
+        });
+
+        document.getElementById('boss-overlay').classList.add('show');
+        
+        const timerFill = document.getElementById('boss-timer-fill');
+        timerFill.style.transition = 'none';
+        timerFill.style.width = '100%';
+        
+        setTimeout(() => {
+            timerFill.style.transition = 'width 3s linear';
+            timerFill.style.width = '0%';
+        }, 200);
+
+        bossTimerInterval = setTimeout(() => {
+            if(isBossFight) answerBoss(-1, null); 
+        }, 3200);
+    }
+
+    function answerBoss(selectedId, btnElement) {
+        if(!isBossFight) return;
+        clearTimeout(bossTimerInterval);
+        isBossFight = false;
+
+        const isCorrect = selectedId === currentBossWord.id;
+
+        if(isCorrect) {
+            if(window.navigator.vibrate) window.navigator.vibrate(100);
+            if(btnElement) btnElement.classList.add('correct');
+            clickPower++; 
+        } else {
+            if(window.navigator.vibrate) window.navigator.vibrate([80, 80, 80]);
+            if(btnElement) btnElement.classList.add('wrong');
+            
+            sparks -= 100;
+            if (sparks < 0) sparks = 0;
+        }
+
+        setTimeout(() => {
+            document.getElementById('boss-overlay').classList.remove('show');
+            clicksToBoss = 50;
+            updateUI();
+        }, 800);
+    }
+
+    // --- ЛОГИКА МАГАЗИНА С МАССОВЫМ ОБМЕНОМ ---
+    function openShop() {
+        document.getElementById('shop-overlay').classList.add('show');
+        checkShopBtn();
+    }
+    
+    function closeShop() {
+        document.getElementById('shop-overlay').classList.remove('show');
+    }
+
+    function checkShopBtn() {
+        const btn = document.getElementById('exchange-btn');
+        
+        if (sparks >= 500) {
+            let packs = Math.floor(sparks / 500);
+            let cost = packs * 500;
+            let expReward = packs * 10;
+            
+            btn.disabled = false;
+            let formatStr = window.translations ? window.translations['shop_exchange_format'] : 'ОБМЕНЯТЬ {cost} ИСКР НА {expReward} EXP';
+            btn.innerText = formatStr.replace('{cost}', cost).replace('{expReward}', expReward);
+        } else {
+            btn.disabled = true;
+            let diff = 500 - sparks;
+            let formatStr = window.translations ? window.translations['shop_not_enough'] : `НЕ ХВАТАЕТ ({diff} Искр)`;
+            btn.innerText = formatStr.replace('{diff}', diff);
+        }
+    }
+
+    async function buyExp() {
+        if(sparks < 500 || isExchanging) return;
+        
+        isExchanging = true; 
+
+        const btn = document.getElementById('exchange-btn');
+        let packs = Math.floor(sparks / 500);
+        let cost = packs * 500;
+        let expReward = packs * 10;
+
+        btn.innerText = window.translations ? window.translations['shop_processing'] : "ОБРАБОТКА...";
+        btn.disabled = true;
+
+        try {
+            let { data: stats } = await sb.from('user_progress').select('global_exp, global_level').eq('username', user).single();
+            
+            let gExp = (stats?.global_exp || 0) + expReward; 
+            let gLvl = stats?.global_level || 1;
+
+            while (true) {
+                let neededExp = gLvl * 10;
+                if (gExp >= neededExp) {
+                    gExp -= neededExp;
+                    gLvl += 1;
+                } else {
+                    break;
+                }
+            }
+
+            await sb.from('user_progress').update({ 
+                global_exp: gExp,
+                global_level: gLvl
+            }).eq('username', user);
+
+            sparks -= cost;
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
+            
+            updateUI();
+            
+            let formatStr = window.translations ? window.translations['shop_success'] : 'УСПЕШНО (+{expReward} EXP)!';
+            btn.innerText = formatStr.replace('{expReward}', expReward);
+            
+            setTimeout(() => {
+                isExchanging = false; 
+                checkShopBtn();
+            }, 1500);
+
+        } catch (error) {
+            console.error(error);
+            btn.innerText = window.translations ? window.translations['shop_error'] : "ОШИБКА СЕТИ";
+            setTimeout(() => {
+                isExchanging = false; 
+                checkShopBtn();
+            }, 2000);
+        }
+    }
+
+    loadWords();
+</script>
+</body>
+</html>

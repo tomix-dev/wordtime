@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Modes</title>
+    <!-- ВЕРНУЛИ SUPABASE НА МЕСТО -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; overflow-x: hidden; padding-bottom: 90px; 
+        }
+
+        /* --- АНИМАЦИЯ --- */
+        main { 
+            width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px);
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        main.ready { opacity: 1; transform: translateY(0); }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- TAB BAR --- */
+        .tab-bar-container {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 110px;
+            background: linear-gradient(to top, var(--bg) 60%, transparent);
+            display: flex; justify-content: center; align-items: flex-end;
+            padding-bottom: 25px; z-index: 1000; pointer-events: none;
+        }
+        .tab-bar {
+            pointer-events: auto; width: 90%; max-width: 350px; height: 65px;
+            background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 22px;
+            display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
+        .tab-item.active { color: var(--gold); }
+        .tab-icon { font-size: 18px; margin-bottom: 3px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+
+        /* --- КАРТОЧКИ РЕЖИМОВ --- */
+        .brand-header { text-align: center; margin-top: 10px; margin-bottom: 30px; }
+        .brand-logo { font-size: 28px; font-weight: 900; background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C, #FBF5B7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; text-transform: uppercase; }
+
+        .mode-container { display: flex; flex-direction: column; gap: 15px; }
+        .mode-card { 
+            background: var(--glass); border: 1px solid var(--glass-border); 
+            border-radius: 20px; padding: 25px 20px; display: flex; flex-direction: column; 
+            align-items: center; text-align: center; cursor: pointer; transition: 0.2s ease; 
+            backdrop-filter: blur(10px); position: relative; overflow: hidden;
+        }
+        .mode-card:active { transform: scale(0.96); border-color: var(--gold); background: rgba(212, 175, 55, 0.08); }
+        .mode-icon { font-size: 42px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2)); }
+        .mode-title { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .mode-desc { font-size: 10px; color: #888; font-weight: 700; line-height: 1.4; }
+        
+        .mode-coming { opacity: 0.6; pointer-events: none; }
+        .mode-coming .mode-title { color: #666; }
+        .badge { position: absolute; top: 15px; right: 15px; background: rgba(212, 175, 55, 0.2); color: var(--gold); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 10px; border: 1px solid var(--glass-border); letter-spacing: 1px; }
+        .badge.new { color: var(--green); border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.1); }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings"></span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content">
+    <div class="brand-header">
+        <h1 class="brand-logo" data-i18n="mode_header"></h1>
+    </div>
+
+    <div class="mode-container">
+        <!-- НАЙДИ ПАРУ -->
+        <div class="mode-card" onclick="fadeNavigate('find.html')">
+            <span class="mode-icon">🧩</span>
+            <div class="mode-title" data-i18n="mode_find_title"></div>
+            <div class="mode-desc" data-i18n="mode_find_desc"></div>
+        </div>
+
+        <!-- ПРАВДА ИЛИ ЛОЖЬ -->
+        <div class="mode-card" onclick="fadeNavigate('true.html')">
+            <span class="mode-icon">⚖️</span>
+            <div class="mode-title" data-i18n="mode_true_title"></div>
+            <div class="mode-desc" data-i18n="mode_true_desc"></div>
+        </div>
+
+        <!-- SPEED RUSH -->
+        <div class="mode-card" onclick="fadeNavigate('click.html')">
+            <span class="mode-icon">⚡</span>
+            <div class="mode-title" data-i18n="mode_speed_title"></div>
+            <div class="mode-desc" data-i18n="mode_speed_desc"></div>
+        </div>
+
+        <!-- BRAIN CLICKER -->
+        <div class="mode-card" onclick="fadeNavigate('brain.html')">
+            <span class="badge new" data-i18n="badge_new"></span>
+            <span class="mode-icon">🧠</span>
+            <div class="mode-title" data-i18n="mode_brain_title"></div>
+            <div class="mode-desc" data-i18n="mode_brain_desc"></div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Проверка авторизации
+    const user = localStorage.getItem('wt_user');
+    if(!user) window.location.href = 'index.html';
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    // Появление страницы только после готовности переводов
+    document.addEventListener('translationsReady', () => {
+        requestAnimationFrame(() => {
+            document.getElementById('main-content').classList.add('ready');
+        });
+    });
+
+    // Если переводчик уже отработал до того как мы повесили слушатель
+    if (window.translations && Object.keys(window.translations).length > 0) {
+        document.getElementById('main-content').classList.add('ready');
+    }
+</script>
+</body>
+</html>

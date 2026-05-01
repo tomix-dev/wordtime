@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Настройки</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --gold: #D4AF37;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(212, 175, 55, 0.2);
+            --red: #ff4b4b;
+        }
+
+        /* ДОБАВЛЕНА БАЗА ДЛЯ HTML КАК НА ДРУГИХ СТРАНИЦАХ */
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        /* ДОБАВЛЕН overflow-x: hidden ДЛЯ ЗАЩИТЫ ОТ ГОРИЗОНТАЛЬНОГО СКРОЛЛА */
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; margin: 0; padding-bottom: 90px; overflow-x: hidden; 
+        }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+        
+        main { width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: 0.4s; }
+        main.ready { opacity: 1; transform: translateY(0); }
+
+        .brand-header { text-align: center; margin-top: 10px; margin-bottom: 35px; }
+        .brand-logo { font-size: 28px; font-weight: 900; background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+
+        .settings-container { display: flex; flex-direction: column; gap: 20px; }
+        .settings-group { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; backdrop-filter: blur(10px); }
+        .group-label { font-size: 10px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; display: block; }
+
+        .lang-option { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.02); 
+            margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s;
+        }
+        .lang-option.active { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .lang-name { font-size: 14px; font-weight: 700; }
+        .check-mark { color: var(--gold); font-weight: 900; opacity: 0; }
+        .lang-option.active .check-mark { opacity: 1; }
+
+        .logout-btn { 
+            margin-top: 20px; background: rgba(255, 75, 75, 0.05); border: 1px solid rgba(255, 75, 75, 0.2); 
+            color: var(--red); width: 100%; padding: 18px; border-radius: 20px; 
+            font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+        }
+
+        /* TAB BAR */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; flex: 1; transition: 0.3s; }
+        .tab-item.active { color: var(--gold); }
+        .tab-icon { font-size: 18px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item active">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings"></span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content">
+    <div class="brand-header">
+        <h1 class="brand-logo" data-i18n="settings_header"></h1>
+    </div>
+
+    <div class="settings-container">
+        <div class="settings-group">
+            <span class="group-label" data-i18n="settings_lang_label"></span>
+            
+            <div class="lang-option" id="opt-rus" onclick="setLanguage('rus')">
+                <span class="lang-name" data-i18n="lang_rus_full"></span>
+                <span class="check-mark">✓</span>
+            </div>
+            
+            <div class="lang-option" id="opt-ukr" onclick="setLanguage('ukr')">
+                <span class="lang-name" data-i18n="lang_ukr_full"></span>
+                <span class="check-mark">✓</span>
+            </div>
+        </div>
+
+        <button class="logout-btn" onclick="logout()" data-i18n="logout_btn"></button>
+    </div>
+</main>
+
+<script>
+    const user = localStorage.getItem('wt_user');
+    if(!user) window.location.href = 'index.html';
+
+    function logout() {
+        localStorage.removeItem('wt_user');
+        window.location.href = 'index.html';
+    }
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        document.querySelector('main').style.opacity = '0';
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    document.addEventListener('translationsReady', () => {
+        const lang = localStorage.getItem('appLang') || 'rus';
+        document.getElementById(`opt-${lang}`).classList.add('active');
+        document.getElementById('main-content').classList.add('ready');
+    });
+</script>
+</body>
+</html>

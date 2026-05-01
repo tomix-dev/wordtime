@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — True or False</title>
+    <script src="translator.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700; 
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2); 
+            --green: #00ff88; --red: #ff4b4b; 
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; display: flex; flex-direction: column; overflow-x: hidden; 
+            padding-bottom: 90px; 
+        }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
+        .tab-item.active { color: var(--gold); }
+        .tab-icon { font-size: 18px; margin-bottom: 3px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+
+        /* --- КОНТЕНТ --- */
+        main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px; visibility: hidden; }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; margin-bottom: 15px; transition: 0.2s; cursor: pointer; }
+        .back-btn:active { color: var(--gold); }
+
+        .progress-section { margin-bottom: 25px; background: var(--glass); padding: 15px; border-radius: 20px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+        .lvl-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 900; color: var(--gold); font-size: 11px; letter-spacing: 1px; }
+        .bar-bg { height: 6px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+
+        /* --- ИГРОВАЯ КАРТОЧКА --- */
+        .tf-card { 
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), var(--glass)); 
+            border: 1px solid var(--glass-border); border-radius: 25px; padding: 40px 20px; 
+            text-align: center; margin-bottom: 20px; backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.3s ease;
+        }
+        .tf-question { font-size: 12px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        .tf-word { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(212, 175, 55, 0.3); line-height: 1.4; }
+        .tf-word span { color: var(--gold); }
+
+        .tf-card.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.08); box-shadow: 0 0 30px rgba(0, 255, 136, 0.2); }
+        .tf-card.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.1); box-shadow: 0 0 30px rgba(255, 75, 75, 0.2); animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+        /* --- КНОПКИ ПРАВДА/ЛОЖЬ --- */
+        .tf-buttons { display: flex; gap: 15px; margin-top: 10px; }
+        .btn-tf {
+            flex: 1; padding: 20px 0; border-radius: 18px; font-size: 14px; font-weight: 900; 
+            text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.2s;
+            background: rgba(15,15,15,0.8); backdrop-filter: blur(10px); color: #fff;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .btn-tf .icon { font-size: 24px; }
+        
+        .btn-true { border: 1px solid rgba(0, 255, 136, 0.3); }
+        .btn-true:active { background: rgba(0, 255, 136, 0.15); border-color: var(--green); transform: scale(0.95); }
+        
+        .btn-false { border: 1px solid rgba(255, 75, 75, 0.3); }
+        .btn-false:active { background: rgba(255, 75, 75, 0.15); border-color: var(--red); transform: scale(0.95); }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar" id="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings"></span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content">
+    <div onclick="fadeNavigate('mode.html')" class="back-btn">
+        <span>◀</span> <span data-i18n="back_to_modes"></span>
+    </div>
+
+    <div class="progress-section">
+        <div class="lvl-info">
+            <span id="lvl-label">LVL ...</span>
+            <span id="prog-label">0 / 5</span>
+        </div>
+        <div class="bar-bg"><div id="bar-fill" class="bar-fill"></div></div>
+    </div>
+
+    <div class="tf-card" id="tf-card">
+        <div class="tf-question" data-i18n="tf_question"></div>
+        <div class="tf-word" id="tf-word" data-i18n="loading_word"></div>
+    </div>
+
+    <div class="tf-buttons">
+        <button class="btn-tf btn-true" onclick="makeChoice(true)">
+            <span class="icon">✅</span> <span data-i18n="tf_true"></span>
+        </button>
+        <button class="btn-tf btn-false" onclick="makeChoice(false)">
+            <span class="icon">❌</span> <span data-i18n="tf_false"></span>
+        </button>
+    </div>
+</main>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    let user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    // Текущий язык для карточек
+    const appLang = localStorage.getItem('appLang') || 'rus';
+
+    let currentLevel = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
+    let matchedInLevel = parseInt(localStorage.getItem('wt_tf_prog')) || 0;
+    
+    let pool = [];
+    let isCurrentTrue = true;
+    let isProcessing = false;
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function syncData() {
+        try {
+            // Ждем инициализации переводчика интерфейса
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            updateUI();
+            
+            // Берем 5 слов из базы для текущего уровня с нужным языком перевода
+            const { data: words } = await sb.from('words')
+                .select(`id, level, eng, ${appLang}`)
+                .eq('level', currentLevel)
+                .order('id', { ascending: true })
+                .limit(5);
+
+            if(words && words.length >= 5) { 
+                pool = words;
+                initTask();
+                requestAnimationFrame(() => {
+                    document.getElementById('main-content').classList.add('ready');
+                });
+            } else {
+                let finishedText = window.translations ? window.translations['levels_finished'] : "Уровни <br><span>закончились!</span>";
+                document.getElementById('tf-word').innerHTML = finishedText;
+                document.getElementById('main-content').classList.add('ready');
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    function initTask() {
+        isProcessing = false;
+        document.getElementById('tf-card').className = 'tf-card';
+
+        let wordObj = pool[matchedInLevel]; 
+        let displayTranslation = wordObj[appLang];
+
+        // Шанс 50% на то, что перевод будет ложным
+        isCurrentTrue = Math.random() > 0.5;
+
+        if (!isCurrentTrue) {
+            // Подменяем перевод на перевод от другого слова из пятерки
+            let otherWordObj = pool[(matchedInLevel + 1) % 5];
+            displayTranslation = otherWordObj[appLang];
+        }
+
+        document.getElementById('tf-word').innerHTML = `${wordObj.eng} <br><span>—</span><br> ${displayTranslation}`;
+    }
+
+    async function makeChoice(userChoice) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        const card = document.getElementById('tf-card');
+
+        if (userChoice === isCurrentTrue) {
+            // ПРАВИЛЬНЫЙ ОТВЕТ
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+            
+            card.classList.add('correct');
+            matchedInLevel++;
+            localStorage.setItem('wt_tf_prog', matchedInLevel);
+            
+            let { data: stats } = await sb.from('user_progress').select('total_pairs_found').eq('username', user).single();
+            if(stats) {
+                sb.from('user_progress').update({ total_pairs_found: (stats.total_pairs_found || 0) + 1 }).eq('username', user);
+            }
+
+            updateUI();
+
+            setTimeout(() => {
+                if (matchedInLevel >= 5) {
+                    nextLevel();
+                } else {
+                    initTask();
+                }
+            }, 600);
+
+        } else {
+            // НЕПРАВИЛЬНЫЙ ОТВЕТ
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 80, 50]);
+            
+            card.classList.add('wrong');
+            
+            setTimeout(() => {
+                card.classList.remove('wrong');
+                isProcessing = false; 
+            }, 500);
+        }
+    }
+
+    async function nextLevel() {
+        currentLevel++;
+        matchedInLevel = 0;
+        localStorage.setItem('wt_tf_lvl', currentLevel);
+        localStorage.setItem('wt_tf_prog', 0);
+        
+        let passedText = window.translations ? window.translations['level_passed'] : "УРОВЕНЬ <br><span>ПРОЙДЕН!</span>";
+        document.getElementById('tf-word').innerHTML = passedText;
+
+        let { data: stats } = await sb.from('user_progress').select('global_exp, global_level').eq('username', user).single();
+        
+        let gExp = (stats?.global_exp || 0) + 5; 
+        let gLvl = stats?.global_level || 1;
+
+        while (true) {
+            let neededExp = gLvl * 10;
+            if (gExp >= neededExp) {
+                gExp -= neededExp;
+                gLvl += 1;
+            } else {
+                break;
+            }
+        }
+
+        await sb.from('user_progress').update({ 
+            global_exp: gExp,
+            global_level: gLvl
+        }).eq('username', user);
+
+        setTimeout(() => {
+            location.reload();
+        }, 800);
+    }
+
+    function updateUI() {
+        document.getElementById('lvl-label').innerText = `LVL ${currentLevel}`;
+        document.getElementById('prog-label').innerText = `${matchedInLevel} / 5`; 
+        document.getElementById('bar-fill').style.width = (matchedInLevel / 5 * 100) + '%'; 
+    }
+
+    syncData();
+</script>
+</body>
+</html>

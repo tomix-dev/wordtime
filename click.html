@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Speed Rush</title>
+    <script src="translator.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700; 
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2); 
+            --green: #00ff88; --red: #ff4b4b; 
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; display: flex; flex-direction: column; overflow-x: hidden; 
+            padding-bottom: 90px; 
+        }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
+        .tab-item.active { color: var(--gold); }
+        .tab-icon { font-size: 18px; margin-bottom: 3px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+
+        /* --- КОНТЕНТ --- */
+        main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px; visibility: hidden; }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; margin-bottom: 15px; transition: 0.2s; cursor: pointer; }
+        .back-btn:active { color: var(--gold); }
+
+        /* --- ИНФО ПАНЕЛЬ (Очки и Комбо) --- */
+        .info-panel { display: flex; justify-content: space-between; align-items: center; background: var(--glass); padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); margin-bottom: 20px; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        .stat-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .stat-val { font-size: 20px; font-weight: 900; color: #fff; }
+        #combo-val { color: var(--gold-light); transition: 0.2s; }
+        .combo-pulse { transform: scale(1.3); text-shadow: 0 0 15px var(--gold); }
+
+        /* --- ТАЙМЕР --- */
+        .timer-container { margin-bottom: 25px; position: relative; }
+        .timer-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .timer-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold-light)); width: 100%; transition: width 1s linear; }
+        .timer-fill.danger { background: linear-gradient(90deg, #ff9900, var(--red)); }
+        .time-text { position: absolute; right: 0; top: -20px; font-size: 12px; font-weight: 900; color: var(--gold); }
+
+        /* --- ИГРОВАЯ ЗОНА --- */
+        .target-card { 
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), var(--glass)); 
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px 10px; 
+            text-align: center; margin-bottom: 20px; backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; min-height: 120px;
+        }
+        .target-word { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+
+        /* --- СЕТКА КНОПОК --- */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .option-btn {
+            background: rgba(15,15,15,0.8); border: 1px solid var(--glass-border); border-radius: 15px;
+            padding: 20px 10px; font-size: 13px; font-weight: 800; color: #ccc; text-transform: uppercase;
+            cursor: pointer; transition: 0.15s; backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; text-align: center; min-height: 70px;
+        }
+        .option-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); border-color: var(--gold); color: #fff; }
+        
+        .option-btn.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.1); color: var(--green); }
+        .option-btn.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.15); color: var(--red); animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+        /* --- ОВЕРЛЕЙ КОНЦА ИГРЫ --- */
+        .end-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; pointer-events: none; transition: 0.4s;
+        }
+        .end-screen.show { opacity: 1; pointer-events: auto; }
+        .end-title { font-size: 32px; font-weight: 900; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); text-align: center; }
+        .end-stats { display: flex; gap: 30px; margin-bottom: 40px; }
+        .end-stat { text-align: center; }
+        .end-stat span { display: block; font-size: 10px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .end-stat strong { font-size: 24px; color: #fff; font-weight: 900; }
+        .end-btn {
+            background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; border-radius: 20px;
+            padding: 15px 40px; font-size: 14px; font-weight: 900; color: #000; text-transform: uppercase;
+            letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); transition: 0.2s;
+        }
+        .end-btn:active { transform: scale(0.95); }
+
+        /* ЭКРАН СТАРТА */
+        .start-screen {
+             position: absolute; inset: 0; background: var(--bg); z-index: 100;
+             display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.4s;
+        }
+        .start-screen.hide { opacity: 0; pointer-events: none; }
+        .start-btn {
+            background: transparent; border: 2px solid var(--gold); border-radius: 20px;
+            padding: 15px 40px; font-size: 16px; font-weight: 900; color: var(--gold); text-transform: uppercase;
+            letter-spacing: 2px; cursor: pointer; transition: 0.2s; box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+        }
+        .start-btn:active { background: var(--gold); color: #000; }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar" id="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play"></span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings"></span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content" style="position: relative;">
+    
+    <!-- ЭКРАН СТАРТА -->
+    <div class="start-screen" id="start-screen">
+        <h2 data-i18n="speed_rush_title" style="font-weight: 900; color: #fff; margin-bottom: 10px; font-size: 24px;"></h2>
+        <p data-i18n="speed_rush_desc" style="color: #888; font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 40px; max-width: 250px; line-height: 1.5;"></p>
+        <button class="start-btn" onclick="startGame()" data-i18n="start_btn"></button>
+    </div>
+
+    <div onclick="fadeNavigate('mode.html')" class="back-btn">
+        <span>◀</span> <span data-i18n="back_to_modes"></span>
+    </div>
+
+    <div class="info-panel">
+        <div class="stat-box">
+            <span class="stat-label" data-i18n="stat_score"></span>
+            <span class="stat-val" id="score-val">0</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label" data-i18n="stat_combo"></span>
+            <span class="stat-val" id="combo-val">x1</span>
+        </div>
+    </div>
+
+    <div class="timer-container">
+        <div class="time-text" id="time-text">60s</div>
+        <div class="timer-bg"><div class="timer-fill" id="timer-fill"></div></div>
+    </div>
+
+    <div class="target-card">
+        <div class="target-word" id="target-word" data-i18n="loading_word"></div>
+    </div>
+
+    <div class="options-grid" id="options-grid">
+        <!-- Кнопки генерируются JS -->
+    </div>
+</main>
+
+<!-- ЭКРАН КОНЦА ИГРЫ -->
+<div class="end-screen" id="end-screen">
+    <div class="end-title" data-i18n="time_out_title"></div>
+    <div class="end-stats">
+        <div class="end-stat"><span data-i18n="stat_score"></span><strong id="final-score">0</strong></div>
+        <div class="end-stat"><span data-i18n="max_combo"></span><strong id="final-combo">x1</strong></div>
+        <div class="end-stat"><span data-i18n="exp_plus"></span><strong id="final-exp" style="color: var(--gold);">0</strong></div>
+    </div>
+    <button class="end-btn" onclick="saveAndExit()" data-i18n="claim_reward_btn"></button>
+</div>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    let user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    // Определяем текущий язык для вариантов ответов
+    const appLang = localStorage.getItem('appLang') || 'rus';
+
+    let pool = [];
+    let currentWord = null;
+    let score = 0;
+    let combo = 1;
+    let maxCombo = 1;
+    let timeLeft = 60;
+    let timerInterval = null;
+    let isPlaying = false;
+    let isProcessing = false;
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function loadWords() {
+        try {
+            // Ждем инициализации переводчика
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Загружаем пачку слов
+            const { data: words } = await sb.from('words').select(`id, eng, ${appLang}`).limit(50);
+            if(words && words.length >= 4) {
+                pool = words;
+                requestAnimationFrame(() => {
+                    document.getElementById('main-content').classList.add('ready');
+                });
+            } else {
+                document.getElementById('target-word').innerText = window.translations ? window.translations['loading_words_error'] : "Error";
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hide');
+        score = 0;
+        combo = 1;
+        maxCombo = 1;
+        timeLeft = 60;
+        isPlaying = true;
+        updateUI();
+        nextTask();
+        
+        // Запускаем таймер
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerUI();
+            if(timeLeft <= 0) {
+                endGame();
+            }
+        }, 1000);
+    }
+
+    function nextTask() {
+        if(!isPlaying) return;
+        isProcessing = false;
+        
+        // Выбираем правильное слово
+        currentWord = pool[Math.floor(Math.random() * pool.length)];
+        document.getElementById('target-word').innerText = currentWord.eng;
+
+        // Выбираем 3 случайных НЕПРАВИЛЬНЫХ перевода
+        let options = [currentWord];
+        while(options.length < 4) {
+            let randomWord = pool[Math.floor(Math.random() * pool.length)];
+            if(!options.find(w => w.id === randomWord.id)) {
+                options.push(randomWord);
+            }
+        }
+
+        // Перемешиваем варианты
+        options.sort(() => Math.random() - 0.5);
+
+        // Отрисовываем кнопки, используя выбранный язык (appLang)
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerText = opt[appLang]; // <--- Динамический язык перевода
+            btn.onclick = () => checkAnswer(opt.id, btn);
+            grid.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedId, btnElement) {
+        if(!isPlaying || isProcessing) return;
+        isProcessing = true;
+
+        if(selectedId === currentWord.id) {
+            // ПРАВИЛЬНО
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+            btnElement.classList.add('correct');
+            
+            score += (10 * combo);
+            combo++;
+            if(combo > maxCombo) maxCombo = combo;
+            
+            animateCombo();
+            updateUI();
+            setTimeout(nextTask, 300);
+
+        } else {
+            // ОШИБКА
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 80, 50]);
+            btnElement.classList.add('wrong');
+            
+            combo = 1;
+            timeLeft -= 2; // Штраф времени
+            updateUI();
+            updateTimerUI();
+            
+            setTimeout(() => {
+                btnElement.classList.remove('wrong');
+                isProcessing = false;
+            }, 400);
+        }
+    }
+
+    function animateCombo() {
+        const comboEl = document.getElementById('combo-val');
+        comboEl.classList.add('combo-pulse');
+        setTimeout(() => comboEl.classList.remove('combo-pulse'), 150);
+    }
+
+    function updateUI() {
+        document.getElementById('score-val').innerText = score;
+        document.getElementById('combo-val').innerText = `x${combo}`;
+        
+        const comboEl = document.getElementById('combo-val');
+        if(combo >= 10) comboEl.style.color = 'var(--red)';
+        else if(combo >= 5) comboEl.style.color = 'var(--green)';
+        else comboEl.style.color = 'var(--gold-light)';
+    }
+
+    function updateTimerUI() {
+        if(timeLeft < 0) timeLeft = 0;
+        document.getElementById('time-text').innerText = `${timeLeft}s`;
+        const fill = document.getElementById('timer-fill');
+        fill.style.width = `${(timeLeft / 60) * 100}%`;
+        
+        if(timeLeft <= 10) fill.classList.add('danger');
+        else fill.classList.remove('danger');
+    }
+
+    function endGame() {
+        isPlaying = false;
+        clearInterval(timerInterval);
+        if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+        
+        const earnedExp = Math.floor(score / 50);
+
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('final-combo').innerText = `x${maxCombo}`;
+        document.getElementById('final-exp').innerText = earnedExp;
+        
+        document.getElementById('end-screen').classList.add('show');
+    }
+
+    async function saveAndExit() {
+        const btn = document.querySelector('.end-btn');
+        btn.innerText = window.translations ? window.translations['saving_btn'] : "СОХРАНЕНИЕ...";
+        btn.style.opacity = '0.5';
+        btn.style.pointerEvents = 'none';
+
+        const earnedExp = Math.floor(score / 50);
+        const pairsFound = Math.floor(score / 10);
+
+        try {
+            let { data: stats } = await sb.from('user_progress').select('global_exp, global_level, total_pairs_found').eq('username', user).single();
+            
+            let gExp = (stats?.global_exp || 0) + earnedExp; 
+            let gLvl = stats?.global_level || 1;
+            let newTotalPairs = (stats?.total_pairs_found || 0) + pairsFound;
+
+            let neededExp = gLvl * 10;
+            if (gExp >= neededExp) {
+                gExp -= neededExp;
+                gLvl += 1;
+            }
+
+            await sb.from('user_progress').update({ 
+                global_exp: gExp,
+                global_level: gLvl,
+                total_pairs_found: newTotalPairs
+            }).eq('username', user);
+
+            fadeNavigate('mode.html');
+        } catch(e) {
+            console.error(e);
+            fadeNavigate('mode.html'); 
+        }
+    }
+
+    loadWords();
+</script>
+</body>
+</html>
