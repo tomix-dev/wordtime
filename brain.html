@@ -486,6 +486,18 @@
                 global_level: gLvl
             }).eq('username', user);
 
+            // ==========================================
+            // ОТПРАВКА СОБЫТИЯ В ЛЕНТУ (LIVE FEED)
+            // ==========================================
+            sb.from('live_feed').insert({
+                username: user,
+                event_type: 'brain_exchange',
+                event_val: expReward.toString()
+            }).then(({error}) => {
+                if(error) console.error("Ошибка отправки в ленту:", error);
+            });
+            // ==========================================
+
             sparks -= cost;
             if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
             

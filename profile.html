@@ -114,7 +114,7 @@
         .acc-info-row:first-child { padding-top: 0; }
         .acc-info-row:last-child { padding-bottom: 0; border-bottom: none; }
         .acc-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .acc-val { font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+        .acc-val { font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; }
 
         /* --- ДОСТИЖЕНИЯ --- */
         .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; margin-bottom: 40px; }
@@ -229,18 +229,18 @@
         </div>
         <div class="acc-info-row">
             <span class="acc-label" data-i18n="acc_status">СТАТУС</span>
-            <span class="acc-val" style="color: var(--green);" data-i18n="acc_status_active">АКТИВЕН</span>
+            <span class="acc-val" id="acc-status-val" style="color: var(--green);">АКТИВЕН</span>
         </div>
         <div class="acc-info-row">
             <span class="acc-label" data-i18n="acc_role">РОЛЬ</span>
-            <span class="acc-val" id="acc-role">Player</span>
+            <span class="acc-val" id="acc-role">PLAYER</span>
         </div>
     </div>
 
     <!-- ЭВОЛЮЦИЯ -->
     <h3 class="section-title" data-i18n="achievements_title">ЭВОЛЮЦИЯ</h3>
     <div class="ach-grid" id="ach-container">
-        <!-- 15 стадий эволюции питомцев (400 уровень скрыт) -->
+        <!-- 15 стадий эволюции питомцев -->
         <div class="ach-box" id="ach-1"><span class="ach-emoji">🥚</span><span class="ach-txt">1 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-1"></div></div></div>
         <div class="ach-box" id="ach-10"><span class="ach-emoji">🐱</span><span class="ach-txt">10 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-10"></div></div></div>
         <div class="ach-box" id="ach-25"><span class="ach-emoji">😼</span><span class="ach-txt">25 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-25"></div></div></div>
@@ -269,8 +269,6 @@
 
     const displayName = localStorage.getItem('wt_display_name') || user;
     document.getElementById('user-name').innerText = displayName.toUpperCase();
-    
-    // Сразу вставляем никнейм в новый блок
     document.getElementById('acc-nickname').innerText = displayName.toUpperCase();
 
     function fadeNavigate(url) {
@@ -291,7 +289,6 @@
         }, 150);
     }
 
-    // Эволюция аватара
     function updateAvatar(level) {
         const avatarImg = document.getElementById('avatar-img');
         const avatarTitle = document.getElementById('avatar-title');
@@ -330,7 +327,6 @@
         }
     }
 
-    // Прогресс до следующего питомца
     function updatePetProgress(level) {
         const petLevels = [10, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400];
         let nextPetLvl = null;
@@ -368,7 +364,6 @@
         }
     }
 
-    // Прогресс-бар достижений (15 стадий, 400 убран из массива)
     function updateProgressUI(level) {
         const thresholds = [1, 10, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350];
         let nextTargetFound = false;
@@ -379,20 +374,16 @@
             const prevTh = i === 0 ? 0 : thresholds[i-1];
 
             if(el) {
-                // Сбрасываем все классы
                 el.classList.remove('active', 'in-progress', 'locked');
                 
                 if (level >= th) {
-                    // Уже получено
                     el.classList.add('active');
                 } else if (!nextTargetFound) {
-                    // Следующая цель (в процессе)
                     el.classList.add('in-progress');
                     nextTargetFound = true;
                     let progressPercent = ((level - prevTh) / (th - prevTh)) * 100;
                     if(fillEl) fillEl.style.width = `${Math.max(0, progressPercent)}%`;
                 } else {
-                    // Еще не дошли (Замок и размытие)
                     el.classList.add('locked');
                 }
             }
@@ -428,20 +419,25 @@
                 document.getElementById('total-pairs').innerText = totalPairs;
                 document.getElementById('total-sparks').innerText = localSparks;
 
-                // Форматирование даты регистрации для блока Данные Аккаунта
+                // Форматирование даты
                 const day = String(regDate.getDate()).padStart(2, '0');
                 const month = String(regDate.getMonth() + 1).padStart(2, '0');
                 const year = regDate.getFullYear();
                 document.getElementById('acc-regdate').innerText = `${day}.${month}.${year}`;
 
-                // Установка роли
+                // --- ПРИНУДИТЕЛЬНЫЙ ПЕРЕВОД СТАТУСА И РОЛИ ---
+                
+                // Статус
+                const statusEl = document.getElementById('acc-status-val');
+                statusEl.innerText = window.translations && window.translations['acc_status_active'] ? window.translations['acc_status_active'] : 'АКТИВЕН';
+
+                // Роль
                 const role = p.role || 'Player';
                 const roleEl = document.getElementById('acc-role');
-                // Подставляем роль либо из базы, либо через переводчик, если есть ключ
                 const roleKey = `role_${role.toLowerCase()}`;
-                roleEl.innerText = window.translations && window.translations[roleKey] ? window.translations[roleKey] : role;
                 
-                // Цвет в зависимости от роли
+                roleEl.innerText = window.translations && window.translations[roleKey] ? window.translations[roleKey] : role.toUpperCase();
+                
                 if (role === 'Admin') roleEl.style.color = 'var(--red)';
                 else if (role === 'Tester') roleEl.style.color = 'var(--blue)';
                 else roleEl.style.color = 'var(--gold-light)';

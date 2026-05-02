@@ -37,19 +37,21 @@
         .settings-group { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; backdrop-filter: blur(10px); position: relative; }
         .group-label { font-size: 10px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; display: block; text-align: center; }
 
-        /* --- СМЕНА ИМЕНИ --- */
+        /* --- СМЕНА ИМЕНИ (ИСПРАВЛЕНО) --- */
         .name-input-wrapper { display: flex; flex-direction: column; gap: 10px; }
-        .name-input-row { display: flex; gap: 10px; }
+        .name-input-row { display: flex; gap: 10px; flex-wrap: wrap; }
         .name-input { 
-            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); 
+            flex: 1 1 160px; min-width: 0; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); 
             border-radius: 15px; color: #fff; padding: 15px; font-size: 14px; 
             font-family: 'Montserrat', sans-serif; outline: none; transition: 0.3s; font-weight: 700;
         }
         .name-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
         .save-btn { 
-            background: var(--gold); color: #000; border: none; border-radius: 15px; 
-            padding: 0 20px; font-weight: 900; font-size: 10px; cursor: pointer; 
+            flex: 1 1 auto; background: var(--gold); color: #000; border: none; border-radius: 15px; 
+            padding: 15px 20px; font-weight: 900; font-size: 10px; cursor: pointer; 
             text-transform: uppercase; transition: 0.2s; letter-spacing: 1px; min-width: 100px;
+            display: flex; justify-content: center; align-items: center; text-align: center;
+            line-height: 1.2; word-break: break-word;
         }
         .save-btn:active { transform: scale(0.95); }
         .input-hint { font-size: 8px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px; line-height: 1.4; }

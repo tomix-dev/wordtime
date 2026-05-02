@@ -268,7 +268,6 @@
 
     async function syncData() {
         try {
-            // Ждем инициализации переводчика интерфейса
             if (!window.translations) {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
@@ -280,7 +279,6 @@
                 localStorage.setItem('wt_last_lvl', currentLevel);
                 localStorage.setItem('wt_last_prog', matchedInLevel);
                 
-                // Запрашиваем из базы английское слово и перевод в зависимости от языка (eng, rus/ukr)
                 const { data: words } = await sb.from('words')
                     .select(`id, level, eng, ${appLang}`)
                     .eq('level', currentLevel)
@@ -308,7 +306,7 @@
         // Английские карточки
         pool.forEach(w => eCol.appendChild(createCard(w.eng, w.id, 'eng')));
         
-        // Карточки с переводом (rus или ukr) перемешиваем
+        // Карточки с переводом перемешиваем
         [...pool].sort(() => Math.random() - 0.5).forEach(w => lCol.appendChild(createCard(w[appLang], w.id, 'lang')));
         
         updateUI();
@@ -383,6 +381,20 @@
             global_exp: gExp,
             global_level: gLvl
         }).eq('username', user);
+
+        // ==========================================
+        // ОТПРАВКА СОБЫТИЯ В ЛЕНТУ (КАЖДЫЕ 10 УРОВНЕЙ)
+        // ==========================================
+        if (nextLvl % 10 === 0) {
+            sb.from('live_feed').insert({
+                username: user,
+                event_type: 'pair_lvl',
+                event_val: nextLvl.toString()
+            }).then(({error}) => {
+                if(error) console.error("Ошибка отправки в ленту:", error);
+            });
+        }
+        // ==========================================
         
         location.reload();
     }

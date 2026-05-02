@@ -287,6 +287,20 @@
             global_level: gLvl
         }).eq('username', user);
 
+        // ==========================================
+        // ОТПРАВКА СОБЫТИЯ В ЛЕНТУ (КАЖДЫЕ 10 УРОВНЕЙ)
+        // ==========================================
+        if (currentLevel % 10 === 0) {
+            sb.from('live_feed').insert({
+                username: user,
+                event_type: 'tf_lvl',
+                event_val: currentLevel.toString()
+            }).then(({error}) => {
+                if(error) console.error("Ошибка отправки в ленту:", error);
+            });
+        }
+        // ==========================================
+
         setTimeout(() => {
             location.reload();
         }, 800);

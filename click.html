@@ -25,7 +25,7 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (4 КНОПКИ) --- */
+        /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
         .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
@@ -39,16 +39,20 @@
         main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px; visibility: hidden; }
         main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
 
-        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; margin-bottom: 15px; transition: 0.2s; cursor: pointer; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: 0.2s; cursor: pointer; }
         .back-btn:active { color: var(--gold); }
+        .lvl-badge { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); color: var(--gold); padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: flex; gap: 6px; align-items: center;}
 
-        /* --- ИНФО ПАНЕЛЬ (Очки и Комбо) --- */
-        .info-panel { display: flex; justify-content: space-between; align-items: center; background: var(--glass); padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); margin-bottom: 20px; }
-        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        /* --- ИНФО ПАНЕЛЬ --- */
+        .info-panel { display: flex; justify-content: space-between; align-items: center; background: var(--glass); padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); margin-bottom: 20px; position: relative; overflow: hidden; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; z-index: 2; }
         .stat-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        .stat-val { font-size: 20px; font-weight: 900; color: #fff; }
-        #combo-val { color: var(--gold-light); transition: 0.2s; }
+        .stat-val { font-size: 20px; font-weight: 900; color: #fff; transition: 0.2s; }
+        #combo-val { color: var(--gold-light); }
         .combo-pulse { transform: scale(1.3); text-shadow: 0 0 15px var(--gold); }
+        
+        .score-goal-text { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 7px; color: rgba(255,255,255,0.3); font-weight: 800; letter-spacing: 2px; }
 
         /* --- ТАЙМЕР --- */
         .timer-container { margin-bottom: 25px; position: relative; }
@@ -75,7 +79,7 @@
         }
         .option-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); border-color: var(--gold); color: #fff; }
         
-        .option-btn.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.1); color: var(--green); }
+        .option-btn.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.1); color: var(--green); pointer-events: none;}
         .option-btn.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.15); color: var(--red); animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
         /* --- ОВЕРЛЕЙ КОНЦА ИГРЫ --- */
@@ -85,11 +89,15 @@
             z-index: 2000; opacity: 0; pointer-events: none; transition: 0.4s;
         }
         .end-screen.show { opacity: 1; pointer-events: auto; }
-        .end-title { font-size: 32px; font-weight: 900; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); text-align: center; }
+        .end-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+        .end-title.success { color: var(--green); text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+        .end-title.fail { color: var(--red); text-shadow: 0 0 20px rgba(255, 75, 75, 0.5); }
+        
         .end-stats { display: flex; gap: 30px; margin-bottom: 40px; }
         .end-stat { text-align: center; }
         .end-stat span { display: block; font-size: 10px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
         .end-stat strong { font-size: 24px; color: #fff; font-weight: 900; }
+        
         .end-btn {
             background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; border-radius: 20px;
             padding: 15px 40px; font-size: 14px; font-weight: 900; color: #000; text-transform: uppercase;
@@ -145,15 +153,19 @@
 
 <main id="main-content" style="position: relative;">
     
-    <!-- ЭКРАН СТАРТА -->
     <div class="start-screen" id="start-screen">
         <h2 data-i18n="speed_rush_title" style="font-weight: 900; color: #fff; margin-bottom: 10px; font-size: 24px;">SPEED RUSH</h2>
         <p data-i18n="speed_rush_desc" style="color: #888; font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 40px; max-width: 250px; line-height: 1.5;">Находи переводы как можно быстрее!</p>
         <button class="start-btn" onclick="startGame()" data-i18n="start_btn">СТАРТ</button>
     </div>
 
-    <div onclick="fadeNavigate('mode.html')" class="back-btn">
-        <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
+    <div class="top-nav">
+        <div onclick="fadeNavigate('mode.html')" class="back-btn">
+            <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
+        </div>
+        <div class="lvl-badge">
+            <span data-i18n="rush_round_label">РАУНД</span> <span id="rush-lvl-display">1</span>
+        </div>
     </div>
 
     <div class="info-panel">
@@ -165,6 +177,7 @@
             <span class="stat-label" data-i18n="stat_combo">КОМБО</span>
             <span class="stat-val" id="combo-val">x1</span>
         </div>
+        <div class="score-goal-text" data-i18n="rush_score_needed">НУЖНО 400 ОЧКОВ</div>
     </div>
 
     <div class="timer-container">
@@ -181,15 +194,14 @@
     </div>
 </main>
 
-<!-- ЭКРАН КОНЦА ИГРЫ -->
 <div class="end-screen" id="end-screen">
-    <div class="end-title" data-i18n="time_out_title">ВРЕМЯ ВЫШЛО!</div>
+    <div class="end-title" id="end-title">...</div>
     <div class="end-stats">
         <div class="end-stat"><span data-i18n="stat_score">ОЧКИ</span><strong id="final-score">0</strong></div>
         <div class="end-stat"><span data-i18n="max_combo">МАКС. КОМБО</span><strong id="final-combo">x1</strong></div>
         <div class="end-stat"><span data-i18n="exp_plus">ПОЛУЧЕНО EXP</span><strong id="final-exp" style="color: var(--gold);">0</strong></div>
     </div>
-    <button class="end-btn" onclick="saveAndExit()" data-i18n="claim_reward_btn">ЗАБРАТЬ НАГРАДУ</button>
+    <button class="end-btn" id="end-action-btn" onclick="saveAndExit()">...</button>
 </div>
 
 <script>
@@ -200,10 +212,12 @@
     let user = localStorage.getItem('wt_user');
     if (!user) window.location.href = 'index.html';
 
-    // Определяем текущий язык для вариантов ответов
     const appLang = localStorage.getItem('appLang') || 'rus';
 
-    let pool = [];
+    let rushRound = 1;
+    let pool = [];         // Все слова для раунда (включая перенесенные)
+    let activeDeck = [];   // Слова, на которые еще не дан правильный ответ
+
     let currentWord = null;
     let score = 0;
     let combo = 1;
@@ -212,6 +226,7 @@
     let timerInterval = null;
     let isPlaying = false;
     let isProcessing = false;
+    let isRoundPassed = false;
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -224,20 +239,53 @@
 
     async function loadWords() {
         try {
-            // Ждем инициализации переводчика
             if (!window.translations) {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            // Загружаем пачку слов
-            const { data: words } = await sb.from('words').select(`id, eng, ${appLang}`).limit(50);
+            // Узнаем текущий раунд игрока из базы
+            let { data: prog } = await sb.from('user_progress').select('rush_level').eq('username', user).single();
+            if (prog && prog.rush_level) {
+                rushRound = prog.rush_level;
+            }
+            document.getElementById('rush-lvl-display').innerText = rushRound;
+
+            // --- НОВАЯ ЛОГИКА ГРУППИРОВКИ УРОВНЕЙ ---
+            // Высчитываем диапазон (по 5 уровней на каждый раунд)
+            let minLevel = (rushRound - 1) * 5 + 1;
+            let maxLevel = rushRound * 5;
+
+            // Если игрок дошел до раунда 61 (уровни 300+)
+            if (minLevel > 300) {
+                // Берем случайный блок из 5 уровней, чтобы симулировать рандом по всей базе
+                minLevel = Math.floor(Math.random() * 295) + 1;
+                maxLevel = minLevel + 4;
+            }
+
+            // Грузим слова для этого диапазона уровней
+            const { data: words } = await sb.from('words')
+                .select(`id, level, eng, ${appLang}`)
+                .gte('level', minLevel)
+                .lte('level', maxLevel)
+                .limit(150); // Увеличили лимит, так как теперь 5 уровней
+
             if(words && words.length >= 4) {
-                pool = words;
+                pool = [...words];
+
+                // Проверяем, есть ли неразгаданные слова с прошлого раунда
+                let carryover = JSON.parse(localStorage.getItem('wt_rush_carryover')) || [];
+                carryover.forEach(cw => {
+                    // Добавляем, если такого ID еще нет в пуле
+                    if(!pool.find(w => w.id === cw.id)) {
+                        pool.push(cw);
+                    }
+                });
+
                 requestAnimationFrame(() => {
                     document.getElementById('main-content').classList.add('ready');
                 });
             } else {
-                document.getElementById('target-word').innerText = window.translations ? window.translations['loading_words_error'] : "Error";
+                document.getElementById('target-word').innerText = window.translations ? window.translations['loading_words_error'] : "Слова закончились!";
             }
         } catch(e) {
             console.error(e);
@@ -251,10 +299,13 @@
         maxCombo = 1;
         timeLeft = 60;
         isPlaying = true;
+        
+        // Заполняем колоду всеми доступными словами
+        activeDeck = [...pool];
+
         updateUI();
         nextTask();
         
-        // Запускаем таймер
         timerInterval = setInterval(() => {
             timeLeft--;
             updateTimerUI();
@@ -268,11 +319,17 @@
         if(!isPlaying) return;
         isProcessing = false;
         
-        // Выбираем правильное слово
-        currentWord = pool[Math.floor(Math.random() * pool.length)];
+        // Если умная колода опустела до конца времени — восполняем (бесконечный фарм)
+        if (activeDeck.length === 0) {
+            activeDeck = [...pool];
+        }
+
+        // Берем случайное слово из оставшихся в КОЛОДЕ
+        let randomIndex = Math.floor(Math.random() * activeDeck.length);
+        currentWord = activeDeck[randomIndex];
         document.getElementById('target-word').innerText = currentWord.eng;
 
-        // Выбираем 3 случайных НЕПРАВИЛЬНЫХ перевода
+        // Варианты ответов берем из всего ПУЛА (чтобы запутать)
         let options = [currentWord];
         while(options.length < 4) {
             let randomWord = pool[Math.floor(Math.random() * pool.length)];
@@ -281,16 +338,14 @@
             }
         }
 
-        // Перемешиваем варианты
         options.sort(() => Math.random() - 0.5);
 
-        // Отрисовываем кнопки, используя выбранный язык (appLang)
         const grid = document.getElementById('options-grid');
         grid.innerHTML = '';
         options.forEach(opt => {
             const btn = document.createElement('div');
             btn.className = 'option-btn';
-            btn.innerText = opt[appLang]; // <--- Динамический язык перевода
+            btn.innerText = opt[appLang]; 
             btn.onclick = () => checkAnswer(opt.id, btn);
             grid.appendChild(btn);
         });
@@ -301,10 +356,12 @@
         isProcessing = true;
 
         if(selectedId === currentWord.id) {
-            // ПРАВИЛЬНО
+            // ВЕРНО - удаляем слово из активной колоды
             if(window.navigator.vibrate) window.navigator.vibrate(50);
             btnElement.classList.add('correct');
             
+            activeDeck = activeDeck.filter(w => w.id !== currentWord.id);
+
             score += (10 * combo);
             combo++;
             if(combo > maxCombo) maxCombo = combo;
@@ -314,12 +371,12 @@
             setTimeout(nextTask, 300);
 
         } else {
-            // ОШИБКА
+            // ОШИБКА - слово остается в колоде
             if(window.navigator.vibrate) window.navigator.vibrate([50, 80, 50]);
             btnElement.classList.add('wrong');
             
             combo = 1;
-            timeLeft -= 2; // Штраф времени
+            timeLeft -= 2; 
             updateUI();
             updateTimerUI();
             
@@ -367,11 +424,27 @@
         document.getElementById('final-combo').innerText = `x${maxCombo}`;
         document.getElementById('final-exp').innerText = earnedExp;
         
+        const titleEl = document.getElementById('end-title');
+        const btnEl = document.getElementById('end-action-btn');
+
+        // Проверка победы (400 очков)
+        isRoundPassed = score >= 400;
+
+        if (isRoundPassed) {
+            titleEl.innerText = window.translations?.['rush_passed_title'] || 'РАУНД ПРОЙДЕН!';
+            titleEl.className = 'end-title success';
+            btnEl.innerText = window.translations?.['rush_next_round_btn'] || 'СЛЕДУЮЩИЙ РАУНД';
+        } else {
+            titleEl.innerText = window.translations?.['rush_failed_title'] || 'ВРЕМЯ ВЫШЛО!';
+            titleEl.className = 'end-title fail';
+            btnEl.innerText = window.translations?.['rush_retry_btn'] || 'ПОПРОБОВАТЬ СНОВА';
+        }
+        
         document.getElementById('end-screen').classList.add('show');
     }
 
     async function saveAndExit() {
-        const btn = document.querySelector('.end-btn');
+        const btn = document.getElementById('end-action-btn');
         btn.innerText = window.translations ? window.translations['saving_btn'] : "СОХРАНЕНИЕ...";
         btn.style.opacity = '0.5';
         btn.style.pointerEvents = 'none';
@@ -392,16 +465,36 @@
                 gLvl += 1;
             }
 
+            let nextRoundNum = rushRound;
+
+            if (isRoundPassed) {
+                // Если раунд пройден, переносим невыученные слова в следующий раунд
+                localStorage.setItem('wt_rush_carryover', JSON.stringify(activeDeck));
+                nextRoundNum++;
+            }
+
+            // Обновляем базу
             await sb.from('user_progress').update({ 
                 global_exp: gExp,
                 global_level: gLvl,
-                total_pairs_found: newTotalPairs
+                total_pairs_found: newTotalPairs,
+                rush_level: nextRoundNum
             }).eq('username', user);
 
-            fadeNavigate('mode.html');
+            if (isRoundPassed && maxCombo >= 10) {
+                sb.from('live_feed').insert({
+                    username: user,
+                    event_type: 'speed_combo',
+                    event_val: maxCombo.toString()
+                }).then(({error}) => { if(error) console.error(error); });
+            }
+
+            // Перезапускаем игру для следующего раунда / попытки
+            location.reload();
+
         } catch(e) {
             console.error(e);
-            fadeNavigate('mode.html'); 
+            location.reload();
         }
     }
 
