@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Профиль</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --gold: #D4AF37;
+            --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88;
+            --red: #ff4b4b;
+            --blue: #00bfff;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; overflow-x: hidden; 
+            padding-bottom: 90px; display: flex; flex-direction: column;
+        }
+        
+        main { 
+            flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px);
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            visibility: hidden; display: flex; flex-direction: column;
+        }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- ТАБ-БАР (4 КНОПКИ) --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.5s ease; }
+        .tab-bar.ready { opacity: 1; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
+        .tab-item.active { color: var(--gold); }
+        .tab-icon { font-size: 18px; margin-bottom: 3px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+
+        /* --- ВЕРХНЯЯ ЧАСТЬ (ПРОФИЛЬ) --- */
+        .profile-header { text-align: center; margin-top: 15px; margin-bottom: 20px; }
+        .username { font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; color: #fff; }
+        
+        .level-badge { 
+            display: inline-block; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); 
+            padding: 5px 15px; border-radius: 12px; font-size: 12px; font-weight: 900; color: var(--gold-light);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); margin-bottom: 15px;
+        }
+
+        .exp-container { width: 80%; margin: 0 auto; text-align: center; }
+        .exp-text { font-size: 9px; color: #888; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; }
+        .exp-bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .exp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
+
+        /* --- ПЕРСОНАЖ (ЦЕНТР ЭКРАНА) --- */
+        .character-showcase { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin-bottom: 30px; position: relative; padding: 20px 0 10px 0;
+        }
+        .character-bg {
+            position: absolute; width: 250px; height: 250px; border-radius: 50%; top: 10px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+            z-index: 0; animation: pulseGlow 3s infinite alternate;
+        }
+        .character-avatar {
+            width: 180px; height: 180px; background: #0a0a0a; border: 2px solid var(--glass-border);
+            border-radius: 30px; display: flex; justify-content: center; align-items: center;
+            font-size: 80px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+            z-index: 1; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            overflow: hidden; 
+        }
+        .character-avatar:active { transform: scale(0.95); }
+        .character-title {
+            margin-top: 20px; font-size: 14px; font-weight: 900; color: #fff;
+            text-transform: uppercase; letter-spacing: 2px; z-index: 1;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8); text-align: center;
+        }
+
+        /* --- ПРОГРЕСС СЛЕДУЮЩЕГО ПИТОМЦА --- */
+        .pet-progress-container { width: 60%; max-width: 250px; margin-top: 15px; text-align: center; z-index: 1; }
+        .pet-prog-text { font-size: 8px; color: #aaa; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .pet-prog-bg { width: 100%; height: 4px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .pet-prog-fill { height: 100%; background: linear-gradient(90deg, var(--green), #00ffcc); width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.4); }
+
+        /* --- КРАТКАЯ СТАТИСТИКА --- */
+        .mini-stats { display: flex; justify-content: space-around; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px; backdrop-filter: blur(10px); margin-bottom: 30px; }
+        .m-stat { display: flex; flex-direction: column; align-items: center; }
+        .m-stat span:first-child { font-size: 8px; color: #666; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .m-stat span:last-child { font-size: 14px; font-weight: 900; color: #fff; }
+
+        /* --- ДАННЫЕ АККАУНТА --- */
+        .section-title { font-size: 10px; color: var(--gold); letter-spacing: 3px; text-align: center; margin-bottom: 15px; font-weight: 900; text-transform: uppercase; }
+        .acc-info-card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 20px; backdrop-filter: blur(10px);
+            margin-bottom: 35px;
+        }
+        .acc-info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .acc-info-row:first-child { padding-top: 0; }
+        .acc-info-row:last-child { padding-bottom: 0; border-bottom: none; }
+        .acc-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .acc-val { font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+
+        /* --- ДОСТИЖЕНИЯ --- */
+        .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; margin-bottom: 40px; }
+        .ach-box { aspect-ratio: 1/1; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.3s; padding-top: 5px; }
+        .ach-emoji { font-size: 26px; margin-bottom: 6px; filter: grayscale(1); opacity: 0.2; transition: 0.3s; }
+        .ach-txt { font-size: 8px; font-weight: 900; color: #444; text-transform: uppercase; transition: 0.3s; letter-spacing: 1px; }
+        
+        .ach-prog { width: 70%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 8px; overflow: hidden; display: none; }
+        .ach-prog-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.5s ease; }
+
+        /* 1. В ПРОЦЕССЕ (Следующий уровень) */
+        .ach-box.in-progress { border-color: rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.05); }
+        .ach-box.in-progress .ach-emoji { filter: grayscale(0.5); opacity: 0.6; }
+        .ach-box.in-progress .ach-txt { color: var(--gold-light); }
+        .ach-box.in-progress .ach-prog { display: block; }
+
+        /* 2. АКТИВНЫЕ (Уже получены) */
+        .ach-box.active { border-color: var(--green); background: rgba(0, 255, 136, 0.05); }
+        .ach-box.active .ach-emoji { filter: grayscale(0); opacity: 1; }
+        .ach-box.active .ach-txt { color: var(--green); }
+        .ach-box.active .ach-prog { display: none; }
+
+        /* 3. ЗАКРЫТЫЕ (Замочки и размытие) */
+        .ach-box.locked .ach-emoji { filter: blur(5px) grayscale(1); opacity: 0.15; }
+        .ach-box.locked::after { 
+            content: '🔒'; 
+            position: absolute; 
+            font-size: 20px; 
+            top: 40%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+            opacity: 0.8;
+        }
+        .ach-box.locked .ach-txt { color: #555; }
+
+        @keyframes pulseGlow { 0% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar" id="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item active">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
+        </a>
+    </div>
+</div>
+
+<main id="profile-content">
+    <div class="profile-header">
+        <div class="username" id="user-name">...</div>
+        <div class="level-badge" id="level-badge">LVL 1</div>
+        <div class="exp-container">
+            <div class="exp-text" id="exp-text">0 / 10 EXP</div>
+            <div class="exp-bar-bg"><div class="exp-bar-fill" id="exp-fill"></div></div>
+        </div>
+    </div>
+
+    <div class="character-showcase">
+        <div class="character-bg"></div>
+        <div class="character-avatar" id="avatar-img" onclick="pokeAvatar()"></div>
+        <div class="character-title" id="avatar-title">Загрузка...</div>
+        
+        <!-- ПРОГРЕСС СЛЕДУЮЩЕГО ПИТОМЦА -->
+        <div class="pet-progress-container">
+            <div class="pet-prog-text" id="pet-prog-text">...</div>
+            <div class="pet-prog-bg"><div class="pet-prog-fill" id="pet-prog-fill"></div></div>
+        </div>
+    </div>
+
+    <div class="mini-stats">
+        <div class="m-stat">
+            <span data-i18n="stat_days">ДНЕЙ В ИГРЕ</span>
+            <span id="user-days">0</span>
+        </div>
+        <div class="m-stat" style="border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border); padding: 0 20px;">
+            <span data-i18n="stat_pairs">НАЙДЕНО ПАР</span>
+            <span id="total-pairs">0</span>
+        </div>
+        <div class="m-stat">
+            <span data-i18n="stat_sparks">ИСКР</span>
+            <span id="total-sparks">0</span>
+        </div>
+    </div>
+
+    <!-- ДАННЫЕ АККАУНТА -->
+    <h3 class="section-title" data-i18n="acc_info_title">ДАННЫЕ АККАУНТА</h3>
+    <div class="acc-info-card">
+        <div class="acc-info-row">
+            <span class="acc-label" data-i18n="acc_name">НИКНЕЙМ</span>
+            <span class="acc-val" id="acc-nickname">...</span>
+        </div>
+        <div class="acc-info-row">
+            <span class="acc-label" data-i18n="acc_reg">РЕГИСТРАЦИЯ</span>
+            <span class="acc-val" id="acc-regdate">...</span>
+        </div>
+        <div class="acc-info-row">
+            <span class="acc-label" data-i18n="acc_status">СТАТУС</span>
+            <span class="acc-val" style="color: var(--green);" data-i18n="acc_status_active">АКТИВЕН</span>
+        </div>
+        <div class="acc-info-row">
+            <span class="acc-label" data-i18n="acc_role">РОЛЬ</span>
+            <span class="acc-val" id="acc-role">Player</span>
+        </div>
+    </div>
+
+    <!-- ЭВОЛЮЦИЯ -->
+    <h3 class="section-title" data-i18n="achievements_title">ЭВОЛЮЦИЯ</h3>
+    <div class="ach-grid" id="ach-container">
+        <!-- 15 стадий эволюции питомцев (400 уровень скрыт) -->
+        <div class="ach-box" id="ach-1"><span class="ach-emoji">🥚</span><span class="ach-txt">1 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-1"></div></div></div>
+        <div class="ach-box" id="ach-10"><span class="ach-emoji">🐱</span><span class="ach-txt">10 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-10"></div></div></div>
+        <div class="ach-box" id="ach-25"><span class="ach-emoji">😼</span><span class="ach-txt">25 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-25"></div></div></div>
+        <div class="ach-box" id="ach-50"><span class="ach-emoji">🐯</span><span class="ach-txt">50 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-50"></div></div></div>
+        <div class="ach-box" id="ach-75"><span class="ach-emoji">🦁</span><span class="ach-txt">75 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-75"></div></div></div>
+        <div class="ach-box" id="ach-100"><span class="ach-emoji">🎩</span><span class="ach-txt">100 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-100"></div></div></div>
+        <div class="ach-box" id="ach-125"><span class="ach-emoji">🕶️</span><span class="ach-txt">125 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-125"></div></div></div>
+        <div class="ach-box" id="ach-150"><span class="ach-emoji">🐶</span><span class="ach-txt">150 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-150"></div></div></div>
+        <div class="ach-box" id="ach-175"><span class="ach-emoji">🦮</span><span class="ach-txt">175 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-175"></div></div></div>
+        <div class="ach-box" id="ach-200"><span class="ach-emoji">🐕</span><span class="ach-txt">200 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-200"></div></div></div>
+        <div class="ach-box" id="ach-225"><span class="ach-emoji">🛡️</span><span class="ach-txt">225 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-225"></div></div></div>
+        <div class="ach-box" id="ach-250"><span class="ach-emoji">⚔️</span><span class="ach-txt">250 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-250"></div></div></div>
+        <div class="ach-box" id="ach-275"><span class="ach-emoji">🐾</span><span class="ach-txt">275 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-275"></div></div></div>
+        <div class="ach-box" id="ach-300"><span class="ach-emoji">🐺</span><span class="ach-txt">300 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-300"></div></div></div>
+        <div class="ach-box" id="ach-350"><span class="ach-emoji">🌠</span><span class="ach-txt">350 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-350"></div></div></div>
+    </div>
+</main>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    const user = localStorage.getItem('wt_user');
+    if(!user) window.location.href = 'index.html';
+
+    const displayName = localStorage.getItem('wt_display_name') || user;
+    document.getElementById('user-name').innerText = displayName.toUpperCase();
+    
+    // Сразу вставляем никнейм в новый блок
+    document.getElementById('acc-nickname').innerText = displayName.toUpperCase();
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    function pokeAvatar() {
+        if(window.navigator.vibrate) window.navigator.vibrate(15);
+        const avatar = document.getElementById('avatar-img');
+        avatar.style.transform = 'scale(0.85) rotate(-5deg)';
+        setTimeout(() => {
+            avatar.style.transform = 'scale(1) rotate(0deg)';
+        }, 150);
+    }
+
+    // Эволюция аватара
+    function updateAvatar(level) {
+        const avatarImg = document.getElementById('avatar-img');
+        const avatarTitle = document.getElementById('avatar-title');
+
+        let imgSrc = ''; let titleKey = ''; let defaultText = '';
+
+        if (level < 10) { imgSrc = 'cats/1.png'; titleKey = 'avatar_lvl_1'; defaultText = 'Котенок-Новичок'; } 
+        else if (level < 25) { imgSrc = 'cats/10.png'; titleKey = 'avatar_lvl_10'; defaultText = 'Любопытный Бродяга'; } 
+        else if (level < 50) { imgSrc = 'cats/25.png'; titleKey = 'avatar_lvl_25'; defaultText = 'Уверенный Кот'; } 
+        else if (level < 75) { imgSrc = 'cats/50.png'; titleKey = 'avatar_lvl_50'; defaultText = 'Деловой Хищник'; } 
+        else if (level < 100) { imgSrc = 'cats/75.png'; titleKey = 'avatar_lvl_75'; defaultText = 'Босс Района'; } 
+        else if (level < 125) { imgSrc = 'cats/100.png'; titleKey = 'avatar_lvl_100'; defaultText = 'Теневой Магнат'; } 
+        else if (level < 150) { imgSrc = 'cats/125.png'; titleKey = 'avatar_lvl_125'; defaultText = 'Кошачий Дон'; } 
+        else if (level < 175) { imgSrc = 'dogs/150.png'; titleKey = 'avatar_lvl_150'; defaultText = 'Верный Пес'; } 
+        else if (level < 200) { imgSrc = 'dogs/175.png'; titleKey = 'avatar_lvl_175'; defaultText = 'Опытный Охотник'; } 
+        else if (level < 225) { imgSrc = 'dogs/200.png'; titleKey = 'avatar_lvl_200'; defaultText = 'Волк-Одиночка'; } 
+        else if (level < 250) { imgSrc = 'dogs/225.png'; titleKey = 'avatar_lvl_225'; defaultText = 'Страж Порядка'; } 
+        else if (level < 275) { imgSrc = 'dogs/250.png'; titleKey = 'avatar_lvl_250'; defaultText = 'Свирепый Вожак'; } 
+        else if (level < 300) { imgSrc = 'dogs/275.png'; titleKey = 'avatar_lvl_275'; defaultText = 'Альфа-Дог'; } 
+        else if (level < 350) { imgSrc = 'dogs/300.png'; titleKey = 'avatar_lvl_300'; defaultText = 'Гроза Улиц'; } 
+        else if (level < 400) { imgSrc = 'dogs/350.png'; titleKey = 'avatar_lvl_350'; defaultText = 'Повелитель Стаи'; } 
+        else { imgSrc = 'dogs/400.png'; titleKey = 'avatar_lvl_400'; defaultText = 'Свободный Человек'; }
+
+        avatarImg.innerHTML = `<img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit; pointer-events: none; transform: scale(1.05);">`;
+        avatarTitle.innerText = window.translations ? (window.translations[titleKey] || defaultText) : defaultText;
+
+        if (level >= 400) {
+            avatarImg.style.borderColor = "var(--gold-light)";
+            avatarImg.style.boxShadow = "0 0 40px rgba(255, 215, 0, 0.8)";
+        } else if (level >= 150) {
+            avatarImg.style.borderColor = "var(--gold)";
+            avatarImg.style.boxShadow = "0 0 20px rgba(212, 175, 55, 0.3)";
+        } else {
+            avatarImg.style.borderColor = "var(--glass-border)";
+            avatarImg.style.boxShadow = "0 20px 40px rgba(0,0,0,0.6)";
+        }
+    }
+
+    // Прогресс до следующего питомца
+    function updatePetProgress(level) {
+        const petLevels = [10, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400];
+        let nextPetLvl = null;
+        let prevPetLvl = 1;
+
+        for (let i = 0; i < petLevels.length; i++) {
+            if (level < petLevels[i]) {
+                nextPetLvl = petLevels[i];
+                prevPetLvl = i === 0 ? 1 : petLevels[i-1];
+                break;
+            }
+        }
+
+        const textEl = document.getElementById('pet-prog-text');
+        const fillEl = document.getElementById('pet-prog-fill');
+
+        if (nextPetLvl) {
+            let left = nextPetLvl - level;
+            let formatStr = window.translations && window.translations['next_pet_prog'] 
+                            ? window.translations['next_pet_prog'] 
+                            : `ДО НОВОГО ПИТОМЦА: ${left} LVL`;
+            textEl.innerText = formatStr.replace('{left}', left);
+
+            let progress = ((level - prevPetLvl) / (nextPetLvl - prevPetLvl)) * 100;
+            fillEl.style.width = `${Math.max(0, progress)}%`;
+        } else {
+            let formatStr = window.translations && window.translations['max_pet_prog'] 
+                            ? window.translations['max_pet_prog'] 
+                            : `МАКСИМАЛЬНЫЙ УРОВЕНЬ!`;
+            textEl.innerText = formatStr;
+            textEl.style.color = "var(--gold)";
+            fillEl.style.width = '100%';
+            fillEl.style.background = 'linear-gradient(90deg, var(--gold), var(--gold-light))';
+            fillEl.style.boxShadow = '0 0 10px rgba(212, 175, 55, 0.5)';
+        }
+    }
+
+    // Прогресс-бар достижений (15 стадий, 400 убран из массива)
+    function updateProgressUI(level) {
+        const thresholds = [1, 10, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350];
+        let nextTargetFound = false;
+
+        thresholds.forEach((th, i) => {
+            const el = document.getElementById(`ach-${th}`);
+            const fillEl = document.getElementById(`ach-fill-${th}`);
+            const prevTh = i === 0 ? 0 : thresholds[i-1];
+
+            if(el) {
+                // Сбрасываем все классы
+                el.classList.remove('active', 'in-progress', 'locked');
+                
+                if (level >= th) {
+                    // Уже получено
+                    el.classList.add('active');
+                } else if (!nextTargetFound) {
+                    // Следующая цель (в процессе)
+                    el.classList.add('in-progress');
+                    nextTargetFound = true;
+                    let progressPercent = ((level - prevTh) / (th - prevTh)) * 100;
+                    if(fillEl) fillEl.style.width = `${Math.max(0, progressPercent)}%`;
+                } else {
+                    // Еще не дошли (Замок и размытие)
+                    el.classList.add('locked');
+                }
+            }
+        });
+    }
+
+    async function loadProfileData() {
+        try {
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            const { data: p } = await sb.from('user_progress').select('*').eq('username', user).single();
+
+            if(p) {
+                const regDate = new Date(p.created_at);
+                const today = new Date();
+                const diffDays = Math.max(1, Math.ceil(Math.abs(today - regDate) / (1000 * 60 * 60 * 24))); 
+                
+                const gLvl = p.global_level || 1;
+                const gExp = p.global_exp || 0;
+                const neededExp = gLvl * 10;
+                const totalPairs = p.total_pairs_found || 0;
+                const localSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
+
+                // Шапка
+                document.getElementById('level-badge').innerText = `LVL ${gLvl}`;
+                document.getElementById('exp-text').innerText = `${gExp} / ${neededExp} EXP`;
+                document.getElementById('exp-fill').style.width = `${(gExp / neededExp) * 100}%`;
+
+                // Статистика
+                document.getElementById('user-days').innerText = diffDays;
+                document.getElementById('total-pairs').innerText = totalPairs;
+                document.getElementById('total-sparks').innerText = localSparks;
+
+                // Форматирование даты регистрации для блока Данные Аккаунта
+                const day = String(regDate.getDate()).padStart(2, '0');
+                const month = String(regDate.getMonth() + 1).padStart(2, '0');
+                const year = regDate.getFullYear();
+                document.getElementById('acc-regdate').innerText = `${day}.${month}.${year}`;
+
+                // Установка роли
+                const role = p.role || 'Player';
+                const roleEl = document.getElementById('acc-role');
+                // Подставляем роль либо из базы, либо через переводчик, если есть ключ
+                const roleKey = `role_${role.toLowerCase()}`;
+                roleEl.innerText = window.translations && window.translations[roleKey] ? window.translations[roleKey] : role;
+                
+                // Цвет в зависимости от роли
+                if (role === 'Admin') roleEl.style.color = 'var(--red)';
+                else if (role === 'Tester') roleEl.style.color = 'var(--blue)';
+                else roleEl.style.color = 'var(--gold-light)';
+
+                // Визуал
+                updateAvatar(gLvl);
+                updatePetProgress(gLvl);
+                updateProgressUI(gLvl);
+            }
+
+            document.getElementById('profile-content').classList.add('ready');
+            document.getElementById('tab-bar').classList.add('ready');
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('profile-content').classList.add('ready');
+        }
+    }
+
+    document.addEventListener('translationsReady', loadProfileData);
+    if (window.translations && Object.keys(window.translations).length > 0) {
+        loadProfileData();
+    }
+</script>
+</body>
+</html>

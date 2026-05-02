@@ -25,13 +25,14 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР --- */
+        /* --- ТАБ-БАР (4 КНОПКИ) --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar.ready { opacity: 1; }
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
         .tab-item.active { color: var(--gold); }
         .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
 
         /* --- КОНТЕНТ --- */
@@ -92,22 +93,26 @@
     <div class="tab-bar" id="tab-bar">
         <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
             <span class="tab-icon">🏠</span>
-            <span class="tab-label" data-i18n="tab_home"></span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
             <span class="tab-icon">🎮</span>
-            <span class="tab-label" data-i18n="tab_play"></span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
-            <span class="tab-label" data-i18n="tab_settings"></span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
         </a>
     </div>
 </div>
 
 <main id="main-content">
     <div onclick="fadeNavigate('mode.html')" class="back-btn">
-        <span>◀</span> <span data-i18n="back_to_modes"></span>
+        <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
     </div>
 
     <div class="progress-section">
@@ -119,16 +124,16 @@
     </div>
 
     <div class="tf-card" id="tf-card">
-        <div class="tf-question" data-i18n="tf_question"></div>
-        <div class="tf-word" id="tf-word" data-i18n="loading_word"></div>
+        <div class="tf-question" data-i18n="tf_question">ВЕРНЫЙ ПЕРЕВОД?</div>
+        <div class="tf-word" id="tf-word" data-i18n="loading_word">Загрузка...</div>
     </div>
 
     <div class="tf-buttons">
         <button class="btn-tf btn-true" onclick="makeChoice(true)">
-            <span class="icon">✅</span> <span data-i18n="tf_true"></span>
+            <span class="icon">✅</span> <span data-i18n="tf_true">ПРАВДА</span>
         </button>
         <button class="btn-tf btn-false" onclick="makeChoice(false)">
-            <span class="icon">❌</span> <span data-i18n="tf_false"></span>
+            <span class="icon">❌</span> <span data-i18n="tf_false">ЛОЖЬ</span>
         </button>
     </div>
 </main>

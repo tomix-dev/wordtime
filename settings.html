@@ -14,13 +14,12 @@
             --glass: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(212, 175, 55, 0.2);
             --red: #ff4b4b;
+            --green: #00ff88;
         }
 
-        /* ДОБАВЛЕНА БАЗА ДЛЯ HTML КАК НА ДРУГИХ СТРАНИЦАХ */
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        /* ДОБАВЛЕН overflow-x: hidden ДЛЯ ЗАЩИТЫ ОТ ГОРИЗОНТАЛЬНОГО СКРОЛЛА */
         body { 
             background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
             min-height: 100dvh; margin: 0; padding-bottom: 90px; overflow-x: hidden; 
@@ -35,9 +34,40 @@
         .brand-logo { font-size: 28px; font-weight: 900; background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
 
         .settings-container { display: flex; flex-direction: column; gap: 20px; }
-        .settings-group { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; backdrop-filter: blur(10px); }
-        .group-label { font-size: 10px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; display: block; }
+        .settings-group { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; backdrop-filter: blur(10px); position: relative; }
+        .group-label { font-size: 10px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; display: block; text-align: center; }
 
+        /* --- СМЕНА ИМЕНИ --- */
+        .name-input-wrapper { display: flex; flex-direction: column; gap: 10px; }
+        .name-input-row { display: flex; gap: 10px; }
+        .name-input { 
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); 
+            border-radius: 15px; color: #fff; padding: 15px; font-size: 14px; 
+            font-family: 'Montserrat', sans-serif; outline: none; transition: 0.3s; font-weight: 700;
+        }
+        .name-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .save-btn { 
+            background: var(--gold); color: #000; border: none; border-radius: 15px; 
+            padding: 0 20px; font-weight: 900; font-size: 10px; cursor: pointer; 
+            text-transform: uppercase; transition: 0.2s; letter-spacing: 1px; min-width: 100px;
+        }
+        .save-btn:active { transform: scale(0.95); }
+        .input-hint { font-size: 8px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px; line-height: 1.4; }
+
+        /* --- БЛОК "СКОРО" --- */
+        .disabled-group { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; }
+        .soon-badge { 
+            background: var(--red); color: #fff; padding: 3px 8px; border-radius: 8px; 
+            font-size: 8px; font-weight: 900; margin-left: 8px; vertical-align: text-bottom; letter-spacing: 1px;
+        }
+        .style-preview-box {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 15px;
+            padding: 15px; text-align: center; font-size: 16px; font-weight: 900; letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(176, 38, 255, 0.8); color: transparent;
+            -webkit-text-stroke: 1px #b026ff;
+        }
+
+        /* --- ЯЗЫК --- */
         .lang-option { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.02); 
@@ -49,17 +79,18 @@
         .lang-option.active .check-mark { opacity: 1; }
 
         .logout-btn { 
-            margin-top: 20px; background: rgba(255, 75, 75, 0.05); border: 1px solid rgba(255, 75, 75, 0.2); 
+            margin-top: 10px; background: rgba(255, 75, 75, 0.05); border: 1px solid rgba(255, 75, 75, 0.2); 
             color: var(--red); width: 100%; padding: 18px; border-radius: 20px; 
-            font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+            font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.2s;
         }
+        .logout-btn:active { background: rgba(255, 75, 75, 0.1); transform: scale(0.97); }
 
-        /* TAB BAR */
+        /* --- ТАБ-БАР (4 КНОПКИ) --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; }
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; flex: 1; transition: 0.3s; }
         .tab-item.active { color: var(--gold); }
-        .tab-icon { font-size: 18px; }
+        .tab-icon { font-size: 18px; margin-bottom: 3px; }
         .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
@@ -71,55 +102,200 @@
     <div class="tab-bar">
         <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
             <span class="tab-icon">🏠</span>
-            <span class="tab-label" data-i18n="tab_home"></span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item">
             <span class="tab-icon">🎮</span>
-            <span class="tab-label" data-i18n="tab_play"></span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item active">
             <span class="tab-icon">⚙️</span>
-            <span class="tab-label" data-i18n="tab_settings"></span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
         </a>
     </div>
 </div>
 
 <main id="main-content">
     <div class="brand-header">
-        <h1 class="brand-logo" data-i18n="settings_header"></h1>
+        <h1 class="brand-logo" data-i18n="tab_settings">НАСТРОЙКИ</h1>
     </div>
 
     <div class="settings-container">
+        <!-- Смена имени -->
         <div class="settings-group">
-            <span class="group-label" data-i18n="settings_lang_label"></span>
+            <span class="group-label" data-i18n="settings_name_label">ИГРОВОЕ ИМЯ</span>
+            <div class="name-input-wrapper">
+                <div class="name-input-row">
+                    <input type="text" id="display-name-input" class="name-input" placeholder="Введите имя..." minlength="4" maxlength="16" pattern="[a-zA-Z0-9]+">
+                    <button class="save-btn" id="save-name-btn" onclick="saveName()" data-i18n="settings_save_btn">СОХРАНИТЬ</button>
+                </div>
+                <div class="input-hint" data-i18n="settings_name_hint">От 4 до 16 символов (A-Z, 0-9). Изменить можно раз в 24 часа.</div>
+            </div>
+        </div>
+
+        <!-- Стиль имени (СКОРО) -->
+        <div class="settings-group disabled-group">
+            <span class="group-label">
+                <span data-i18n="settings_style_label">СТИЛЬ ИМЕНИ</span> 
+                <span class="soon-badge" data-i18n="settings_soon_badge">СКОРО</span>
+            </span>
+            <div class="style-preview-box">
+                NEON STROKE
+            </div>
+        </div>
+
+        <!-- Блок настроек языка -->
+        <div class="settings-group">
+            <span class="group-label" data-i18n="settings_lang_label">ЯЗЫК ИНТЕРФЕЙСА</span>
             
             <div class="lang-option" id="opt-rus" onclick="setLanguage('rus')">
-                <span class="lang-name" data-i18n="lang_rus_full"></span>
+                <span class="lang-name" data-i18n="lang_rus_full">Русский</span>
                 <span class="check-mark">✓</span>
             </div>
             
             <div class="lang-option" id="opt-ukr" onclick="setLanguage('ukr')">
-                <span class="lang-name" data-i18n="lang_ukr_full"></span>
+                <span class="lang-name" data-i18n="lang_ukr_full">Українська</span>
                 <span class="check-mark">✓</span>
             </div>
         </div>
 
-        <button class="logout-btn" onclick="logout()" data-i18n="logout_btn"></button>
+        <button class="logout-btn" id="logout-btn" onclick="logout()" data-i18n="logout_btn">ВЫЙТИ ИЗ АККАУНТА</button>
     </div>
 </main>
 
 <script>
-    const user = localStorage.getItem('wt_user');
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    let user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
+    // Проверяем, находится ли пользователь в Telegram Mini App
+    const isTelegramApp = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && Object.keys(window.Telegram.WebApp.initDataUnsafe).length > 0) || localStorage.getItem('wt_login_method') === 'telegram';
+
+    if (isTelegramApp) {
+        document.getElementById('logout-btn').style.display = 'none';
+    }
+
+    function loadSettingsData() {
+        const inputEl = document.getElementById('display-name-input');
+        inputEl.value = user;
+        
+        // Подтягиваем перевод для placeholder, если он есть
+        if (window.translations && window.translations['settings_name_placeholder']) {
+            inputEl.placeholder = window.translations['settings_name_placeholder'];
+        }
+    }
+
+    function showButtonError(btnEl, message, originalText) {
+        btnEl.style.background = 'var(--red)';
+        btnEl.style.color = '#fff';
+        btnEl.innerText = message;
+        btnEl.disabled = true;
+        
+        setTimeout(() => {
+            btnEl.style.background = 'var(--gold)';
+            btnEl.style.color = '#000';
+            btnEl.innerText = originalText;
+            btnEl.disabled = false;
+        }, 2000);
+    }
+
+    async function saveName() {
+        const inputEl = document.getElementById('display-name-input');
+        const btnEl = document.getElementById('save-name-btn');
+        const originalText = btnEl.innerText; // Текст "Сохранить" на нужном языке
+        const newName = inputEl.value.trim();
+
+        if (!newName || newName.toLowerCase() === user.toLowerCase()) return;
+
+        // Переводы для ошибок
+        const msgWait = window.translations ? (window.translations['msg_wait_hours'] || 'ЖДИТЕ') : 'ЖДИТЕ';
+        const msgHours = window.translations ? (window.translations['msg_hours_short'] || 'Ч.') : 'Ч.';
+        const msgRegex = window.translations ? (window.translations['msg_only_eng'] || 'ТОЛЬКО A-Z (4-16)') : 'ТОЛЬКО A-Z (4-16)';
+        const msgTaken = window.translations ? (window.translations['msg_name_taken'] || 'ИМЯ ЗАНЯТО') : 'ИМЯ ЗАНЯТО';
+        const msgErr = window.translations ? (window.translations['msg_error'] || 'ОШИБКА') : 'ОШИБКА';
+        const msgOk = window.translations ? (window.translations['msg_ok'] || 'ОК!') : 'ОК!';
+
+        // Проверка кулдауна (24 часа)
+        const lastChange = localStorage.getItem('wt_last_name_change');
+        if (lastChange) {
+            const now = new Date().getTime();
+            const diff = now - parseInt(lastChange);
+            const hours24 = 24 * 60 * 60 * 1000;
+            
+            if (diff < hours24) {
+                if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+                const timeLeft = Math.ceil((hours24 - diff) / (1000 * 60 * 60));
+                showButtonError(btnEl, `${msgWait} ${timeLeft} ${msgHours}`, originalText);
+                return;
+            }
+        }
+
+        // Валидация
+        const nameRegex = /^[a-zA-Z0-9]{4,16}$/;
+        if (!nameRegex.test(newName)) {
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+            showButtonError(btnEl, msgRegex, originalText);
+            return;
+        }
+
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+
+        btnEl.innerText = '...';
+        btnEl.disabled = true;
+
+        try {
+            const { error } = await sb.from('user_progress').update({ username: newName }).eq('username', user);
+            
+            if (error) {
+                if (error.code === '23505') throw new Error('TAKEN');
+                throw error;
+            }
+            
+            localStorage.setItem('wt_user', newName);
+            localStorage.setItem('wt_last_name_change', new Date().getTime().toString());
+            user = newName;
+
+            btnEl.style.background = 'var(--green)';
+            btnEl.innerText = msgOk;
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+            
+            setTimeout(() => {
+                btnEl.style.background = 'var(--gold)';
+                btnEl.innerText = originalText;
+                btnEl.disabled = false;
+            }, 1500);
+
+        } catch (error) {
+            console.error('Ошибка сохранения:', error);
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+            const errorMsg = error.message === 'TAKEN' ? msgTaken : msgErr;
+            showButtonError(btnEl, errorMsg, originalText);
+        }
+    }
+
     function logout() {
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
         localStorage.removeItem('wt_user');
         window.location.href = 'index.html';
+    }
+
+    function setLanguage(lang) {
+        localStorage.setItem('appLang', lang);
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        location.reload();
     }
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
         document.querySelector('main').style.opacity = '0';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
         setTimeout(() => { window.location.href = url; }, 400); 
     }
 
@@ -127,7 +303,15 @@
         const lang = localStorage.getItem('appLang') || 'rus';
         document.getElementById(`opt-${lang}`).classList.add('active');
         document.getElementById('main-content').classList.add('ready');
+        loadSettingsData();
     });
+
+    if (window.translations && Object.keys(window.translations).length > 0) {
+        const lang = localStorage.getItem('appLang') || 'rus';
+        document.getElementById(`opt-${lang}`).classList.add('active');
+        document.getElementById('main-content').classList.add('ready');
+        loadSettingsData();
+    }
 </script>
 </body>
 </html>

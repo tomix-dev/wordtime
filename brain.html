@@ -25,13 +25,14 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР --- */
+        /* --- ТАБ-БАР (4 КНОПКИ) --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar.ready { opacity: 1; }
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
         .tab-item.active { color: var(--gold); }
         .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
 
         /* --- КОНТЕНТ --- */
@@ -151,33 +152,37 @@
     <div class="tab-bar" id="tab-bar">
         <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
             <span class="tab-icon">🏠</span>
-            <span class="tab-label" data-i18n="tab_home"></span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
             <span class="tab-icon">🎮</span>
-            <span class="tab-label" data-i18n="tab_play"></span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
-            <span class="tab-label" data-i18n="tab_settings"></span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
         </a>
     </div>
 </div>
 
 <main id="main-content">
     <div class="top-header">
-        <div onclick="fadeNavigate('mode.html')" class="back-btn"><span>◀</span> <span data-i18n="back_to_modes"></span></div>
-        <button class="shop-btn" onclick="openShop()" data-i18n="shop_btn"></button>
+        <div onclick="fadeNavigate('mode.html')" class="back-btn"><span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span></div>
+        <button class="shop-btn" onclick="openShop()" data-i18n="shop_btn">МАГАЗИН</button>
     </div>
 
     <div class="stats-panel">
         <div class="stat-block">
-            <div class="stat-label" data-i18n="stat_sparks"></div>
+            <div class="stat-label" data-i18n="stat_sparks">ИСКРЫ</div>
             <div class="stat-val" id="spark-count">0</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-block">
-            <div class="stat-label" data-i18n="stat_power"></div>
+            <div class="stat-label" data-i18n="stat_power">СИЛА</div>
             <div class="stat-val" id="power-count">1</div>
         </div>
     </div>
@@ -186,7 +191,7 @@
         <div class="brain-btn" id="brain-btn" onpointerdown="handleClick(event)">🧠</div>
         
         <div class="progress-to-boss">
-            <div class="ptb-text"><span data-i18n="progress_boss"></span> <span id="taps-left">50</span></div>
+            <div class="ptb-text"><span data-i18n="progress_boss">ДО БОССА:</span> <span id="taps-left">50</span></div>
             <div class="ptb-bar"><div class="ptb-fill" id="ptb-fill"></div></div>
         </div>
     </div>
@@ -199,7 +204,7 @@
 
 <!-- БОСС ФАЙТ -->
 <div class="boss-overlay" id="boss-overlay">
-    <div class="boss-title" data-i18n="boss_title"></div>
+    <div class="boss-title" data-i18n="boss_title">БИТВА С БОССОМ</div>
     <div class="boss-word" id="boss-word">Loading...</div>
     <div class="boss-timer"><div class="boss-timer-fill" id="boss-timer-fill"></div></div>
     <div class="boss-options" id="boss-options">
@@ -210,10 +215,10 @@
 <!-- МАГАЗИН ОБМЕНА -->
 <div class="shop-overlay" id="shop-overlay">
     <div class="shop-card">
-        <div class="shop-title" data-i18n="shop_title"></div>
-        <div class="shop-desc" data-i18n="shop_desc"></div>
+        <div class="shop-title" data-i18n="shop_title">ОБМЕННИК</div>
+        <div class="shop-desc" data-i18n="shop_desc">Обменяй накопленные искры на глобальный опыт для профиля!</div>
         <button class="exchange-btn" id="exchange-btn" onclick="buyExp()">Loading...</button>
-        <button class="close-shop" onclick="closeShop()" data-i18n="close_btn"></button>
+        <button class="close-shop" onclick="closeShop()" data-i18n="close_btn">ЗАКРЫТЬ</button>
     </div>
 </div>
 
@@ -371,7 +376,6 @@
         options.forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'boss-btn';
-            // Используем динамический язык
             btn.innerText = opt[appLang];
             btn.onclick = () => answerBoss(opt.id, btn);
             grid.appendChild(btn);
@@ -438,12 +442,12 @@
             let expReward = packs * 10;
             
             btn.disabled = false;
-            let formatStr = window.translations ? window.translations['shop_exchange_format'] : 'ОБМЕНЯТЬ {cost} ИСКР НА {expReward} EXP';
+            let formatStr = window.translations && window.translations['shop_exchange_format'] ? window.translations['shop_exchange_format'] : 'ОБМЕНЯТЬ {cost} ИСКР НА {expReward} EXP';
             btn.innerText = formatStr.replace('{cost}', cost).replace('{expReward}', expReward);
         } else {
             btn.disabled = true;
             let diff = 500 - sparks;
-            let formatStr = window.translations ? window.translations['shop_not_enough'] : `НЕ ХВАТАЕТ ({diff} Искр)`;
+            let formatStr = window.translations && window.translations['shop_not_enough'] ? window.translations['shop_not_enough'] : `НЕ ХВАТАЕТ ({diff} Искр)`;
             btn.innerText = formatStr.replace('{diff}', diff);
         }
     }
@@ -458,7 +462,7 @@
         let cost = packs * 500;
         let expReward = packs * 10;
 
-        btn.innerText = window.translations ? window.translations['shop_processing'] : "ОБРАБОТКА...";
+        btn.innerText = window.translations && window.translations['shop_processing'] ? window.translations['shop_processing'] : "ОБРАБОТКА...";
         btn.disabled = true;
 
         try {
@@ -487,7 +491,7 @@
             
             updateUI();
             
-            let formatStr = window.translations ? window.translations['shop_success'] : 'УСПЕШНО (+{expReward} EXP)!';
+            let formatStr = window.translations && window.translations['shop_success'] ? window.translations['shop_success'] : 'УСПЕШНО (+{expReward} EXP)!';
             btn.innerText = formatStr.replace('{expReward}', expReward);
             
             setTimeout(() => {
@@ -497,7 +501,7 @@
 
         } catch (error) {
             console.error(error);
-            btn.innerText = window.translations ? window.translations['shop_error'] : "ОШИБКА СЕТИ";
+            btn.innerText = window.translations && window.translations['shop_error'] ? window.translations['shop_error'] : "ОШИБКА СЕТИ";
             setTimeout(() => {
                 isExchanging = false; 
                 checkShopBtn();

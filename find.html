@@ -46,7 +46,7 @@
             z-index: -1; 
         }
 
-        /* --- НИЖНЯЯ ПАНЕЛЬ (TAB BAR) --- */
+        /* --- НИЖНЯЯ ПАНЕЛЬ (TAB BAR - 4 КНОПКИ) --- */
         .tab-bar-container {
             position: fixed;
             bottom: 0;
@@ -64,8 +64,8 @@
 
         .tab-bar {
             pointer-events: auto;
-            width: 90%;
-            max-width: 350px;
+            width: 95%;
+            max-width: 380px;
             height: 65px;
             background: rgba(15, 15, 15, 0.95);
             backdrop-filter: blur(20px);
@@ -76,6 +76,7 @@
             justify-content: space-around;
             align-items: center;
             box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+            transition: opacity 0.5s ease;
         }
 
         .tab-item {
@@ -204,22 +205,26 @@
     <div class="tab-bar" id="tab-bar">
         <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
             <span class="tab-icon">🏠</span>
-            <span class="tab-label" data-i18n="tab_home"></span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
             <span class="tab-icon">🎮</span>
-            <span class="tab-label" data-i18n="tab_play"></span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
-            <span class="tab-label" data-i18n="tab_settings"></span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
         </a>
     </div>
 </div>
 
 <main id="main-content">
     <div onclick="fadeNavigate('mode.html')" class="back-btn">
-        <span>◀</span> <span data-i18n="back_to_modes"></span>
+        <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
     </div>
 
     <div class="progress-section">

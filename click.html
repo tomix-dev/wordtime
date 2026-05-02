@@ -25,13 +25,14 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР --- */
+        /* --- ТАБ-БАР (4 КНОПКИ) --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 90%; max-width: 350px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar.ready { opacity: 1; }
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
         .tab-item.active { color: var(--gold); }
         .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
 
         /* --- КОНТЕНТ --- */
@@ -125,15 +126,19 @@
     <div class="tab-bar" id="tab-bar">
         <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
             <span class="tab-icon">🏠</span>
-            <span class="tab-label" data-i18n="tab_home"></span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active">
             <span class="tab-icon">🎮</span>
-            <span class="tab-label" data-i18n="tab_play"></span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
-            <span class="tab-label" data-i18n="tab_settings"></span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
         </a>
     </div>
 </div>
@@ -142,22 +147,22 @@
     
     <!-- ЭКРАН СТАРТА -->
     <div class="start-screen" id="start-screen">
-        <h2 data-i18n="speed_rush_title" style="font-weight: 900; color: #fff; margin-bottom: 10px; font-size: 24px;"></h2>
-        <p data-i18n="speed_rush_desc" style="color: #888; font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 40px; max-width: 250px; line-height: 1.5;"></p>
-        <button class="start-btn" onclick="startGame()" data-i18n="start_btn"></button>
+        <h2 data-i18n="speed_rush_title" style="font-weight: 900; color: #fff; margin-bottom: 10px; font-size: 24px;">SPEED RUSH</h2>
+        <p data-i18n="speed_rush_desc" style="color: #888; font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 40px; max-width: 250px; line-height: 1.5;">Находи переводы как можно быстрее!</p>
+        <button class="start-btn" onclick="startGame()" data-i18n="start_btn">СТАРТ</button>
     </div>
 
     <div onclick="fadeNavigate('mode.html')" class="back-btn">
-        <span>◀</span> <span data-i18n="back_to_modes"></span>
+        <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
     </div>
 
     <div class="info-panel">
         <div class="stat-box">
-            <span class="stat-label" data-i18n="stat_score"></span>
+            <span class="stat-label" data-i18n="stat_score">ОЧКИ</span>
             <span class="stat-val" id="score-val">0</span>
         </div>
         <div class="stat-box">
-            <span class="stat-label" data-i18n="stat_combo"></span>
+            <span class="stat-label" data-i18n="stat_combo">КОМБО</span>
             <span class="stat-val" id="combo-val">x1</span>
         </div>
     </div>
@@ -168,7 +173,7 @@
     </div>
 
     <div class="target-card">
-        <div class="target-word" id="target-word" data-i18n="loading_word"></div>
+        <div class="target-word" id="target-word" data-i18n="loading_word">Загрузка...</div>
     </div>
 
     <div class="options-grid" id="options-grid">
@@ -178,13 +183,13 @@
 
 <!-- ЭКРАН КОНЦА ИГРЫ -->
 <div class="end-screen" id="end-screen">
-    <div class="end-title" data-i18n="time_out_title"></div>
+    <div class="end-title" data-i18n="time_out_title">ВРЕМЯ ВЫШЛО!</div>
     <div class="end-stats">
-        <div class="end-stat"><span data-i18n="stat_score"></span><strong id="final-score">0</strong></div>
-        <div class="end-stat"><span data-i18n="max_combo"></span><strong id="final-combo">x1</strong></div>
-        <div class="end-stat"><span data-i18n="exp_plus"></span><strong id="final-exp" style="color: var(--gold);">0</strong></div>
+        <div class="end-stat"><span data-i18n="stat_score">ОЧКИ</span><strong id="final-score">0</strong></div>
+        <div class="end-stat"><span data-i18n="max_combo">МАКС. КОМБО</span><strong id="final-combo">x1</strong></div>
+        <div class="end-stat"><span data-i18n="exp_plus">ПОЛУЧЕНО EXP</span><strong id="final-exp" style="color: var(--gold);">0</strong></div>
     </div>
-    <button class="end-btn" onclick="saveAndExit()" data-i18n="claim_reward_btn"></button>
+    <button class="end-btn" onclick="saveAndExit()" data-i18n="claim_reward_btn">ЗАБРАТЬ НАГРАДУ</button>
 </div>
 
 <script>
