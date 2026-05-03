@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Инвентарь</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88; --purple: #b026ff; --blue: #00bfff;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; padding-bottom: 110px; 
+        }
+
+        main { 
+            width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px); transition: 0.4s; visibility: hidden;
+        }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ РЕСУРСОВ --- */
+        .resources-bar {
+            display: flex; justify-content: space-around; background: var(--glass);
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px 10px;
+            backdrop-filter: blur(10px); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .res-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .res-icon { font-size: 16px; }
+        .res-val { font-size: 14px; font-weight: 900; letter-spacing: 0.5px; font-variant-numeric: tabular-nums; }
+        .v-exp { color: var(--gold); }
+        .v-time { color: var(--blue); }
+        .v-sparks { color: var(--purple); }
+
+        /* --- КАРТОЧКИ КЕЙСОВ --- */
+        .inventory-grid { display: flex; flex-direction: column; gap: 15px; }
+        .case-card {
+            background: linear-gradient(145deg, rgba(25,25,25,0.9), rgba(10,10,10,1));
+            border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px;
+            display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden;
+            transition: 0.3s;
+        }
+        .case-card.empty { opacity: 0.5; filter: grayscale(1); }
+        
+        .case-img {
+            width: 75px; height: 75px; background: rgba(255,255,255,0.03);
+            border-radius: 18px; display: flex; justify-content: center; align-items: center;
+            font-size: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .case-info { flex: 1; }
+        .case-name { font-size: 13px; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
+        .case-count { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; }
+        .case-count span { color: var(--gold); }
+
+        .open-btn {
+            background: #222; border: 1px solid #444; color: #888; font-weight: 900;
+            font-size: 10px; padding: 12px 18px; border-radius: 14px; cursor: pointer;
+            text-transform: uppercase; transition: 0.3s;
+        }
+        .case-card:not(.empty) .open-btn {
+            background: linear-gradient(45deg, var(--gold), var(--gold-light)); color: #000;
+            border: none; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        .open-btn:active { transform: scale(0.95); }
+        .open-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- МОДАЛКА ОТКРЫТИЯ --- */
+        .loot-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.96); backdrop-filter: blur(15px);
+            z-index: 3000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.4s;
+        }
+        .loot-overlay.show { opacity: 1; pointer-events: auto; }
+        
+        .loot-box { text-align: center; width: 85%; }
+        
+        .spinning-case {
+            font-size: 100px; margin-bottom: 30px; display: inline-block;
+            filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.4));
+        }
+        .spin-anim { animation: caseRoll 1.5s cubic-bezier(0.5, 0, 0.2, 1) infinite; }
+        
+        .reward-reveal { display: none; transform: scale(0.5); opacity: 0; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .reward-reveal.show { display: block; transform: scale(1); opacity: 1; }
+        
+        .reward-icon { font-size: 80px; margin-bottom: 15px; filter: drop-shadow(0 0 40px var(--gold)); }
+        .reward-name { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 10px; text-transform: uppercase; }
+        .reward-val { font-size: 40px; font-weight: 900; color: var(--gold-light); margin-bottom: 35px; text-shadow: 0 0 20px rgba(255,215,0,0.5); }
+        
+        @keyframes caseRoll {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(8deg) scale(1.1); }
+            75% { transform: rotate(-8deg) scale(1.1); }
+        }
+
+        .claim-reward-btn {
+            background: linear-gradient(45deg, var(--green), #00ffcc); border: none;
+            color: #000; font-size: 14px; font-weight: 900; padding: 18px 45px;
+            border-radius: 20px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 10px 25px rgba(0, 255, 136, 0.3);
+        }
+
+        /* --- ТАБ-БАР (Стандартный на 5 кнопок) --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
+        
+        /* Профиль теперь активный */
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate; }
+
+        @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
+
+        /* --- ШАПКА --- */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        
+        .back-btn { 
+            display: inline-flex; align-items: center; gap: 6px; 
+            background: var(--glass); border: 1px solid var(--glass-border); 
+            padding: 8px 14px; border-radius: 14px; color: #aaa; 
+            font-size: 10px; font-weight: 800; text-transform: uppercase; 
+            letter-spacing: 1px; text-decoration: none; transition: 0.3s; 
+            cursor: pointer; backdrop-filter: blur(10px);
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); color: #fff; border-color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar" id="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <!-- Профиль теперь активен -->
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item active">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
+        </a>
+        <!-- Возвращаем Квесты -->
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content">
+    <div class="top-header">
+        <div onclick="fadeNavigate('profile.html')" class="back-btn">
+            <span style="font-size: 12px;">◀</span> <span data-i18n="back_to_profile">К ПРОФИЛЮ</span>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-bottom: 25px;">
+        <h1 class="case-name" style="font-size: 20px;" data-i18n="cases_title">ИНВЕНТАРЬ</h1>
+    </div>
+
+    <!-- ПАНЕЛЬ РЕСУРСОВ -->
+    <div class="resources-bar">
+        <div class="res-item">
+            <span class="res-icon">⭐</span>
+            <span class="res-val v-exp" id="ui-exp">0</span>
+        </div>
+        <div class="res-item">
+            <span class="res-icon">⏳</span>
+            <span class="res-val v-time" id="ui-time">0</span>
+        </div>
+        <div class="res-item">
+            <span class="res-icon">🧠</span>
+            <span class="res-val v-sparks" id="ui-sparks">0</span>
+        </div>
+    </div>
+
+    <!-- КЕЙСЫ -->
+    <div class="inventory-grid" id="inventory-list">
+        <!-- Сюда вставится список -->
+    </div>
+</main>
+
+<!-- ОКНО ЛУТА -->
+<div class="loot-overlay" id="loot-overlay">
+    <div class="loot-box">
+        <div id="opening-stage">
+            <div class="spinning-case spin-anim" id="case-anim-icon">📦</div>
+            <h2 class="reward-name" data-i18n="opening_process">ОТКРЫВАЕМ...</h2>
+        </div>
+        
+        <div class="reward-reveal" id="reward-stage">
+            <div class="reward-icon" id="res-reward-icon">⭐</div>
+            <h2 class="reward-name" data-i18n="reward_received">ПОЛУЧЕНО:</h2>
+            <div class="reward-val" id="res-reward-val">+0</div>
+            <button class="claim-reward-btn" onclick="closeLoot()">ОТЛИЧНО</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    const user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    let dbData = null;
+    let isOpening = false;
+
+    // Взвешенный рандом: шанс на минималку выше
+    function roll(min, max) {
+        return Math.floor(min + (max - min) * Math.pow(Math.random(), 2.5));
+    }
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function loadData() {
+        try {
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            const { data, error } = await sb.from('user_progress').select('*').eq('username', user).single();
+            if(error) return;
+            dbData = data;
+            
+            if(!dbData.cases) dbData.cases = { normal: 0, stylish: 0, premium: 0 };
+            
+            updateUI();
+            renderInventory();
+            document.getElementById('main-content').classList.add('ready');
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('ui-exp').innerText = dbData.global_exp || 0;
+        document.getElementById('ui-time').innerText = dbData.coins || 0;
+        document.getElementById('ui-sparks').innerText = parseInt(localStorage.getItem('wt_sparks')) || 0;
+    }
+
+    function renderInventory() {
+        const container = document.getElementById('inventory-list');
+        container.innerHTML = '';
+        
+        const types = [
+            { id: 'normal', name: 'Обычный Кейс', icon: '📦', nameKey: 'case_normal' },
+            { id: 'stylish', name: 'Стильный Кейс', icon: '🧰', nameKey: 'case_stylish' },
+            { id: 'premium', name: 'Премиум Кейс', icon: '💎', nameKey: 'case_premium' }
+        ];
+
+        types.forEach(t => {
+            const count = dbData.cases[t.id] || 0;
+            const displayName = window.translations?.[t.nameKey] || t.name;
+
+            const card = document.createElement('div');
+            card.className = `case-card ${count === 0 ? 'empty' : ''}`;
+            card.innerHTML = `
+                <div class="case-img">${t.icon}</div>
+                <div class="case-info">
+                    <div class="case-name">${displayName}</div>
+                    <div class="case-count">В наличии: <span>${count} шт.</span></div>
+                </div>
+                <button class="open-btn" ${count > 0 ? '' : 'disabled'} onclick="startOpening('${t.id}', '${t.icon}')">
+                    ${count > 0 ? 'ОТКРЫТЬ' : 'ПУСТО'}
+                </button>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function startOpening(type, icon) {
+        if(isOpening || dbData.cases[type] <= 0) return;
+        isOpening = true;
+
+        if(window.navigator.vibrate) window.navigator.vibrate([40, 100, 40]);
+
+        document.getElementById('case-anim-icon').innerText = icon;
+        document.getElementById('opening-stage').style.display = 'block';
+        document.getElementById('reward-stage').style.display = 'none';
+        document.getElementById('loot-overlay').classList.add('show');
+
+        // Ролл типа награды (40% EXP, 30% TIME, 30% SPARKS)
+        let r = Math.random();
+        let rewardType = r < 0.4 ? 'exp' : (r < 0.7 ? 'time' : 'sparks');
+        let amount = 0;
+
+        // Новые урезанные лимиты
+        if(type === 'normal') {
+            if(rewardType === 'exp') amount = roll(10, 31);
+            else if(rewardType === 'time') amount = roll(5, 16);
+            else amount = roll(100, 401);
+        } else if(type === 'stylish') {
+            if(rewardType === 'exp') amount = roll(50, 101);
+            else if(rewardType === 'time') amount = roll(20, 51);
+            else amount = roll(500, 1501);
+        } else {
+            if(rewardType === 'exp') amount = roll(100, 301);
+            else if(rewardType === 'time') amount = roll(60, 151);
+            else amount = roll(2000, 3001);
+        }
+
+        setTimeout(async () => {
+            try {
+                let newCases = { ...dbData.cases };
+                newCases[type] -= 1;
+                
+                let updates = { cases: newCases };
+                
+                if(rewardType === 'exp') {
+                    let gExp = (dbData.global_exp || 0) + amount;
+                    let gLvl = dbData.global_level || 1;
+                    while(gExp >= gLvl * 10) { gExp -= gLvl * 10; gLvl++; }
+                    updates.global_exp = gExp; updates.global_level = gLvl;
+                } else if(rewardType === 'time') {
+                    updates.coins = (dbData.coins || 0) + amount;
+                } else {
+                    let s = parseInt(localStorage.getItem('wt_sparks')) || 0;
+                    localStorage.setItem('wt_sparks', s + amount);
+                }
+
+                await sb.from('user_progress').update(updates).eq('username', user);
+                dbData = { ...dbData, ...updates };
+
+                document.getElementById('opening-stage').style.display = 'none';
+                document.getElementById('res-reward-icon').innerText = (rewardType === 'exp' ? '⭐' : (rewardType === 'time' ? '⏳' : '🧠'));
+                document.getElementById('res-reward-val').innerText = `+${amount}`;
+                document.getElementById('reward-stage').style.display = 'block';
+                document.getElementById('reward-stage').classList.add('show');
+                
+                if(window.navigator.vibrate) window.navigator.vibrate(150);
+                
+                updateUI();
+                renderInventory();
+            } catch(e) { console.error(e); closeLoot(); }
+        }, 1800);
+    }
+
+    function closeLoot() {
+        document.getElementById('loot-overlay').classList.remove('show');
+        isOpening = false;
+    }
+
+    document.addEventListener('translationsReady', loadData);
+    if(window.translations && Object.keys(window.translations).length > 0) {
+        loadData();
+    }
+</script>
+</body>
+</html>

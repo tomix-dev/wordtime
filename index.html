@@ -98,10 +98,15 @@
     const tg = window.Telegram.WebApp;
     tg.ready();
 
-    // Запоминаем режим, чтобы при смене языка (перезагрузке) остаться на регистрации
     let isLoginMode = sessionStorage.getItem('authMode') !== 'reg';
+    let inviterUsername = null;
 
-    // Переводим placeholder-ы после загрузки словаря
+    // Считываем реферальный параметр, если он есть
+    const startParam = tg.initDataUnsafe?.start_param;
+    if (startParam && startParam.startsWith('ref_')) {
+        inviterUsername = startParam.substring(4); // Убираем 'ref_' и получаем имя
+    }
+
     document.addEventListener('translationsReady', () => {
         if(window.translations) {
             document.getElementById('username').placeholder = window.translations['auth_ph_username'] || "USERNAME";
@@ -109,7 +114,33 @@
         }
     });
 
-    // ГЛАВНАЯ ФУНКЦИЯ ЗАПУСКА
+    // Функция начисления реферального бонуса
+    async function processReferralReward(newUsername) {
+        if (!inviterUsername || inviterUsername === newUsername) return; // Себя пригласить нельзя
+
+        try {
+            // Ищем пригласившего в базе
+            const { data: inviterStats } = await sb.from('user_progress')
+                .select('coins, referrals_count')
+                .eq('username', inviterUsername)
+                .single();
+
+            if (inviterStats) {
+                // Начисляем бонус
+                const newCoins = (inviterStats.coins || 0) + 200;
+                const newRefCount = (inviterStats.referrals_count || 0) + 1;
+
+                await sb.from('user_progress')
+                    .update({ coins: newCoins, referrals_count: newRefCount })
+                    .eq('username', inviterUsername);
+
+                console.log(`Начислено 200 TIME игроку ${inviterUsername} за приглашение ${newUsername}`);
+            }
+        } catch (e) {
+            console.error("Ошибка при начислении реф. бонуса:", e);
+        }
+    }
+
     window.onload = async () => {
         const fill = document.getElementById('l-fill');
         const tgUser = tg.initDataUnsafe?.user;
@@ -129,13 +160,30 @@
                 let { data: account } = await sb.from('user_progress').select('*').eq('tg_id', tgUser.id).maybeSingle();
                 if (account) {
                     localStorage.setItem('wt_user', account.username);
+                    localStorage.setItem('wt_login_method', 'telegram');
                 } else {
                     const newName = tgUser.username || tgUser.first_name || ("User" + tgUser.id);
+                    
+                    // Стартовые параметры для новичка
+                    let initialCoins = 0; 
+                    // Если хочешь давать новичку бонус по рефералке - раскомментируй строку ниже:
+                    // if(inviterUsername) initialCoins = 50; 
+
                     await sb.from('user_progress').insert([{ 
-                        username: newName, tg_id: tgUser.id, current_level: 1, 
-                        matched_count: 0, total_pairs_found: 0, created_at: new Date().toISOString()
+                        username: newName, 
+                        tg_id: tgUser.id, 
+                        current_level: 1, 
+                        matched_count: 0, 
+                        total_pairs_found: 0, 
+                        coins: initialCoins,
+                        created_at: new Date().toISOString()
                     }]);
+
                     localStorage.setItem('wt_user', newName);
+                    localStorage.setItem('wt_login_method', 'telegram');
+
+                    // Запускаем начисление бонуса пригласившему
+                    await processReferralReward(newName);
                 }
                 await wait(2000);
                 window.location.href = './main.html';
@@ -160,7 +208,6 @@
             loader.style.display = 'none';
             document.getElementById('login-ui').style.display = 'block';
             
-            // Если мы перезагрузили страницу при смене языка в режиме регистрации
             if (!isLoginMode) {
                 applyRegUI();
             }
@@ -187,7 +234,6 @@
         document.getElementById('auth-mode-text').innerText = window.translations ? window.translations['auth_toggle_to_login'] : 'Есть аккаунт? Войти';
         document.getElementById('reg-lang-selector').style.display = 'block';
         
-        // Подсвечиваем активный язык
         const curLang = localStorage.getItem('appLang') || 'rus';
         document.getElementById('lang-btn-rus').classList.remove('active');
         document.getElementById('lang-btn-ukr').classList.remove('active');
@@ -196,11 +242,9 @@
     }
 
     function changeRegLang(lang) {
-        // Вызываем функцию setLanguage из translator.js, которая сохраняет и перезагружает страницу
         if (typeof setLanguage === 'function') {
             setLanguage(lang);
         } else {
-            // Фолбэк, если скрипт не подгрузился
             localStorage.setItem('appLang', lang);
             location.reload();
         }
@@ -223,6 +267,7 @@
                 let { data: acc } = await sb.from('user_progress').select('*').eq('username', u).single();
                 if(acc && acc.password === p) {
                     localStorage.setItem('wt_user', u);
+                    localStorage.setItem('wt_password', p); // Запоминаем для кнопки ВЫХОД
                     window.location.href = './main.html';
                 } else {
                     alert(window.translations ? window.translations['auth_err_login'] : "Ошибка входа");
@@ -230,12 +275,26 @@
                     btn.disabled = false;
                 }
             } else {
+                let initialCoins = 0; 
+                 if(inviterUsername) initialCoins = 50; // Бонус новичку
+
                 const { error } = await sb.from('user_progress').insert([{ 
-                    username: u, password: p, current_level: 1, matched_count: 0, 
-                    total_pairs_found: 0, created_at: new Date().toISOString() 
+                    username: u, 
+                    password: p, 
+                    current_level: 1, 
+                    matched_count: 0, 
+                    total_pairs_found: 0, 
+                    coins: initialCoins,
+                    created_at: new Date().toISOString() 
                 }]);
+                
                 if(!error) {
                     localStorage.setItem('wt_user', u);
+                    localStorage.setItem('wt_password', p);
+
+                    // Запускаем начисление бонуса пригласившему
+                    await processReferralReward(u);
+
                     window.location.href = './main.html';
                 } else {
                     alert(window.translations ? window.translations['auth_err_taken'] : "Имя занято, попробуйте еще раз");

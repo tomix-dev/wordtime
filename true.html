@@ -20,75 +20,120 @@
         body { 
             background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
             min-height: 100dvh; display: flex; flex-direction: column; overflow-x: hidden; 
-            padding-bottom: 90px; 
+            padding-bottom: 90px; position: relative;
         }
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
         /* --- ТАБ-БАР (ПРЕМИУМ ДИЗАЙН С НЕОНОМ) --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
         
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
         .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
         .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
         
-        /* Активная вкладка */
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        
-        /* Неоновое свечение позади активной иконки */
-        .tab-item.active::before {
-            content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
-            border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate;
-        }
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate; }
 
         @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
 
-        /* --- КОНТЕНТ --- */
-        main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px; visibility: hidden; }
+        /* --- АНИМАЦИЯ КОНТЕНТА --- */
+        main { 
+            flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+            margin-top: 10px; visibility: hidden; display: flex; flex-direction: column;
+        }
         main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
 
-        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; margin-bottom: 15px; transition: 0.2s; cursor: pointer; }
-        .back-btn:active { color: var(--gold); }
+        /* --- ШАПКА И ИНДИКАТОР БУСТА --- */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .back-btn { 
+            display: inline-flex; align-items: center; gap: 5px; color: #888; 
+            font-size: 10px; font-weight: 800; text-transform: uppercase; 
+            letter-spacing: 1px; text-decoration: none; transition: 0.2s; cursor: pointer; 
+            background: var(--glass); border: 1px solid var(--glass-border); 
+            padding: 8px 14px; border-radius: 14px; backdrop-filter: blur(10px);
+        }
+        .back-btn:active { background: rgba(212, 175, 55, 0.1); color: #fff; border-color: var(--gold); transform: scale(0.95); }
 
-        .progress-section { margin-bottom: 25px; background: var(--glass); padding: 15px; border-radius: 20px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
-        .lvl-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 900; color: var(--gold); font-size: 11px; letter-spacing: 1px; }
-        .bar-bg { height: 6px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
-        .bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        .boost-badge {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: rgba(0, 255, 136, 0.15); border: 1px solid var(--green);
+            color: var(--green); font-size: 11px; font-weight: 900;
+            padding: 8px 18px; border-radius: 15px; margin-bottom: 20px; align-self: center;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); text-transform: uppercase;
+            letter-spacing: 1px; transition: 0.3s; opacity: 1; transform: scale(1);
+        }
+        .boost-badge.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; position: absolute; }
+        .boost-timer { color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+
+        /* --- ПРОГРЕСС-БАР --- */
+        .progress-section { 
+            margin-bottom: 25px; background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); 
+            padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border); 
+            backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .lvl-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 900; color: var(--gold); font-size: 11px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+        .bar-bg { height: 8px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
+        .bar-fill { 
+            height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; 
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); 
+        }
+        .bar-fill.boosted { background: linear-gradient(90deg, var(--green), #00ffcc); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
 
         /* --- ИГРОВАЯ КАРТОЧКА --- */
         .tf-card { 
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), var(--glass)); 
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            background: linear-gradient(135deg, rgba(25,25,25,0.9), rgba(10,10,10,0.95)); 
             border: 1px solid var(--glass-border); border-radius: 25px; padding: 40px 20px; 
-            text-align: center; margin-bottom: 20px; backdrop-filter: blur(15px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.3s ease;
+            text-align: center; margin-bottom: 25px; backdrop-filter: blur(15px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02); transition: all 0.3s ease;
         }
-        .tf-question { font-size: 12px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
-        .tf-word { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(212, 175, 55, 0.3); line-height: 1.4; }
-        .tf-word span { color: var(--gold); }
+        .tf-question { font-size: 11px; color: #888; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
+        .tf-word { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.2); line-height: 1.5; }
+        .tf-word span { color: var(--gold); font-size: 20px; display: block; margin: 10px 0; opacity: 0.5; }
 
-        .tf-card.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.08); box-shadow: 0 0 30px rgba(0, 255, 136, 0.2); }
-        .tf-card.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.1); box-shadow: 0 0 30px rgba(255, 75, 75, 0.2); animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .tf-card.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.08); box-shadow: 0 0 40px rgba(0, 255, 136, 0.2); transform: scale(0.98); }
+        .tf-card.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.1); box-shadow: 0 0 40px rgba(255, 75, 75, 0.2); animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
         /* --- КНОПКИ ПРАВДА/ЛОЖЬ --- */
-        .tf-buttons { display: flex; gap: 15px; margin-top: 10px; }
+        .tf-buttons { display: flex; gap: 15px; margin-top: auto; }
         .btn-tf {
-            flex: 1; padding: 20px 0; border-radius: 18px; font-size: 14px; font-weight: 900; 
+            flex: 1; padding: 22px 0; border-radius: 20px; font-size: 15px; font-weight: 900; 
             text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.2s;
-            background: rgba(15,15,15,0.8); backdrop-filter: blur(10px); color: #fff;
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            background: linear-gradient(145deg, rgba(20,20,20,0.9), rgba(10,10,10,1)); backdrop-filter: blur(10px); color: #fff;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .btn-tf .icon { font-size: 24px; }
+        .btn-tf .icon { font-size: 28px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); transition: 0.3s; }
         
         .btn-true { border: 1px solid rgba(0, 255, 136, 0.3); }
-        .btn-true:active { background: rgba(0, 255, 136, 0.15); border-color: var(--green); transform: scale(0.95); }
+        .btn-true:active { background: rgba(0, 255, 136, 0.15); border-color: var(--green); transform: scale(0.95); box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+        .btn-true:active .icon { filter: drop-shadow(0 0 15px var(--green)); transform: scale(1.1); }
         
         .btn-false { border: 1px solid rgba(255, 75, 75, 0.3); }
-        .btn-false:active { background: rgba(255, 75, 75, 0.15); border-color: var(--red); transform: scale(0.95); }
+        .btn-false:active { background: rgba(255, 75, 75, 0.15); border-color: var(--red); transform: scale(0.95); box-shadow: 0 0 20px rgba(255, 75, 75, 0.3); }
+        .btn-false:active .icon { filter: drop-shadow(0 0 15px var(--red)); transform: scale(1.1); }
+
+        /* --- ВСПЛЫВАЮЩИЙ ТЕКСТ ОПЫТА --- */
+        .floating-exp {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 32px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(212,175,55,0.8);
+            opacity: 0; pointer-events: none; z-index: 2000; text-transform: uppercase;
+        }
+        .floating-exp.boosted { color: var(--green); text-shadow: 0 0 20px rgba(0,255,136,0.8); font-size: 36px; }
+        .floating-exp.show { animation: expPop 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes expPop {
+            0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(1.1); }
+        }
 
         @keyframes shake {
             10%, 90% { transform: translate3d(-2px, 0, 0); }
@@ -128,8 +173,15 @@
 </div>
 
 <main id="main-content">
-    <div onclick="fadeNavigate('mode.html')" class="back-btn">
-        <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
+    <div class="top-header">
+        <div onclick="fadeNavigate('mode.html')" class="back-btn">
+            <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
+        </div>
+    </div>
+
+    <!-- ИНДИКАТОР БУСТА X2 ОПЫТ -->
+    <div class="boost-badge hidden" id="boost-badge">
+        🧪 x2 ОПЫТ (<span class="boost-timer" id="boost-timer">00:00</span>)
     </div>
 
     <div class="progress-section">
@@ -155,6 +207,9 @@
     </div>
 </main>
 
+<!-- Эффект начисления опыта по завершению -->
+<div class="floating-exp" id="floating-exp">+5 ОПЫТ</div>
+
 <script>
     const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
     const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
@@ -163,7 +218,6 @@
     let user = localStorage.getItem('wt_user');
     if (!user) window.location.href = 'index.html';
 
-    // Текущий язык для карточек
     const appLang = localStorage.getItem('appLang') || 'rus';
 
     let currentLevel = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
@@ -172,6 +226,11 @@
     let pool = [];
     let isCurrentTrue = true;
     let isProcessing = false;
+
+    // Переменные буста
+    let boostExpUntil = null;
+    let isBoostActive = false;
+    let boostTimerInterval = null;
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -184,14 +243,18 @@
 
     async function syncData() {
         try {
-            // Ждем инициализации переводчика интерфейса
             if (!window.translations) {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
+            // Запрашиваем информацию о бустах из базы
+            let { data: userStats } = await sb.from('user_progress').select('boost_exp_until').eq('username', user).single();
+            if(userStats) {
+                boostExpUntil = userStats.boost_exp_until;
+            }
+
             updateUI();
             
-            // Берем 5 слов из базы для текущего уровня с нужным языком перевода
             const { data: words } = await sb.from('words')
                 .select(`id, level, eng, ${appLang}`)
                 .eq('level', currentLevel)
@@ -201,6 +264,7 @@
             if(words && words.length >= 5) { 
                 pool = words;
                 initTask();
+                startBoostCheck(); // Запускаем проверку буста
                 requestAnimationFrame(() => {
                     document.getElementById('main-content').classList.add('ready');
                 });
@@ -210,8 +274,48 @@
                 document.getElementById('main-content').classList.add('ready');
             }
         } catch(e) {
-            console.error(e);
+            console.error("Ошибка при синхронизации:", e);
         }
+    }
+
+    // --- ЛОГИКА ТАЙМЕРА БУСТА ---
+    function startBoostCheck() {
+        if (!boostExpUntil) return;
+        
+        checkBoost();
+        if (boostTimerInterval) clearInterval(boostTimerInterval);
+        boostTimerInterval = setInterval(checkBoost, 1000);
+    }
+
+    function checkBoost() {
+        if (!boostExpUntil) {
+            disableBoostVisuals();
+            return;
+        }
+
+        const now = new Date();
+        const expiry = new Date(boostExpUntil);
+
+        if (expiry > now) {
+            isBoostActive = true;
+            document.getElementById('boost-badge').classList.remove('hidden');
+            document.getElementById('bar-fill').classList.add('boosted');
+
+            let diffSec = Math.floor((expiry - now) / 1000);
+            let m = String(Math.floor(diffSec / 60)).padStart(2, '0');
+            let s = String(diffSec % 60).padStart(2, '0');
+            document.getElementById('boost-timer').innerText = `${m}:${s}`;
+        } else {
+            disableBoostVisuals();
+        }
+    }
+
+    function disableBoostVisuals() {
+        isBoostActive = false;
+        boostExpUntil = null;
+        if(boostTimerInterval) clearInterval(boostTimerInterval);
+        document.getElementById('boost-badge').classList.add('hidden');
+        document.getElementById('bar-fill').classList.remove('boosted');
     }
 
     function initTask() {
@@ -225,7 +329,6 @@
         isCurrentTrue = Math.random() > 0.5;
 
         if (!isCurrentTrue) {
-            // Подменяем перевод на перевод от другого слова из пятерки
             let otherWordObj = pool[(matchedInLevel + 1) % 5];
             displayTranslation = otherWordObj[appLang];
         }
@@ -247,16 +350,20 @@
             matchedInLevel++;
             localStorage.setItem('wt_tf_prog', matchedInLevel);
             
-            let { data: stats } = await sb.from('user_progress').select('total_pairs_found').eq('username', user).single();
-            if(stats) {
-                sb.from('user_progress').update({ total_pairs_found: (stats.total_pairs_found || 0) + 1 }).eq('username', user);
-            }
+            // В фоне сохраняем прогресс карточек
+            sb.from('user_progress')
+                .select('total_pairs_found')
+                .eq('username', user)
+                .single()
+                .then(({data}) => {
+                    if(data) sb.from('user_progress').update({ total_pairs_found: (data.total_pairs_found || 0) + 1 }).eq('username', user);
+                });
 
             updateUI();
 
             setTimeout(() => {
                 if (matchedInLevel >= 5) {
-                    nextLevel();
+                    handleLevelComplete();
                 } else {
                     initTask();
                 }
@@ -275,7 +382,16 @@
         }
     }
 
-    async function nextLevel() {
+    async function handleLevelComplete() {
+        // Анимация опыта
+        const expEl = document.getElementById('floating-exp');
+        const earnedExp = isBoostActive ? 10 : 5;
+        
+        if (isBoostActive) expEl.classList.add('boosted');
+        expEl.innerText = `+${earnedExp} ОПЫТ`;
+        expEl.classList.add('show');
+        if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 150]);
+
         currentLevel++;
         matchedInLevel = 0;
         localStorage.setItem('wt_tf_lvl', currentLevel);
@@ -283,20 +399,17 @@
         
         let passedText = window.translations ? window.translations['level_passed'] : "УРОВЕНЬ <br><span>ПРОЙДЕН!</span>";
         document.getElementById('tf-word').innerHTML = passedText;
+        document.getElementById('tf-card').className = 'tf-card correct'; // Оставляем зеленое свечение
 
         let { data: stats } = await sb.from('user_progress').select('global_exp, global_level, current_streak, last_played_date').eq('username', user).single();
         
-        let gExp = (stats?.global_exp || 0) + 5; 
+        let gExp = (stats?.global_exp || 0) + earnedExp; 
         let gLvl = stats?.global_level || 1;
 
-        while (true) {
-            let neededExp = gLvl * 10;
-            if (gExp >= neededExp) {
-                gExp -= neededExp;
-                gLvl += 1;
-            } else {
-                break;
-            }
+        // Цикл проверки повышения уровня
+        while (gExp >= gLvl * 10) {
+            gExp -= gLvl * 10;
+            gLvl += 1;
         }
 
         // --- ДВИГАТЕЛЬ СЕРИИ (ОГОНЬКА) ---
@@ -305,12 +418,11 @@
         let lastDateStr = stats?.last_played_date || null;
         
         if (localStorage.getItem('wt_last_played') !== todayStr) {
-            newStreak += 1; // Увеличиваем серию
+            newStreak += 1;
             
             if (lastDateStr) {
                 const lastD = new Date(lastDateStr); lastD.setHours(0,0,0,0);
                 const todayD = new Date(); todayD.setHours(0,0,0,0);
-                // Если разница больше 1 дня - сбрасываем серию до 1
                 if ((todayD - lastD) / 86400000 > 1) {
                     newStreak = 1;
                 }
@@ -318,18 +430,14 @@
             localStorage.setItem('wt_last_played', todayStr);
             lastDateStr = todayStr;
         }
-        // ---------------------------------
 
         await sb.from('user_progress').update({ 
             global_exp: gExp,
             global_level: gLvl,
-            current_streak: newStreak,         // Пишем новую серию
-            last_played_date: lastDateStr      // Пишем дату
+            current_streak: newStreak,         
+            last_played_date: lastDateStr      
         }).eq('username', user);
 
-        // ==========================================
-        // ОТПРАВКА СОБЫТИЯ В ЛЕНТУ (КАЖДЫЕ 10 УРОВНЕЙ)
-        // ==========================================
         if (currentLevel % 10 === 0) {
             sb.from('live_feed').insert({
                 username: user,
@@ -339,11 +447,11 @@
                 if(error) console.error("Ошибка отправки в ленту:", error);
             });
         }
-        // ==========================================
 
+        // Ждем пока пройдет анимация опыта и перезагружаем
         setTimeout(() => {
             location.reload();
-        }, 800);
+        }, 1200);
     }
 
     function updateUI() {

@@ -9,12 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
-            --gold: #D4AF37;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(212, 175, 55, 0.2);
-            --red: #ff4b4b;
-            --green: #00ff88;
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
+            --red: #ff4b4b; --green: #00ff88; --blue: #00bfff; --purple: #b026ff;
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
@@ -22,7 +19,7 @@
         
         body { 
             background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
-            min-height: 100dvh; margin: 0; padding-bottom: 90px; overflow-x: hidden; 
+            min-height: 100dvh; margin: 0; padding-bottom: 110px; overflow-x: hidden; 
         }
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
@@ -30,76 +27,76 @@
         main { width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: 0.4s; }
         main.ready { opacity: 1; transform: translateY(0); }
 
-        .brand-header { text-align: center; margin-top: 10px; margin-bottom: 35px; }
-        .brand-logo { font-size: 28px; font-weight: 900; background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+        .brand-header { text-align: center; margin-top: 10px; margin-bottom: 25px; }
+        .brand-logo { font-size: 24px; font-weight: 900; background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 2px;}
 
-        .settings-container { display: flex; flex-direction: column; gap: 20px; }
-        .settings-group { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; backdrop-filter: blur(10px); position: relative; }
-        .group-label { font-size: 10px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; display: block; text-align: center; }
+        .settings-container { display: flex; flex-direction: column; gap: 15px; }
+        
+        /* --- БЛОК НАСТРОЕК (КОМПАКТНЫЙ) --- */
+        .settings-group { background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; backdrop-filter: blur(10px); position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .group-label { font-size: 9px; font-weight: 900; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; display: block; }
 
-        /* --- СМЕНА ИМЕНИ (ИСПРАВЛЕНО) --- */
-        .name-input-wrapper { display: flex; flex-direction: column; gap: 10px; }
-        .name-input-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .name-input { 
-            flex: 1 1 160px; min-width: 0; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); 
-            border-radius: 15px; color: #fff; padding: 15px; font-size: 14px; 
+        /* --- ПОЛЯ ВВОДА И КНОПКИ --- */
+        .input-wrapper { display: flex; flex-direction: column; gap: 8px; }
+        .input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .styled-input { 
+            flex: 1 1 140px; min-width: 0; background: rgba(0,0,0,0.6); border: 1px solid var(--glass-border); 
+            border-radius: 12px; color: #fff; padding: 12px 15px; font-size: 13px; 
             font-family: 'Montserrat', sans-serif; outline: none; transition: 0.3s; font-weight: 700;
         }
-        .name-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .styled-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .styled-input[readonly] { color: var(--blue); border-color: rgba(0, 191, 255, 0.3); background: rgba(0, 191, 255, 0.05); font-size: 11px; }
+
         .save-btn { 
-            flex: 1 1 auto; background: var(--gold); color: #000; border: none; border-radius: 15px; 
-            padding: 15px 20px; font-weight: 900; font-size: 10px; cursor: pointer; 
-            text-transform: uppercase; transition: 0.2s; letter-spacing: 1px; min-width: 100px;
-            display: flex; justify-content: center; align-items: center; text-align: center;
-            line-height: 1.2; word-break: break-word;
+            flex: 0 0 auto; background: linear-gradient(45deg, var(--gold), var(--gold-light)); color: #000; 
+            border: none; border-radius: 12px; padding: 0 20px; font-weight: 900; font-size: 10px; 
+            cursor: pointer; text-transform: uppercase; transition: 0.2s; letter-spacing: 1px; min-width: 90px;
+            display: flex; justify-content: center; align-items: center; text-align: center; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
         }
-        .save-btn:active { transform: scale(0.95); }
-        .input-hint { font-size: 8px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px; line-height: 1.4; }
+        .save-btn:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3); }
+        .input-hint { font-size: 8px; color: #666; text-transform: uppercase; letter-spacing: 1px; line-height: 1.4; margin-top: 4px; }
 
-        /* --- БЛОК "СКОРО" --- */
-        .disabled-group { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; }
-        .soon-badge { 
-            background: var(--red); color: #fff; padding: 3px 8px; border-radius: 8px; 
-            font-size: 8px; font-weight: 900; margin-left: 8px; vertical-align: text-bottom; letter-spacing: 1px;
-        }
-        .style-preview-box {
-            background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 15px;
-            padding: 15px; text-align: center; font-size: 16px; font-weight: 900; letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(176, 38, 255, 0.8); color: transparent;
-            -webkit-text-stroke: 1px #b026ff;
-        }
+        /* --- РЕФЕРАЛЬНАЯ КАРТОЧКА --- */
+        .ref-card { background: linear-gradient(145deg, rgba(0, 191, 255, 0.1), rgba(0, 191, 255, 0.02)); border: 1px solid rgba(0, 191, 255, 0.3); border-radius: 20px; padding: 18px; box-shadow: 0 10px 25px rgba(0, 191, 255, 0.1); }
+        .ref-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .ref-title { font-size: 12px; font-weight: 900; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; }
+        .ref-reward { background: rgba(0, 191, 255, 0.2); padding: 4px 10px; border-radius: 10px; font-size: 10px; font-weight: 900; color: #fff; }
+        
+        .ref-stats { display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; border: 1px solid rgba(0, 191, 255, 0.1); }
+        .r-stat { display: flex; flex-direction: column; gap: 4px; }
+        .r-stat span { font-size: 8px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .r-stat strong { font-size: 16px; font-weight: 900; color: #fff; }
+        .r-stat strong.earned { color: var(--gold-light); }
 
-        /* --- ЯЗЫК --- */
-        .lang-option { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.02); 
-            margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s;
+        /* --- КОМПАКТНЫЙ ЯЗЫК --- */
+        .lang-toggle-wrapper { display: flex; gap: 10px; }
+        .lang-btn { 
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); 
+            border-radius: 12px; color: #888; padding: 12px 0; font-size: 11px; 
+            font-weight: 900; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
         }
-        .lang-option.active { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
-        .lang-name { font-size: 14px; font-weight: 700; }
-        .check-mark { color: var(--gold); font-weight: 900; opacity: 0; }
-        .lang-option.active .check-mark { opacity: 1; }
+        .lang-btn.active { background: rgba(212, 175, 55, 0.15); border-color: var(--gold); color: var(--gold); box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.1); }
 
+        /* --- ВЫХОД --- */
         .logout-btn { 
-            margin-top: 10px; background: rgba(255, 75, 75, 0.05); border: 1px solid rgba(255, 75, 75, 0.2); 
-            color: var(--red); width: 100%; padding: 18px; border-radius: 20px; 
-            font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.2s;
+            margin-top: 5px; background: rgba(255, 75, 75, 0.05); border: 1px solid rgba(255, 75, 75, 0.3); 
+            color: var(--red); width: 100%; padding: 16px; border-radius: 16px; 
+            font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.2s;
         }
-        .logout-btn:active { background: rgba(255, 75, 75, 0.1); transform: scale(0.97); }
+        .logout-btn:active { background: rgba(255, 75, 75, 0.15); transform: scale(0.97); }
 
-      /* --- ТАБ-БАР (УЛУЧШЕННЫЙ ДИЗАЙН) --- */
+        /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
-        
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
-        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
-        
-        /* Активная вкладка */
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2;}
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate; }
+        @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
     </style>
 </head>
 <body>
@@ -107,26 +104,11 @@
 <div class="bg-pattern"></div>
 <div class="tab-bar-container">
     <div class="tab-bar" id="tab-bar">
-        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
-            <span class="tab-icon">🏠</span>
-            <span class="tab-label" data-i18n="tab_home">Главная</span>
-        </a>
-        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item">
-            <span class="tab-icon">🎮</span>
-            <span class="tab-label" data-i18n="tab_play">Играть</span>
-        </a>
-        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
-            <span class="tab-icon">👤</span>
-            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
-        </a>
-        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
-            <span class="tab-icon">📜</span>
-            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
-        </a>
-        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item active">
-            <span class="tab-icon">⚙️</span>
-            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
-        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item"><span class="tab-icon">🏠</span><span class="tab-label" data-i18n="tab_home">Главная</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item"><span class="tab-icon">🎮</span><span class="tab-label" data-i18n="tab_play">Играть</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item"><span class="tab-icon">👤</span><span class="tab-label" data-i18n="tab_profile">Профиль</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item"><span class="tab-icon">📜</span><span class="tab-label" data-i18n="tab_quests">Квесты</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item active"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tab_settings">Настройки</span></a>
     </div>
 </div>
 
@@ -136,44 +118,65 @@
     </div>
 
     <div class="settings-container">
-        <!-- Смена имени -->
+        
+        <!-- РЕФЕРАЛЬНАЯ СИСТЕМА (НОВЫЙ ДИЗАЙН) -->
+        <div class="ref-card">
+            <div class="ref-header">
+                <span class="ref-title" data-i18n="settings_ref_label">ПРИГЛАСИ ДРУГА</span>
+                <span class="ref-reward">+200 ⏳</span>
+            </div>
+            <div class="ref-stats">
+                <div class="r-stat">
+                    <span data-i18n="ref_stat_invited">ПРИГЛАШЕНО:</span>
+                    <strong id="ref-count">0</strong>
+                </div>
+                <div class="r-stat" style="align-items: flex-end;">
+                    <span data-i18n="ref_stat_earned">ЗАРАБОТАНО:</span>
+                    <strong class="earned" id="ref-earned">0 ⏳</strong>
+                </div>
+            </div>
+            <div class="input-wrapper">
+                <div class="input-row">
+                    <input type="text" id="ref-link-input" class="styled-input" readonly>
+                    <button class="save-btn" id="copy-ref-btn" style="background: linear-gradient(45deg, var(--blue), #00ffcc);" onclick="copyRefLink()" data-i18n="settings_copy_btn">КОПИЯ</button>
+                </div>
+                <div class="input-hint" data-i18n="settings_ref_hint">Отправь ссылку другу и получи 200 TIME за его регистрацию!</div>
+            </div>
+        </div>
+
+        <!-- ПРОМОКОДЫ -->
+        <div class="settings-group">
+            <span class="group-label" data-i18n="settings_promo_label">ПРОМОКОД</span>
+            <div class="input-wrapper">
+                <div class="input-row">
+                    <input type="text" id="promo-input" class="styled-input" placeholder="Введите код..." style="text-transform: uppercase;">
+                    <button class="save-btn" id="promo-btn" onclick="applyPromo()" data-i18n="settings_apply_btn">ВВОД</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- СМЕНА ИМЕНИ -->
         <div class="settings-group">
             <span class="group-label" data-i18n="settings_name_label">ИГРОВОЕ ИМЯ</span>
-            <div class="name-input-wrapper">
-                <div class="name-input-row">
-                    <input type="text" id="display-name-input" class="name-input" placeholder="Введите имя..." minlength="4" maxlength="16" pattern="[a-zA-Z0-9]+">
+            <div class="input-wrapper">
+                <div class="input-row">
+                    <input type="text" id="display-name-input" class="styled-input" placeholder="Имя..." minlength="4" maxlength="16" pattern="[a-zA-Z0-9]+">
                     <button class="save-btn" id="save-name-btn" onclick="saveName()" data-i18n="settings_save_btn">СОХРАНИТЬ</button>
                 </div>
                 <div class="input-hint" data-i18n="settings_name_hint">От 4 до 16 символов (A-Z, 0-9). Изменить можно раз в 24 часа.</div>
             </div>
         </div>
 
-        <!-- Стиль имени (СКОРО) -->
-        <div class="settings-group disabled-group">
-            <span class="group-label">
-                <span data-i18n="settings_style_label">СТИЛЬ ИМЕНИ</span> 
-                <span class="soon-badge" data-i18n="settings_soon_badge">СКОРО</span>
-            </span>
-            <div class="style-preview-box">
-                NEON STROKE
-            </div>
-        </div>
-
-        <!-- Блок настроек языка -->
+        <!-- КОМПАКТНЫЙ ЯЗЫК -->
         <div class="settings-group">
             <span class="group-label" data-i18n="settings_lang_label">ЯЗЫК ИНТЕРФЕЙСА</span>
-            
-            <div class="lang-option" id="opt-rus" onclick="setLanguage('rus')">
-                <span class="lang-name" data-i18n="lang_rus_full">Русский</span>
-                <span class="check-mark">✓</span>
-            </div>
-            
-            <div class="lang-option" id="opt-ukr" onclick="setLanguage('ukr')">
-                <span class="lang-name" data-i18n="lang_ukr_full">Українська</span>
-                <span class="check-mark">✓</span>
+            <div class="lang-toggle-wrapper">
+                <button class="lang-btn" id="opt-rus" onclick="setLanguage('rus')">РУССКИЙ</button>
+                <button class="lang-btn" id="opt-ukr" onclick="setLanguage('ukr')">УКРАЇНСЬКА</button>
             </div>
         </div>
 
+        <!-- ВЫХОД -->
         <button class="logout-btn" id="logout-btn" onclick="logout()" data-i18n="logout_btn">ВЫЙТИ ИЗ АККАУНТА</button>
     </div>
 </main>
@@ -186,21 +189,56 @@
     let user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // Проверяем, находится ли пользователь в Telegram Mini App
-    const isTelegramApp = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && Object.keys(window.Telegram.WebApp.initDataUnsafe).length > 0) || localStorage.getItem('wt_login_method') === 'telegram';
+    // Вписываем бот юзернейм
+    const TELEGRAM_BOT_USERNAME = 'WordTimes_bot'; 
 
-    if (isTelegramApp) {
+    // Проверка для скрытия кнопки ВЫХОД
+    const isTelegramApp = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && Object.keys(window.Telegram.WebApp.initDataUnsafe).length > 0) || localStorage.getItem('wt_login_method') === 'telegram';
+    const hasPassword = localStorage.getItem('wt_password') !== null;
+
+    if (isTelegramApp || !hasPassword) {
         document.getElementById('logout-btn').style.display = 'none';
     }
 
-    function loadSettingsData() {
+    async function loadSettingsData() {
         const inputEl = document.getElementById('display-name-input');
         inputEl.value = user;
         
-        // Подтягиваем перевод для placeholder, если он есть
-        if (window.translations && window.translations['settings_name_placeholder']) {
-            inputEl.placeholder = window.translations['settings_name_placeholder'];
+        // Генерация реф ссылки (через Mini App)
+        const refLink = `https://t.me/${TELEGRAM_BOT_USERNAME}/app?startapp=ref_${user}`;
+        document.getElementById('ref-link-input').value = refLink;
+
+        // Загрузка статистики рефералов
+        try {
+            const { data: stats } = await sb.from('user_progress').select('referrals_count').eq('username', user).single();
+            const refCount = stats?.referrals_count || 0;
+            const earnedCoins = refCount * 200;
+            
+            document.getElementById('ref-count').innerText = refCount;
+            document.getElementById('ref-earned').innerText = `${earnedCoins} ⏳`;
+        } catch(e) {
+            console.error("Ошибка загрузки реф. статистики:", e);
         }
+    }
+
+    function copyRefLink() {
+        const link = document.getElementById('ref-link-input').value;
+        navigator.clipboard.writeText(link).then(() => {
+            const btn = document.getElementById('copy-ref-btn');
+            const originalText = btn.innerText;
+            const copiedText = window.translations ? window.translations['settings_copied'] : 'СКОПИРОВАНО!';
+            
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+            
+            btn.innerText = copiedText;
+            btn.style.background = 'var(--green)';
+            btn.style.color = '#000';
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = 'linear-gradient(45deg, var(--blue), #00ffcc)';
+            }, 2000);
+        });
     }
 
     function showButtonError(btnEl, message, originalText) {
@@ -210,22 +248,98 @@
         btnEl.disabled = true;
         
         setTimeout(() => {
-            btnEl.style.background = 'var(--gold)';
+            btnEl.style.background = ''; 
             btnEl.style.color = '#000';
             btnEl.innerText = originalText;
             btnEl.disabled = false;
         }, 2000);
     }
 
+    // --- ЛОГИКА ПРОМОКОДОВ ---
+    async function applyPromo() {
+        const inputEl = document.getElementById('promo-input');
+        const btnEl = document.getElementById('promo-btn');
+        const originalText = btnEl.innerText;
+        const code = inputEl.value.trim().toUpperCase();
+
+        if (!code) return;
+
+        btnEl.innerText = '...';
+        btnEl.disabled = true;
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+
+        try {
+            const { data: promoData, error: promoErr } = await sb.from('promo_codes').select('*').eq('code', code).single();
+            
+            if (promoErr || !promoData) {
+                const msgNotFound = window.translations ? window.translations['promo_not_found'] : 'КОД НЕ НАЙДЕН';
+                throw new Error(msgNotFound);
+            }
+
+            if (promoData.current_uses >= promoData.max_uses) {
+                const msgLimit = window.translations ? window.translations['promo_limit'] : 'ЛИМИТ';
+                throw new Error(msgLimit);
+            }
+
+            const { data: usedData } = await sb.from('used_promocodes').select('*').eq('username', user).eq('code', code).single();
+            
+            if (usedData) {
+                const msgUsed = window.translations ? window.translations['promo_used'] : 'УЖЕ ИСПОЛЬЗОВАН';
+                throw new Error(msgUsed);
+            }
+
+            const { data: userStats } = await sb.from('user_progress').select('*').eq('username', user).single();
+            let updates = {};
+
+            if (promoData.reward_type === 'time') updates.coins = (userStats.coins || 0) + promoData.reward_amount;
+            else if (promoData.reward_type === 'exp') {
+                let gExp = (userStats.global_exp || 0) + promoData.reward_amount;
+                let gLvl = userStats.global_level || 1;
+                while (gExp >= gLvl * 10) { gExp -= gLvl * 10; gLvl++; }
+                updates.global_exp = gExp; updates.global_level = gLvl;
+            } 
+            else if (promoData.reward_type === 'sparks') {
+                let s = parseInt(localStorage.getItem('wt_sparks')) || 0;
+                localStorage.setItem('wt_sparks', s + promoData.reward_amount);
+            }
+            else if (promoData.reward_type.startsWith('case_')) {
+                let caseType = promoData.reward_type.split('_')[1];
+                let cases = userStats.cases || { normal: 0, stylish: 0, premium: 0 };
+                cases[caseType] = (cases[caseType] || 0) + promoData.reward_amount;
+                updates.cases = cases;
+            }
+
+            if (Object.keys(updates).length > 0) await sb.from('user_progress').update(updates).eq('username', user);
+            await sb.from('promo_codes').update({ current_uses: promoData.current_uses + 1 }).eq('code', code);
+            await sb.from('used_promocodes').insert({ username: user, code: code });
+
+            btnEl.style.background = 'var(--green)';
+            btnEl.innerText = `+${promoData.reward_amount} ${promoData.reward_type.toUpperCase()}!`;
+            inputEl.value = '';
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
+
+            setTimeout(() => {
+                btnEl.style.background = '';
+                btnEl.innerText = originalText;
+                btnEl.disabled = false;
+            }, 3000);
+
+        } catch (error) {
+            console.error('Ошибка промокода:', error);
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+            showButtonError(btnEl, error.message, originalText);
+        }
+    }
+
+    // --- ЛОГИКА СМЕНЫ ИМЕНИ ---
     async function saveName() {
         const inputEl = document.getElementById('display-name-input');
         const btnEl = document.getElementById('save-name-btn');
-        const originalText = btnEl.innerText; // Текст "Сохранить" на нужном языке
+        const originalText = btnEl.innerText;
         const newName = inputEl.value.trim();
 
         if (!newName || newName.toLowerCase() === user.toLowerCase()) return;
 
-        // Переводы для ошибок
         const msgWait = window.translations ? (window.translations['msg_wait_hours'] || 'ЖДИТЕ') : 'ЖДИТЕ';
         const msgHours = window.translations ? (window.translations['msg_hours_short'] || 'Ч.') : 'Ч.';
         const msgRegex = window.translations ? (window.translations['msg_only_eng'] || 'ТОЛЬКО A-Z (4-16)') : 'ТОЛЬКО A-Z (4-16)';
@@ -233,13 +347,11 @@
         const msgErr = window.translations ? (window.translations['msg_error'] || 'ОШИБКА') : 'ОШИБКА';
         const msgOk = window.translations ? (window.translations['msg_ok'] || 'ОК!') : 'ОК!';
 
-        // Проверка кулдауна (24 часа)
         const lastChange = localStorage.getItem('wt_last_name_change');
         if (lastChange) {
             const now = new Date().getTime();
             const diff = now - parseInt(lastChange);
             const hours24 = 24 * 60 * 60 * 1000;
-            
             if (diff < hours24) {
                 if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
                 const timeLeft = Math.ceil((hours24 - diff) / (1000 * 60 * 60));
@@ -248,7 +360,6 @@
             }
         }
 
-        // Валидация
         const nameRegex = /^[a-zA-Z0-9]{4,16}$/;
         if (!nameRegex.test(newName)) {
             if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
@@ -257,13 +368,11 @@
         }
 
         if(window.navigator.vibrate) window.navigator.vibrate(10);
-
         btnEl.innerText = '...';
         btnEl.disabled = true;
 
         try {
             const { error } = await sb.from('user_progress').update({ username: newName }).eq('username', user);
-            
             if (error) {
                 if (error.code === '23505') throw new Error('TAKEN');
                 throw error;
@@ -275,10 +384,13 @@
 
             btnEl.style.background = 'var(--green)';
             btnEl.innerText = msgOk;
+            
+            document.getElementById('ref-link-input').value = `https://t.me/${TELEGRAM_BOT_USERNAME}/app?startapp=ref_${user}`;
+
             if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
             
             setTimeout(() => {
-                btnEl.style.background = 'var(--gold)';
+                btnEl.style.background = '';
                 btnEl.innerText = originalText;
                 btnEl.disabled = false;
             }, 1500);
@@ -294,6 +406,7 @@
     function logout() {
         if(window.navigator.vibrate) window.navigator.vibrate(10);
         localStorage.removeItem('wt_user');
+        localStorage.removeItem('wt_password');
         window.location.href = 'index.html';
     }
 

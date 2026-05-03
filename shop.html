@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Магазин</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88; --purple: #b026ff; --blue: #00bfff; --red: #ff4b4b;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; padding-bottom: 110px; 
+        }
+
+        main { 
+            width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px); transition: 0.4s; visibility: hidden;
+        }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- ШАПКА --- */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { 
+            display: inline-flex; align-items: center; gap: 6px; 
+            background: var(--glass); border: 1px solid var(--glass-border); 
+            padding: 8px 14px; border-radius: 14px; color: #aaa; 
+            font-size: 10px; font-weight: 800; text-transform: uppercase; 
+            letter-spacing: 1px; text-decoration: none; transition: 0.3s; cursor: pointer; 
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); color: #fff; border-color: var(--gold); }
+
+        .header-title { text-align: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; text-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        .page-desc { font-size: 10px; color: var(--gold); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- ПАНЕЛЬ БАЛАНСА --- */
+        .balance-bar {
+            display: flex; justify-content: center; align-items: center; gap: 20px;
+            background: linear-gradient(90deg, rgba(0, 191, 255, 0.1), rgba(0, 191, 255, 0.05));
+            border: 1px solid rgba(0, 191, 255, 0.3); border-radius: 20px; padding: 15px;
+            margin-bottom: 30px; box-shadow: 0 10px 25px rgba(0, 191, 255, 0.15);
+        }
+        .bal-label { font-size: 10px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .bal-val { font-size: 22px; font-weight: 900; color: var(--blue); text-shadow: 0 0 15px rgba(0, 191, 255, 0.5); display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums;}
+
+        /* --- ВИТРИНА МАГАЗИНА --- */
+        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        
+        .shop-item {
+            background: linear-gradient(145deg, rgba(25,25,25,0.8), rgba(10,10,10,0.9));
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 20px 10px; text-align: center; display: flex; flex-direction: column;
+            align-items: center; transition: 0.3s; position: relative; overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .item-icon { font-size: 40px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1)); transition: 0.3s; }
+        .item-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; height: 26px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .item-desc { font-size: 8px; font-weight: 700; color: #888; margin-bottom: 15px; line-height: 1.3; height: 24px; text-transform: uppercase;}
+
+        .buy-btn {
+            background: rgba(0, 191, 255, 0.15); border: 1px solid var(--blue);
+            color: var(--blue); font-size: 12px; font-weight: 900; padding: 10px 0; width: 100%;
+            border-radius: 12px; cursor: pointer; transition: 0.2s; display: flex;
+            justify-content: center; align-items: center; gap: 5px; text-transform: uppercase;
+        }
+        .buy-btn:active { transform: scale(0.95); background: var(--blue); color: #000; }
+        
+        /* Кнопка когда не хватает денег */
+        .buy-btn.locked { 
+            background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); 
+            color: #888; pointer-events: none; 
+        }
+
+        /* Оформление премиум и золотых товаров */
+        .shop-item.gold .buy-btn:not(.locked) { background: rgba(212, 175, 55, 0.15); border-color: var(--gold); color: var(--gold); }
+        .shop-item.gold .buy-btn:not(.locked):active { background: var(--gold); color: #000; }
+        
+        .shop-item.premium .item-icon { filter: drop-shadow(0 0 20px var(--purple)); transform: scale(1.1); }
+        .shop-item.premium .item-name { color: var(--purple); text-shadow: 0 0 10px rgba(176, 38, 255, 0.4); }
+        .shop-item.premium .buy-btn:not(.locked) { background: rgba(176, 38, 255, 0.15); border-color: var(--purple); color: var(--purple); }
+        .shop-item.premium .buy-btn:not(.locked):active { background: var(--purple); color: #fff; }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: 0.3s; flex: 1; position: relative;}
+        .tab-icon { font-size: 20px; margin-bottom: 4px; filter: grayscale(100%) opacity(0.6); transition: 0.3s; z-index: 2;}
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2;}
+        
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate; }
+
+        @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
+
+        /* --- ОВЕРЛЕЙ УСПЕШНОЙ ПОКУПКИ --- */
+        .success-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px);
+            z-index: 3000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .success-overlay.show { opacity: 1; pointer-events: auto; }
+        .success-card {
+            background: linear-gradient(145deg, rgba(20,20,20,0.95), rgba(10,10,10,1)); border: 2px solid var(--blue);
+            border-radius: 25px; padding: 40px 30px; text-align: center; width: 85%; max-width: 350px;
+            transform: scale(0.8); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 15px 50px rgba(0, 191, 255, 0.3);
+        }
+        .success-overlay.show .success-card { transform: scale(1); }
+        
+        .s-icon { font-size: 70px; margin-bottom: 15px; filter: drop-shadow(0 0 25px rgba(0, 191, 255, 0.5)); animation: popIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .s-title { font-size: 24px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 2px; }
+        .s-desc { font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; margin-bottom: 30px; letter-spacing: 1px; }
+        
+        .s-btn {
+            background: linear-gradient(45deg, var(--blue), #00ffcc); border: none;
+            color: #000; font-size: 13px; font-weight: 900; padding: 16px 35px; border-radius: 16px;
+            width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s;
+        }
+        .s-btn:active { transform: scale(0.95); }
+
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<main id="main-content">
+    <div class="top-header">
+        <div onclick="fadeNavigate('quests.html')" class="back-btn">
+            <span style="font-size: 12px;">◀</span> <span data-i18n="back_to_quests">НАЗАД</span>
+        </div>
+    </div>
+
+    <div class="header-title">
+        <div class="page-title" data-i18n="shop_page_title">МАГАЗИН</div>
+        <div class="page-desc" data-i18n="shop_page_desc">Трать TIME-коины с умом!</div>
+    </div>
+
+    <div class="balance-bar">
+        <div class="bal-label">ТВОЙ БАЛАНС:</div>
+        <div class="bal-val"><span id="user-time">0</span> ⏳</div>
+    </div>
+
+    <div class="shop-grid" id="shop-grid">
+        <!-- Товары генерируются через JS -->
+    </div>
+</main>
+
+<div class="success-overlay" id="success-overlay">
+    <div class="success-card">
+        <div class="s-icon" id="s-icon">✅</div>
+        <div class="s-title" data-i18n="buy_success">УСПЕШНО!</div>
+        <div class="s-desc" id="s-desc">Товар добавлен</div>
+        <button class="s-btn" onclick="closeSuccess()">ОТЛИЧНО</button>
+    </div>
+</div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item"><span class="tab-icon">🏠</span><span class="tab-label" data-i18n="tab_home">Главная</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item"><span class="tab-icon">🎮</span><span class="tab-label" data-i18n="tab_play">Играть</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item"><span class="tab-icon">👤</span><span class="tab-label" data-i18n="tab_profile">Профиль</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item active"><span class="tab-icon">📜</span><span class="tab-label" data-i18n="tab_quests">Квесты</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tab_settings">Настройки</span></a>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    const user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    let dbData = null;
+    let isProcessing = false;
+
+    // Конфигурация товаров (без заморозки серии)
+    const SHOP_ITEMS = [
+        { id: 'case_normal', type: 'case', price: 200, icon: '📦', nameKey: 'case_normal', desc: '+1 Обычный Кейс', theme: 'blue' },
+        { id: 'case_stylish', type: 'case', price: 600, icon: '🧰', nameKey: 'case_stylish', desc: '+1 Стильный Кейс', theme: 'blue' },
+        { id: 'case_premium', type: 'case', price: 1500, icon: '💎', nameKey: 'case_premium', desc: '+1 Премиум Кейс', theme: 'premium' },
+        { id: 'boost_exp', type: 'booster', minutes: 30, price: 250, icon: '🧪', nameKey: 'item_boost_exp', desc: 'x2 ОПЫТ на 30 минут', theme: 'green' },
+        { id: 'boost_sparks', type: 'booster', minutes: 15, price: 150, icon: '⚡', nameKey: 'item_boost_sparks', desc: 'x2 ИСКРЫ на 15 минут', theme: 'blue' },
+        { id: 'role_vip', type: 'role', roleName: 'VIP', price: 3000, icon: '👑', nameKey: 'item_role_vip', desc: 'Золотой цвет статуса', theme: 'gold' },
+        { id: 'role_legend', type: 'role', roleName: 'LEGEND', price: 7500, icon: '🔥', nameKey: 'item_role_legend', desc: 'Неоновый цвет статуса', theme: 'premium' }
+    ];
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function loadShop() {
+        try {
+            if (!window.translations) await new Promise(res => setTimeout(res, 500));
+
+            const { data, error } = await sb.from('user_progress').select('*').eq('username', user).single();
+            if (error) throw error;
+            dbData = data;
+            
+            if(!dbData.cases) dbData.cases = { normal: 0, stylish: 0, premium: 0 };
+
+            renderShop();
+            document.getElementById('main-content').classList.add('ready');
+
+        } catch (e) { console.error("Ошибка:", e); }
+    }
+
+    function renderShop() {
+        const timeCoins = dbData.coins || 0;
+        document.getElementById('user-time').innerText = timeCoins;
+
+        const grid = document.getElementById('shop-grid');
+        grid.innerHTML = '';
+
+        SHOP_ITEMS.forEach(item => {
+            const displayName = window.translations?.[item.nameKey] || item.nameKey;
+            
+            const alreadyHasRole = (item.type === 'role' && dbData.role === item.roleName);
+            const canAfford = timeCoins >= item.price;
+            
+            // Если не хватает денег, кнопка серая, но цена отображается
+            let btnClass = canAfford && !alreadyHasRole ? 'buy-btn' : 'buy-btn locked';
+            let btnText = `${item.price} ⏳`;
+            
+            if (alreadyHasRole) {
+                btnText = 'КУПЛЕНО';
+                btnClass = 'buy-btn locked';
+            }
+
+            grid.innerHTML += `
+                <div class="shop-item ${item.theme}">
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-name">${displayName}</div>
+                    <div class="item-desc">${item.desc}</div>
+                    <button class="${btnClass}" onclick="buyItem('${item.id}')">${btnText}</button>
+                </div>
+            `;
+        });
+    }
+
+    async function buyItem(itemId) {
+        if(isProcessing) return;
+        
+        const item = SHOP_ITEMS.find(i => i.id === itemId);
+        if(!item || (dbData.coins || 0) < item.price) return;
+
+        isProcessing = true;
+        if(window.navigator.vibrate) window.navigator.vibrate(50);
+
+        try {
+            let updates = {};
+            updates.coins = dbData.coins - item.price;
+            let successDesc = '';
+
+            if(item.type === 'case') {
+                let caseType = item.id.split('_')[1]; 
+                let cases = { ...dbData.cases };
+                cases[caseType] = (cases[caseType] || 0) + 1;
+                updates.cases = cases;
+                successDesc = `ДОБАВЛЕН ${item.icon} В ИНВЕНТАРЬ`;
+            } 
+            else if(item.type === 'booster') {
+                const now = new Date();
+                const expiry = new Date(now.getTime() + item.minutes * 60000);
+                if (item.id === 'boost_exp') updates.boost_exp_until = expiry.toISOString();
+                if (item.id === 'boost_sparks') updates.boost_sparks_until = expiry.toISOString();
+                successDesc = `БУСТЕР АКТИВИРОВАН НА ${item.minutes} МИН`;
+            }
+            else if(item.type === 'role') {
+                updates.role = item.roleName;
+                successDesc = `РОЛЬ ОБНОВЛЕНА НА ${item.roleName}`;
+            }
+
+            await sb.from('user_progress').update(updates).eq('username', user);
+            
+            dbData = { ...dbData, ...updates };
+            renderShop();
+
+            document.getElementById('s-icon').innerText = item.icon;
+            document.getElementById('s-desc').innerText = successDesc;
+            document.getElementById('success-overlay').classList.add('show');
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
+
+        } catch(e) { console.error("Ошибка покупки:", e); }
+
+        isProcessing = false;
+    }
+
+    function closeSuccess() {
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        document.getElementById('success-overlay').classList.remove('show');
+    }
+
+    document.addEventListener('translationsReady', loadShop);
+    if (window.translations && Object.keys(window.translations).length > 0) {
+        loadShop();
+    }
+</script>
+</body>
+</html>

@@ -11,7 +11,7 @@
         :root { 
             --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700; 
             --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2); 
-            --green: #00ff88; --red: #ff4b4b; 
+            --green: #00ff88; --red: #ff4b4b; --purple: #b026ff; --blue: #00bfff;
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
@@ -25,26 +25,19 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (ПРЕМИУМ ДИЗАЙН С НЕОНОМ) --- */
+        /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
         
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
         .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
         .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
         
-        /* Активная вкладка */
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        
-        /* Неоновое свечение позади активной иконки */
-        .tab-item.active::before {
-            content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
-            border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate;
-        }
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate; }
 
         @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
 
@@ -53,70 +46,84 @@
         main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
 
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: 0.2s; cursor: pointer; }
-        .back-btn:active { color: var(--gold); }
-        .lvl-badge { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); color: var(--gold); padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: flex; gap: 6px; align-items: center;}
+        .back-btn { display: inline-flex; align-items: center; gap: 5px; color: #888; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: 0.2s; cursor: pointer; background: var(--glass); border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: 14px; backdrop-filter: blur(10px); }
+        .back-btn:active { background: rgba(212, 175, 55, 0.1); color: #fff; border-color: var(--gold); transform: scale(0.95); }
+        .lvl-badge { background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); color: var(--gold-light); padding: 8px 15px; border-radius: 14px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: flex; gap: 6px; align-items: center; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+
+        /* --- ИНДИКАТОР БУСТА --- */
+        .boost-badge {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: rgba(0, 255, 136, 0.15); border: 1px solid var(--green);
+            color: var(--green); font-size: 11px; font-weight: 900;
+            padding: 8px 18px; border-radius: 15px; margin: 0 auto 20px auto; width: max-content;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); text-transform: uppercase;
+            letter-spacing: 1px; transition: 0.3s; opacity: 1; transform: scale(1);
+        }
+        .boost-badge.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; position: absolute; }
+        .boost-timer { color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
 
         /* --- ИНФО ПАНЕЛЬ --- */
-        .info-panel { display: flex; justify-content: space-between; align-items: center; background: var(--glass); padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); margin-bottom: 20px; position: relative; overflow: hidden; }
+        .info-panel { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .stat-box { display: flex; flex-direction: column; align-items: center; z-index: 2; }
         .stat-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        .stat-val { font-size: 20px; font-weight: 900; color: #fff; transition: 0.2s; }
-        #combo-val { color: var(--gold-light); }
-        .combo-pulse { transform: scale(1.3); text-shadow: 0 0 15px var(--gold); }
+        .stat-val { font-size: 22px; font-weight: 900; color: #fff; transition: 0.2s; font-variant-numeric: tabular-nums; }
+        #combo-val { color: var(--gold-light); text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        .combo-pulse { transform: scale(1.3); text-shadow: 0 0 20px var(--gold); }
         
         .score-goal-text { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 7px; color: rgba(255,255,255,0.3); font-weight: 800; letter-spacing: 2px; }
 
         /* --- ТАЙМЕР --- */
         .timer-container { margin-bottom: 25px; position: relative; }
-        .timer-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
-        .timer-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold-light)); width: 100%; transition: width 1s linear; }
-        .timer-fill.danger { background: linear-gradient(90deg, #ff9900, var(--red)); }
-        .time-text { position: absolute; right: 0; top: -20px; font-size: 12px; font-weight: 900; color: var(--gold); }
+        .timer-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
+        .timer-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold-light)); width: 100%; transition: width 1s linear; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+        .timer-fill.danger { background: linear-gradient(90deg, #ff9900, var(--red)); box-shadow: 0 0 15px rgba(255, 75, 75, 0.6); }
+        .time-text { position: absolute; right: 0; top: -22px; font-size: 13px; font-weight: 900; color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); font-variant-numeric: tabular-nums; }
 
         /* --- ИГРОВАЯ ЗОНА --- */
         .target-card { 
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), var(--glass)); 
-            border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px 10px; 
+            background: linear-gradient(135deg, rgba(25,25,25,0.9), rgba(10,10,10,0.95)); 
+            border: 1px solid var(--glass-border); border-radius: 25px; padding: 30px 10px; 
             text-align: center; margin-bottom: 20px; backdrop-filter: blur(15px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; min-height: 120px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02); display: flex; justify-content: center; align-items: center; min-height: 130px;
         }
-        .target-word { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .target-word { font-size: 32px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
 
         /* --- СЕТКА КНОПОК --- */
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .option-btn {
-            background: rgba(15,15,15,0.8); border: 1px solid var(--glass-border); border-radius: 15px;
+            background: linear-gradient(145deg, rgba(20,20,20,0.9), rgba(10,10,10,1)); border: 1px solid var(--glass-border); border-radius: 18px;
             padding: 20px 10px; font-size: 13px; font-weight: 800; color: #ccc; text-transform: uppercase;
-            cursor: pointer; transition: 0.15s; backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; text-align: center; min-height: 70px;
+            cursor: pointer; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; text-align: center; min-height: 75px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
-        .option-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); border-color: var(--gold); color: #fff; }
+        .option-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.15); border-color: var(--gold-light); color: #fff; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
         
-        .option-btn.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.1); color: var(--green); pointer-events: none;}
-        .option-btn.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.15); color: var(--red); animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .option-btn.correct { border-color: var(--green); background: rgba(0, 255, 136, 0.1); color: var(--green); box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); pointer-events: none;}
+        .option-btn.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.15); color: var(--red); box-shadow: 0 0 20px rgba(255, 75, 75, 0.3); animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
         /* --- ОВЕРЛЕЙ КОНЦА ИГРЫ --- */
         .end-screen {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 2000; opacity: 0; pointer-events: none; transition: 0.4s;
         }
         .end-screen.show { opacity: 1; pointer-events: auto; }
-        .end-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
-        .end-title.success { color: var(--green); text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
-        .end-title.fail { color: var(--red); text-shadow: 0 0 20px rgba(255, 75, 75, 0.5); }
+        .end-title { font-size: 32px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+        .end-title.success { color: var(--green); text-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
+        .end-title.fail { color: var(--red); text-shadow: 0 0 30px rgba(255, 75, 75, 0.5); }
         
-        .end-stats { display: flex; gap: 30px; margin-bottom: 40px; }
+        .end-stats { display: flex; gap: 30px; margin-bottom: 40px; background: rgba(20,20,20,0.8); border: 1px solid var(--glass-border); border-radius: 20px; padding: 25px; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
         .end-stat { text-align: center; }
         .end-stat span { display: block; font-size: 10px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .end-stat strong { font-size: 24px; color: #fff; font-weight: 900; }
+        .end-stat strong { font-size: 26px; color: #fff; font-weight: 900; }
+        .end-stat strong.boosted { color: var(--green); text-shadow: 0 0 15px rgba(0, 255, 136, 0.6); }
         
         .end-btn {
             background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; border-radius: 20px;
-            padding: 15px 40px; font-size: 14px; font-weight: 900; color: #000; text-transform: uppercase;
-            letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); transition: 0.2s;
+            padding: 18px 45px; font-size: 14px; font-weight: 900; color: #000; text-transform: uppercase;
+            letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4); transition: 0.2s;
         }
-        .end-btn:active { transform: scale(0.95); }
+        .end-btn:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
 
         /* ЭКРАН СТАРТА */
         .start-screen {
@@ -171,8 +178,8 @@
 <main id="main-content" style="position: relative;">
     
     <div class="start-screen" id="start-screen">
-        <h2 data-i18n="speed_rush_title" style="font-weight: 900; color: #fff; margin-bottom: 10px; font-size: 24px;">SPEED RUSH</h2>
-        <p data-i18n="speed_rush_desc" style="color: #888; font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 40px; max-width: 250px; line-height: 1.5;">Находи переводы как можно быстрее!</p>
+        <h2 data-i18n="speed_rush_title" style="font-weight: 900; color: #fff; margin-bottom: 10px; font-size: 28px; letter-spacing: 2px;">SPEED RUSH</h2>
+        <p data-i18n="speed_rush_desc" style="color: #888; font-size: 11px; font-weight: 700; text-align: center; margin-bottom: 40px; max-width: 250px; line-height: 1.5; text-transform: uppercase;">Находи переводы как можно быстрее!</p>
         <button class="start-btn" onclick="startGame()" data-i18n="start_btn">СТАРТ</button>
     </div>
 
@@ -183,6 +190,11 @@
         <div class="lvl-badge">
             <span data-i18n="rush_round_label">РАУНД</span> <span id="rush-lvl-display">1</span>
         </div>
+    </div>
+
+    <!-- ИНДИКАТОР БУСТА X2 ОПЫТ -->
+    <div class="boost-badge hidden" id="boost-badge">
+        🧪 x2 ОПЫТ (<span class="boost-timer" id="boost-timer">00:00</span>)
     </div>
 
     <div class="info-panel">
@@ -232,8 +244,8 @@
     const appLang = localStorage.getItem('appLang') || 'rus';
 
     let rushRound = 1;
-    let pool = [];         // Все слова для раунда (включая перенесенные)
-    let activeDeck = [];   // Слова, на которые еще не дан правильный ответ
+    let pool = [];         
+    let activeDeck = [];   
 
     let currentWord = null;
     let score = 0;
@@ -244,6 +256,11 @@
     let isPlaying = false;
     let isProcessing = false;
     let isRoundPassed = false;
+
+    // Переменные буста
+    let boostExpUntil = null;
+    let isBoostActive = false;
+    let boostTimerInterval = null;
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -260,24 +277,22 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            // Узнаем текущий раунд игрока из базы
-            let { data: prog } = await sb.from('user_progress').select('rush_level').eq('username', user).single();
-            if (prog && prog.rush_level) {
-                rushRound = prog.rush_level;
+            // Узнаем текущий раунд и буст из базы
+            let { data: prog } = await sb.from('user_progress').select('rush_level, boost_exp_until').eq('username', user).single();
+            if (prog) {
+                rushRound = prog.rush_level || 1;
+                boostExpUntil = prog.boost_exp_until;
             }
             document.getElementById('rush-lvl-display').innerText = rushRound;
 
-            // Высчитываем диапазон (по 5 уровней на каждый раунд)
             let minLevel = (rushRound - 1) * 5 + 1;
             let maxLevel = rushRound * 5;
 
-            // Если игрок дошел до раунда 61 (уровни 300+)
             if (minLevel > 300) {
                 minLevel = Math.floor(Math.random() * 295) + 1;
                 maxLevel = minLevel + 4;
             }
 
-            // Грузим слова для этого диапазона уровней
             const { data: words } = await sb.from('words')
                 .select(`id, level, eng, ${appLang}`)
                 .gte('level', minLevel)
@@ -287,13 +302,14 @@
             if(words && words.length >= 4) {
                 pool = [...words];
 
-                // Проверяем, есть ли неразгаданные слова с прошлого раунда
                 let carryover = JSON.parse(localStorage.getItem('wt_rush_carryover')) || [];
                 carryover.forEach(cw => {
                     if(!pool.find(w => w.id === cw.id)) {
                         pool.push(cw);
                     }
                 });
+
+                startBoostCheck(); // Запускаем проверку буста
 
                 requestAnimationFrame(() => {
                     document.getElementById('main-content').classList.add('ready');
@@ -306,6 +322,44 @@
         }
     }
 
+    // --- ЛОГИКА ТАЙМЕРА БУСТА ---
+    function startBoostCheck() {
+        if (!boostExpUntil) return;
+        
+        checkBoost();
+        if (boostTimerInterval) clearInterval(boostTimerInterval);
+        boostTimerInterval = setInterval(checkBoost, 1000);
+    }
+
+    function checkBoost() {
+        if (!boostExpUntil) {
+            disableBoostVisuals();
+            return;
+        }
+
+        const now = new Date();
+        const expiry = new Date(boostExpUntil);
+
+        if (expiry > now) {
+            isBoostActive = true;
+            document.getElementById('boost-badge').classList.remove('hidden');
+
+            let diffSec = Math.floor((expiry - now) / 1000);
+            let m = String(Math.floor(diffSec / 60)).padStart(2, '0');
+            let s = String(diffSec % 60).padStart(2, '0');
+            document.getElementById('boost-timer').innerText = `${m}:${s}`;
+        } else {
+            disableBoostVisuals();
+        }
+    }
+
+    function disableBoostVisuals() {
+        isBoostActive = false;
+        boostExpUntil = null;
+        if(boostTimerInterval) clearInterval(boostTimerInterval);
+        document.getElementById('boost-badge').classList.add('hidden');
+    }
+
     function startGame() {
         document.getElementById('start-screen').classList.add('hide');
         score = 0;
@@ -314,7 +368,6 @@
         timeLeft = 60;
         isPlaying = true;
         
-        // Заполняем колоду всеми доступными словами
         activeDeck = [...pool];
 
         updateUI();
@@ -333,17 +386,14 @@
         if(!isPlaying) return;
         isProcessing = false;
         
-        // Если умная колода опустела до конца времени — восполняем (бесконечный фарм)
         if (activeDeck.length === 0) {
             activeDeck = [...pool];
         }
 
-        // Берем случайное слово из оставшихся в КОЛОДЕ
         let randomIndex = Math.floor(Math.random() * activeDeck.length);
         currentWord = activeDeck[randomIndex];
         document.getElementById('target-word').innerText = currentWord.eng;
 
-        // Варианты ответов берем из всего ПУЛА (чтобы запутать)
         let options = [currentWord];
         while(options.length < 4) {
             let randomWord = pool[Math.floor(Math.random() * pool.length)];
@@ -430,16 +480,22 @@
         clearInterval(timerInterval);
         if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
         
-        const earnedExp = Math.floor(score / 50);
+        let baseExp = Math.floor(score / 50);
+        let earnedExp = isBoostActive ? baseExp * 2 : baseExp;
 
         document.getElementById('final-score').innerText = score;
         document.getElementById('final-combo').innerText = `x${maxCombo}`;
-        document.getElementById('final-exp').innerText = earnedExp;
+        
+        const expEl = document.getElementById('final-exp');
+        expEl.innerText = earnedExp;
+        if (isBoostActive) {
+            expEl.classList.add('boosted');
+            expEl.innerText += ' (x2)';
+        }
         
         const titleEl = document.getElementById('end-title');
         const btnEl = document.getElementById('end-action-btn');
 
-        // Проверка победы (400 очков)
         isRoundPassed = score >= 400;
 
         if (isRoundPassed) {
@@ -461,7 +517,8 @@
         btn.style.opacity = '0.5';
         btn.style.pointerEvents = 'none';
 
-        const earnedExp = Math.floor(score / 50);
+        let baseExp = Math.floor(score / 50);
+        let earnedExp = isBoostActive ? baseExp * 2 : baseExp;
         const pairsFound = Math.floor(score / 10);
 
         try {
@@ -471,10 +528,14 @@
             let gLvl = stats?.global_level || 1;
             let newTotalPairs = (stats?.total_pairs_found || 0) + pairsFound;
 
-            let neededExp = gLvl * 10;
-            if (gExp >= neededExp) {
-                gExp -= neededExp;
-                gLvl += 1;
+            while (true) {
+                let neededExp = gLvl * 10;
+                if (gExp >= neededExp) {
+                    gExp -= neededExp;
+                    gLvl += 1;
+                } else {
+                    break;
+                }
             }
 
             // --- ДВИГАТЕЛЬ СЕРИИ (ОГОНЬКА) ---
@@ -483,37 +544,29 @@
             let lastDateStr = stats?.last_played_date || null;
             
             if (localStorage.getItem('wt_last_played') !== todayStr) {
-                newStreak += 1; // Увеличиваем серию
-                
+                newStreak += 1; 
                 if (lastDateStr) {
                     const lastD = new Date(lastDateStr); lastD.setHours(0,0,0,0);
                     const todayD = new Date(); todayD.setHours(0,0,0,0);
-                    // Если разница больше 1 дня - сбрасываем серию до 1
-                    if ((todayD - lastD) / 86400000 > 1) {
-                        newStreak = 1;
-                    }
+                    if ((todayD - lastD) / 86400000 > 1) newStreak = 1;
                 }
                 localStorage.setItem('wt_last_played', todayStr);
                 lastDateStr = todayStr;
             }
-            // ---------------------------------
 
             let nextRoundNum = rushRound;
-
             if (isRoundPassed) {
-                // Если раунд пройден, переносим невыученные слова в следующий раунд
                 localStorage.setItem('wt_rush_carryover', JSON.stringify(activeDeck));
                 nextRoundNum++;
             }
 
-            // Обновляем базу (вместе с новой серией)
             await sb.from('user_progress').update({ 
                 global_exp: gExp,
                 global_level: gLvl,
                 total_pairs_found: newTotalPairs,
                 rush_level: nextRoundNum,
-                current_streak: newStreak,         // Пишем новую серию
-                last_played_date: lastDateStr      // Пишем дату
+                current_streak: newStreak,         
+                last_played_date: lastDateStr      
             }).eq('username', user);
 
             if (isRoundPassed && maxCombo >= 10) {
@@ -524,7 +577,6 @@
                 }).then(({error}) => { if(error) console.error(error); });
             }
 
-            // Перезапускаем игру для следующего раунда / попытки
             location.reload();
 
         } catch(e) {

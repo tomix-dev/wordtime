@@ -17,6 +17,7 @@
             --green: #00ff88;
             --red: #ff4b4b;
             --blue: #00bfff;
+            --purple: #b026ff;
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
@@ -50,13 +51,15 @@
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate; }
+        @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
+
         /* --- ВЕРХНЯЯ ЧАСТЬ (ПРОФИЛЬ) --- */
         .profile-header { text-align: center; margin-top: 15px; margin-bottom: 20px; }
         .username { font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; color: #fff; }
         
         /* Ряд для бейджей (Уровень + Огонек) */
-        .badges-row { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .badges-row { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
         
         .level-badge { 
             background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); 
@@ -73,7 +76,6 @@
         .streak-icon { font-size: 14px; transition: 0.3s; filter: grayscale(1); opacity: 0.3; }
         .streak-count { color: #555; }
         
-        /* Этапы эволюции огонька через CSS фильтры */
         .streak-badge.s-1 { background: rgba(255, 215, 0, 0.1); border-color: var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
         .streak-badge.s-1 .streak-icon { filter: grayscale(0); opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); }
         .streak-badge.s-1 .streak-count { color: var(--gold-light); }
@@ -107,7 +109,7 @@
         /* --- ПЕРСОНАЖ (ЦЕНТР ЭКРАНА) --- */
         .character-showcase { 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            margin-bottom: 30px; position: relative; padding: 20px 0 10px 0;
+            margin-bottom: 25px; position: relative; padding: 20px 0 10px 0;
         }
         .character-bg {
             position: absolute; width: 250px; height: 250px; border-radius: 50%; top: 10px;
@@ -133,6 +135,23 @@
         .pet-prog-text { font-size: 8px; color: #aaa; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .pet-prog-bg { width: 100%; height: 4px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
         .pet-prog-fill { height: 100%; background: linear-gradient(90deg, var(--green), #00ffcc); width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.4); }
+
+        /* --- КНОПКИ КАЛЕНДАРЯ И ИНВЕНТАРЯ --- */
+        .profile-actions {
+            display: flex; justify-content: space-between; gap: 15px; margin-bottom: 25px; width: 100%;
+        }
+        .action-btn {
+            flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;
+            font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase;
+            cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .action-btn:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        .action-btn:active { transform: scale(0.95); }
+        .action-icon { font-size: 18px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+        .calendar-btn .action-icon { filter: drop-shadow(0 0 8px var(--green)); }
+        .inventory-btn .action-icon { filter: drop-shadow(0 0 8px var(--gold)); }
 
         /* --- КРАТКАЯ СТАТИСТИКА --- */
         .mini-stats { display: flex; justify-content: space-around; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px; backdrop-filter: blur(10px); margin-bottom: 30px; }
@@ -243,6 +262,18 @@
             <div class="pet-prog-text" id="pet-prog-text">...</div>
             <div class="pet-prog-bg"><div class="pet-prog-fill" id="pet-prog-fill"></div></div>
         </div>
+    </div>
+
+    <!-- КНОПКИ КАЛЕНДАРЯ И ИНВЕНТАРЯ (ПЕРЕНЕСЕНЫ СЮДА) -->
+    <div class="profile-actions">
+        <button class="action-btn calendar-btn" onclick="fadeNavigate('calendar.html')">
+            <span class="action-icon">📅</span>
+            <span data-i18n="btn_calendar">КАЛЕНДАРЬ</span>
+        </button>
+        <button class="action-btn inventory-btn" onclick="fadeNavigate('cases.html')">
+            <span class="action-icon">🎒</span>
+            <span data-i18n="btn_inventory">ИНВЕНТАРЬ</span>
+        </button>
     </div>
 
     <div class="mini-stats">
@@ -482,7 +513,7 @@
         // Проверяем, не сгорела ли серия (разница больше 1 дня)
         if (lastPlayedStr) {
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Сбрасываем часы для честного сравнения дат
+            today.setHours(0, 0, 0, 0); 
             
             const lastPlayed = new Date(lastPlayedStr);
             lastPlayed.setHours(0, 0, 0, 0);
@@ -491,21 +522,18 @@
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
             if (diffDays > 1) {
-                streak = 0; // Серия сгорела 😢
-                // Фоновое обновление базы, чтобы зафиксировать потерю серии
+                streak = 0; 
                 sb.from('user_progress').update({ current_streak: 0 }).eq('username', user);
             }
         } else {
             streak = 0;
         }
 
-        // Рендерим стили
-        streakBadge.className = 'streak-badge'; // Сброс
+        streakBadge.className = 'streak-badge'; 
         if (streak === 0) {
             streakCount.innerText = '';
         } else {
             streakCount.innerText = streak;
-            // Раздаем красивые классы в зависимости от длины серии
             if (streak >= 60) streakBadge.classList.add('s-60');
             else if (streak >= 45) streakBadge.classList.add('s-45');
             else if (streak >= 30) streakBadge.classList.add('s-30');
@@ -534,33 +562,26 @@
                 const totalPairs = p.total_pairs_found || 0;
                 const localSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
 
-                // Проверка на Level UP
                 checkLevelUp(gLvl);
 
-                // Шапка
                 document.getElementById('level-badge').innerText = `LVL ${gLvl}`;
                 document.getElementById('exp-text').innerText = `${gExp} / ${neededExp} EXP`;
                 document.getElementById('exp-fill').style.width = `${(gExp / neededExp) * 100}%`;
 
-                // ОГОНЕК (СЕРИЯ ДНЕЙ)
                 updateStreakUI(p.current_streak, p.last_played_date);
 
-                // Статистика
                 document.getElementById('user-days').innerText = diffDays;
                 document.getElementById('total-pairs').innerText = totalPairs;
                 document.getElementById('total-sparks').innerText = localSparks;
 
-                // Форматирование даты
                 const day = String(regDate.getDate()).padStart(2, '0');
                 const month = String(regDate.getMonth() + 1).padStart(2, '0');
                 const year = regDate.getFullYear();
                 document.getElementById('acc-regdate').innerText = `${day}.${month}.${year}`;
 
-                // Статус
                 const statusEl = document.getElementById('acc-status-val');
                 statusEl.innerText = window.translations && window.translations['acc_status_active'] ? window.translations['acc_status_active'] : 'АКТИВЕН';
 
-                // Роль
                 const role = p.role || 'Player';
                 const roleEl = document.getElementById('acc-role');
                 const roleKey = `role_${role.toLowerCase()}`;
@@ -570,7 +591,6 @@
                 else if (role === 'Tester') roleEl.style.color = 'var(--blue)';
                 else roleEl.style.color = 'var(--gold-light)';
 
-                // Визуал
                 updateAvatar(gLvl);
                 updatePetProgress(gLvl);
                 updateProgressUI(gLvl);

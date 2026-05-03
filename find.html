@@ -12,13 +12,13 @@
             --bg: #050505; 
             --gold: #D4AF37; 
             --gold-light: #FFD700; 
-            --glass: rgba(255, 255, 255, 0.03); 
+            --glass: rgba(255, 255, 255, 0.05); 
             --glass-border: rgba(212, 175, 55, 0.2); 
             --green: #00ff88; 
             --red: #ff4b4b; 
         }
 
-        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; }
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
 
         * { 
             box-sizing: border-box; 
@@ -37,6 +37,7 @@
             flex-direction: column; 
             overflow-x: hidden; 
             padding-bottom: 90px;
+            position: relative;
         }
 
         .bg-pattern { 
@@ -74,62 +75,98 @@
             flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
             opacity: 0; transform: translateY(15px);
             transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-top: 10px; visibility: hidden;
+            margin-top: 10px; visibility: hidden; display: flex; flex-direction: column;
         }
         main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
 
         /* --- КНОПКА НАЗАД --- */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .back-btn { 
             display: inline-flex; align-items: center; gap: 5px; color: #888; 
             font-size: 10px; font-weight: 800; text-transform: uppercase; 
-            letter-spacing: 1px; text-decoration: none; margin-bottom: 15px; 
-            transition: 0.2s; cursor: pointer; 
+            letter-spacing: 1px; text-decoration: none; transition: 0.2s; cursor: pointer; 
         }
         .back-btn:active { color: var(--gold); }
 
-        .progress-section { 
-            margin-bottom: 25px; background: var(--glass); padding: 15px; 
-            border-radius: 20px; border: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
+        /* --- ИНДИКАТОР БУСТА --- */
+        .boost-badge {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: rgba(0, 255, 136, 0.15); border: 1px solid var(--green);
+            color: var(--green); font-size: 11px; font-weight: 900;
+            padding: 8px 18px; border-radius: 15px; margin-bottom: 20px; align-self: center;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); text-transform: uppercase;
+            letter-spacing: 1px; transition: 0.3s; opacity: 1; transform: scale(1);
         }
-        .lvl-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 900; color: var(--gold); font-size: 11px; letter-spacing: 1px; }
-        .bar-bg { height: 6px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .boost-badge.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; position: absolute; }
+        .boost-timer { color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+
+        /* --- ПРОГРЕСС-БАР --- */
+        .progress-section { 
+            margin-bottom: 25px; background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); 
+            padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .lvl-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 900; color: var(--gold); font-size: 11px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+        .bar-bg { height: 8px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
         .bar-fill { 
             height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; 
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
         }
+        .bar-fill.boosted { background: linear-gradient(90deg, var(--green), #00ffcc); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
 
-        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .col { display: flex; flex-direction: column; gap: 10px; }
+        /* --- ИГРОВОЕ ПОЛЕ --- */
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; align-content: start; }
+        .col { display: flex; flex-direction: column; gap: 12px; }
 
         .card { 
-            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; 
-            padding: 20px 8px; text-align: center; cursor: pointer; font-weight: 700; 
-            transition: all 0.15s ease; backdrop-filter: blur(10px); font-size: clamp(12px, 3.5vw, 14px); 
-            color: #aaa; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; 
-            justify-content: center; min-height: 60px;
+            background: linear-gradient(145deg, rgba(25,25,25,0.9), rgba(15,15,15,0.95)); 
+            border: 1px solid var(--glass-border); border-radius: 16px; 
+            padding: 18px 8px; text-align: center; cursor: pointer; font-weight: 800; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(10px); 
+            font-size: clamp(12px, 3.5vw, 14px); color: #ccc; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; 
+            justify-content: center; min-height: 65px; letter-spacing: 0.5px;
         }
 
         .card.selected { 
-            border-color: var(--gold); background: rgba(212, 175, 55, 0.12); color: #fff; 
-            transform: scale(0.98); box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+            border-color: var(--gold-light); background: rgba(212, 175, 55, 0.15); color: #fff; 
+            transform: scale(0.95) translateY(2px); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), inset 0 0 10px rgba(212, 175, 55, 0.1);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
         }
         
         .card.correct { 
-            border-color: var(--green); background: rgba(0, 255, 136, 0.08); color: var(--green); 
-            pointer-events: none; text-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+            border-color: var(--green); background: rgba(0, 255, 136, 0.05); color: var(--green); 
+            pointer-events: none; opacity: 0.6; transform: scale(0.98);
+            box-shadow: inset 0 0 15px rgba(0, 255, 136, 0.1);
         }
         
         .card.wrong { 
-            border-color: var(--red); background: rgba(255, 75, 75, 0.12); color: var(--red); 
+            border-color: var(--red); background: rgba(255, 75, 75, 0.15); color: var(--red); 
             animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
+            box-shadow: 0 0 15px rgba(255, 75, 75, 0.3);
         }
 
         @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
-            40%, 60% { transform: translate3d(3px, 0, 0); }
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        /* --- ВСПЛЫВАЮЩИЙ ТЕКСТ ОПЫТА --- */
+        .floating-exp {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 32px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(212,175,55,0.8);
+            opacity: 0; pointer-events: none; z-index: 2000;
+        }
+        .floating-exp.boosted { color: var(--green); text-shadow: 0 0 20px rgba(0,255,136,0.8); }
+        .floating-exp.show { animation: expPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes expPop {
+            0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(1.1); }
         }
     </style>
 </head>
@@ -163,8 +200,15 @@
 </div>
 
 <main id="main-content">
-    <div onclick="fadeNavigate('mode.html')" class="back-btn">
-        <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
+    <div class="top-header">
+        <div onclick="fadeNavigate('mode.html')" class="back-btn">
+            <span>◀</span> <span data-i18n="back_to_modes">НАЗАД</span>
+        </div>
+    </div>
+
+    <!-- ИНДИКАТОР БУСТА X2 ОПЫТ -->
+    <div class="boost-badge hidden" id="boost-badge">
+        🧪 x2 ОПЫТ (<span class="boost-timer" id="boost-timer">00:00</span>)
     </div>
 
     <div class="progress-section">
@@ -174,11 +218,15 @@
         </div>
         <div class="bar-bg"><div id="bar-fill" class="bar-fill"></div></div>
     </div>
+    
     <div class="game-grid">
         <div class="col" id="eng-col"></div>
         <div class="col" id="lang-col"></div>
     </div>
 </main>
+
+<!-- Эффект начисления опыта по завершению -->
+<div class="floating-exp" id="floating-exp">+5 ОПЫТ</div>
 
 <script>
     const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
@@ -193,6 +241,11 @@
     let currentLevel = localStorage.getItem('wt_last_lvl') || 1;
     let matchedInLevel = localStorage.getItem('wt_last_prog') || 0;
     let pool = [], selE = null, selR = null;
+
+    // Переменные буста
+    let boostExpUntil = null;
+    let isBoostActive = false;
+    let boostTimerInterval = null;
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -209,10 +262,13 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            let { data: prog } = await sb.from('user_progress').select('*').eq('username', user).single();
+            // Запрашиваем заодно и boost_exp_until
+            let { data: prog } = await sb.from('user_progress').select('current_level, matched_count, boost_exp_until').eq('username', user).single();
             if(prog) {
-                currentLevel = prog.current_level;
-                matchedInLevel = prog.matched_count;
+                currentLevel = prog.current_level || 1;
+                matchedInLevel = prog.matched_count || 0;
+                boostExpUntil = prog.boost_exp_until;
+
                 localStorage.setItem('wt_last_lvl', currentLevel);
                 localStorage.setItem('wt_last_prog', matchedInLevel);
                 
@@ -225,14 +281,58 @@
                 if(words && words.length > 0) {
                     pool = words;
                     initBoard();
+                    startBoostCheck(); // Запускаем проверку буста
                     requestAnimationFrame(() => {
                         document.getElementById('main-content').classList.add('ready');
                     });
+                } else {
+                    document.getElementById('eng-col').innerHTML = '<div style="color:#aaa; text-align:center; padding:20px; width:200%;">Слова закончились!</div>';
+                    document.getElementById('main-content').classList.add('ready');
                 }
             }
         } catch(e) {
-            console.error("Ошибка при загрузке данных уровня:", e);
+            console.error("Ошибка при загрузке данных:", e);
         }
+    }
+
+    // --- ЛОГИКА ТАЙМЕРА БУСТА ---
+    function startBoostCheck() {
+        if (!boostExpUntil) return;
+        
+        checkBoost();
+        if (boostTimerInterval) clearInterval(boostTimerInterval);
+        boostTimerInterval = setInterval(checkBoost, 1000);
+    }
+
+    function checkBoost() {
+        if (!boostExpUntil) {
+            disableBoostVisuals();
+            return;
+        }
+
+        const now = new Date();
+        const expiry = new Date(boostExpUntil);
+
+        if (expiry > now) {
+            isBoostActive = true;
+            document.getElementById('boost-badge').classList.remove('hidden');
+            document.getElementById('bar-fill').classList.add('boosted');
+
+            let diffSec = Math.floor((expiry - now) / 1000);
+            let m = String(Math.floor(diffSec / 60)).padStart(2, '0');
+            let s = String(diffSec % 60).padStart(2, '0');
+            document.getElementById('boost-timer').innerText = `${m}:${s}`;
+        } else {
+            disableBoostVisuals();
+        }
+    }
+
+    function disableBoostVisuals() {
+        isBoostActive = false;
+        boostExpUntil = null;
+        if(boostTimerInterval) clearInterval(boostTimerInterval);
+        document.getElementById('boost-badge').classList.add('hidden');
+        document.getElementById('bar-fill').classList.remove('boosted');
     }
 
     function initBoard() {
@@ -255,7 +355,7 @@
 
     function selectCard(d, type) {
         if(d.classList.contains('correct')) return;
-        if(window.navigator.vibrate) window.navigator.vibrate(5);
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
 
         if(type === 'eng') { if(selE) selE.classList.remove('selected'); selE = d; }
         else { if(selR) selR.classList.remove('selected'); selR = d; }
@@ -278,7 +378,11 @@
             localStorage.setItem('wt_last_prog', matchedInLevel);
             sb.from('user_progress').update({ matched_count: matchedInLevel }).eq('username', user);
             updateUI();
-            if(matchedInLevel === 5) setTimeout(nextLevel, 400);
+            
+            if(matchedInLevel === 5) {
+                // Красивое завершение уровня перед перезагрузкой
+                setTimeout(handleLevelComplete, 300);
+            }
         } else {
             if(window.navigator.vibrate) window.navigator.vibrate([50, 80, 50]);
             
@@ -290,7 +394,17 @@
         }
     }
 
-    async function nextLevel() {
+    async function handleLevelComplete() {
+        // Показываем анимацию опыта
+        const expEl = document.getElementById('floating-exp');
+        const earnedExp = isBoostActive ? 10 : 5;
+        
+        if (isBoostActive) expEl.classList.add('boosted');
+        expEl.innerText = `+${earnedExp} ОПЫТ`;
+        expEl.classList.add('show');
+        if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 150]);
+
+        // Сохраняем прогресс
         const nextLvl = parseInt(currentLevel) + 1;
         
         let { data: stats } = await sb.from('user_progress')
@@ -299,12 +413,12 @@
             
         let newTotal = (stats?.total_pairs_found || 0) + 5;
         
-        let gExp = (stats?.global_exp || 0) + 5; 
+        let gExp = (stats?.global_exp || 0) + earnedExp; 
         let gLvl = stats?.global_level || 1;
 
-        let neededExp = gLvl * 10;
-        if (gExp >= neededExp) {
-            gExp -= neededExp;
+        // Цикл на случай, если опыта перевалило на 2 уровня вперед
+        while (gExp >= gLvl * 10) {
+            gExp -= gLvl * 10;
             gLvl += 1;
         }
 
@@ -314,15 +428,11 @@
         let lastDateStr = stats?.last_played_date || null;
         
         if (localStorage.getItem('wt_last_played') !== todayStr) {
-            newStreak += 1; // Увеличиваем серию
-            
+            newStreak += 1;
             if (lastDateStr) {
                 const lastD = new Date(lastDateStr); lastD.setHours(0,0,0,0);
                 const todayD = new Date(); todayD.setHours(0,0,0,0);
-                // Если разница больше 1 дня - сбрасываем серию до 1
-                if ((todayD - lastD) / 86400000 > 1) {
-                    newStreak = 1;
-                }
+                if ((todayD - lastD) / 86400000 > 1) newStreak = 1;
             }
             localStorage.setItem('wt_last_played', todayStr);
             lastDateStr = todayStr;
@@ -338,17 +448,19 @@
             total_pairs_found: newTotal,
             global_exp: gExp,
             global_level: gLvl,
-            current_streak: newStreak,         // Пишем новую серию
-            last_played_date: lastDateStr      // Пишем дату
+            current_streak: newStreak,
+            last_played_date: lastDateStr
         }).eq('username', user);
 
         if (nextLvl % 10 === 0) {
             sb.from('live_feed').insert({
                 username: user, event_type: 'pair_lvl', event_val: nextLvl.toString()
-            }).then(({error}) => { if(error) console.error("Ошибка отправки в ленту:", error); });
+            }).then(({error}) => { if(error) console.error(error); });
         }
         
-        location.reload();
+        setTimeout(() => {
+            location.reload();
+        }, 1200); // Даем время на анимацию
     }
 
     function updateUI() {
