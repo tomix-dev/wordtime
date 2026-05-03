@@ -25,7 +25,7 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (4 КНОПКИ) --- */
+        /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
         .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
@@ -75,6 +75,15 @@
         .floating-text { position: absolute; font-size: 20px; font-weight: 900; color: var(--purple); pointer-events: none; animation: floatUp 0.6s ease-out forwards; text-shadow: 0 0 10px rgba(176,38,255,0.8); z-index: 50; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(1.5); } }
 
+        /* --- АНТИ-КЛИКЕР ЭКРАН --- */
+        .anti-clicker-overlay {
+            position: fixed; inset: 0; background: rgba(255,0,0,0.2); backdrop-filter: blur(5px);
+            z-index: 3000; display: flex; justify-content: center; align-items: center; text-align: center;
+            opacity: 0; pointer-events: none; transition: 0.2s; padding: 20px;
+        }
+        .anti-clicker-overlay.show { opacity: 1; pointer-events: auto; }
+        .anti-clicker-text { font-size: 20px; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--red); text-transform: uppercase; background: rgba(0,0,0,0.8); padding: 30px; border-radius: 20px; border: 2px solid var(--red); animation: shake 0.5s ease; }
+
         /* --- ОТСЧЕТ ПЕРЕД БОССОМ --- */
         .countdown-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
@@ -85,29 +94,18 @@
         .countdown-text {
             font-size: 120px; font-weight: 900; color: var(--gold); 
             text-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
-            font-variant-numeric: tabular-nums;
-            transition: opacity 0.2s ease;
+            font-variant-numeric: tabular-nums; transition: opacity 0.2s ease;
         }
-        @keyframes popIn {
-            0% { transform: scale(0.5); opacity: 0; }
-            40% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 40% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
         /* --- БОСС-ФАЙТ (OVERLAY) --- */
         .boss-overlay {
             position: fixed; inset: 0; background: rgba(20, 5, 5, 0.95); backdrop-filter: blur(15px);
-            z-index: 2200; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; 
-            transition: opacity 0.4s ease, transform 0.4s ease; 
-            transform: scale(0.95); 
-            padding: 20px;
+            z-index: 2200; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease, transform 0.4s ease; 
+            transform: scale(0.95); padding: 20px;
         }
-        .boss-overlay.show { 
-            opacity: 1; pointer-events: auto; 
-            transform: scale(1); 
-        }
+        .boss-overlay.show { opacity: 1; pointer-events: auto; transform: scale(1); }
         
         .boss-title { color: var(--red); font-size: 14px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 30px; animation: pulseRed 1s infinite; }
         .boss-word { font-size: 36px; font-weight: 900; color: #fff; margin-bottom: 40px; text-align: center; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
@@ -126,6 +124,7 @@
         .boss-btn.wrong { border-color: var(--red); background: rgba(255, 75, 75, 0.2); }
 
         @keyframes pulseRed { 0%, 100% { text-shadow: 0 0 10px var(--red); } 50% { text-shadow: 0 0 30px var(--red), 0 0 50px var(--red); } }
+        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
 
         /* --- МАГАЗИН ОБМЕНА --- */
         .shop-overlay {
@@ -197,6 +196,11 @@
     </div>
 </main>
 
+<!-- АНТИ-КЛИКЕР -->
+<div class="anti-clicker-overlay" id="anti-clicker-overlay">
+    <div class="anti-clicker-text" data-i18n="autoclicker_warning">КЛИКЕР ИСПОЛЬЗОВАТЬ ЗАПРЕЩЕНО!</div>
+</div>
+
 <!-- ОКНО ОТСЧЕТА -->
 <div class="countdown-overlay" id="countdown-overlay">
     <div class="countdown-text" id="countdown-text">3</div>
@@ -237,12 +241,23 @@
     let clickPower = parseInt(localStorage.getItem('wt_click_power')) || 1;
     let clicksToBoss = parseInt(localStorage.getItem('wt_clicks_to_boss')) || 50;
 
+    let globalLevel = 1;
     let pool = [];
+    let usedBossWords = []; 
+    
     let isBossFight = false;
     let isCountingDown = false; 
     let isExchanging = false; 
+    let isLocked = false; 
+
     let bossTimerInterval;
     let currentBossWord = null;
+
+    // Переменные анти-кликера
+    let clickTimes = [];
+    let lastClickX = null;
+    let lastClickY = null;
+    let identicalClickCount = 0;
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -253,12 +268,31 @@
         setTimeout(() => { window.location.href = url; }, 400); 
     }
 
-    async function loadWords() {
+    function getMaxPower() {
+        if (globalLevel < 10) return 20;
+        if (globalLevel < 25) return 30;
+        if (globalLevel < 50) return 50;
+        if (globalLevel < 100) return 70;
+        return 200; 
+    }
+
+    async function loadData() {
         try {
             if (!window.translations) {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
-            // Подтягиваем слова с переводом нужного языка
+            
+            // 1. Получаем глобальный уровень
+            let { data: stats } = await sb.from('user_progress').select('global_level').eq('username', user).single();
+            if (stats && stats.global_level) {
+                globalLevel = stats.global_level;
+            }
+
+            // Корректируем силу, если она больше положенного лимита
+            let maxP = getMaxPower();
+            if (clickPower > maxP) clickPower = maxP;
+
+            // 2. Подтягиваем слова
             const { data: words } = await sb.from('words').select(`id, eng, ${appLang}`).limit(100);
             if(words && words.length >= 3) {
                 pool = words;
@@ -285,10 +319,62 @@
         localStorage.setItem('wt_clicks_to_boss', clicksToBoss);
     }
 
+    // --- АНТИ-КЛИКЕР ---
+    function checkAutoclicker(e) {
+        const now = Date.now();
+        clickTimes.push(now);
+        
+        // Оставляем только клики за последнюю секунду
+        clickTimes = clickTimes.filter(t => now - t < 1000);
+        
+        // Лимит: 20 кликов в секунду
+        if (clickTimes.length > 20) return true;
+
+        // Лимит по одинаковым координатам
+        let x = e.clientX || (e.touches && e.touches[0].clientX);
+        let y = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        if (x !== undefined && x === lastClickX && y === lastClickY) {
+            identicalClickCount++;
+            // Увеличили до 80, чтобы нормальные игроки не страдали
+            if (identicalClickCount > 80) return true; 
+        } else {
+            identicalClickCount = 0;
+        }
+        
+        lastClickX = x;
+        lastClickY = y;
+        
+        return false;
+    }
+
+    function triggerAutoclickerBlock() {
+        isLocked = true;
+        clickTimes = [];
+        identicalClickCount = 0;
+        if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+        
+        const overlay = document.getElementById('anti-clicker-overlay');
+        overlay.classList.add('show');
+        
+        setTimeout(() => {
+            overlay.classList.remove('show');
+            isLocked = false;
+        }, 3000); // Блокировка на 3 секунды
+    }
+
     // --- ЛОГИКА КЛИКЕРА ---
     function handleClick(e) {
-        if(isBossFight || isCountingDown) return;
+        // ЗАПРЕТ МУЛЬТИ-ТАПА: Игнорируем все касания, кроме первого пальца
+        if (e.type === 'pointerdown' && !e.isPrimary) return;
+
+        if(isBossFight || isCountingDown || isLocked) return;
         
+        if (checkAutoclicker(e)) {
+            triggerAutoclickerBlock();
+            return;
+        }
+
         if(window.navigator.vibrate) window.navigator.vibrate(5);
         
         sparks += clickPower;
@@ -361,10 +447,20 @@
         isBossFight = true;
         if(window.navigator.vibrate) window.navigator.vibrate([30, 50, 30, 50, 100]);
         
-        currentBossWord = pool[Math.floor(Math.random() * pool.length)];
+        // Фильтруем пул, убирая те слова, которые игрок уже угадал на боссе
+        let availableWords = pool.filter(w => !usedBossWords.includes(w.id));
+        
+        // Если слова закончились, обнуляем массив (начинаем по новому кругу)
+        if (availableWords.length === 0) {
+            usedBossWords = [];
+            availableWords = [...pool];
+        }
+
+        currentBossWord = availableWords[Math.floor(Math.random() * availableWords.length)];
         document.getElementById('boss-word').innerText = currentBossWord.eng;
 
         let options = [currentBossWord];
+        // Для вариантов ответов можем брать любые слова из пула
         while(options.length < 3) {
             let rnd = pool[Math.floor(Math.random() * pool.length)];
             if(!options.find(w => w.id === rnd.id)) options.push(rnd);
@@ -405,15 +501,26 @@
         const isCorrect = selectedId === currentBossWord.id;
 
         if(isCorrect) {
+            // ПОБЕДА
             if(window.navigator.vibrate) window.navigator.vibrate(100);
             if(btnElement) btnElement.classList.add('correct');
-            clickPower++; 
+            
+            // Добавляем слово в список угаданных, чтобы не повторялось
+            usedBossWords.push(currentBossWord.id);
+            
+            // Начисляем силу (если не уперлись в лимит)
+            let maxP = getMaxPower();
+            if (clickPower < maxP) {
+                clickPower += 1; 
+            }
         } else {
+            // ПОРАЖЕНИЕ
             if(window.navigator.vibrate) window.navigator.vibrate([80, 80, 80]);
             if(btnElement) btnElement.classList.add('wrong');
             
-            sparks -= 100;
-            if (sparks < 0) sparks = 0;
+            // Наказание: -30% искр и -10 силы (мин. 1)
+            sparks = Math.floor(sparks * 0.7);
+            clickPower = Math.max(1, clickPower - 10);
         }
 
         setTimeout(() => {
@@ -435,10 +542,11 @@
 
     function checkShopBtn() {
         const btn = document.getElementById('exchange-btn');
+        const price = 1000; // Новый курс: 1000 искр = 10 EXP
         
-        if (sparks >= 500) {
-            let packs = Math.floor(sparks / 500);
-            let cost = packs * 500;
+        if (sparks >= price) {
+            let packs = Math.floor(sparks / price);
+            let cost = packs * price;
             let expReward = packs * 10;
             
             btn.disabled = false;
@@ -446,20 +554,21 @@
             btn.innerText = formatStr.replace('{cost}', cost).replace('{expReward}', expReward);
         } else {
             btn.disabled = true;
-            let diff = 500 - sparks;
+            let diff = price - sparks;
             let formatStr = window.translations && window.translations['shop_not_enough'] ? window.translations['shop_not_enough'] : `НЕ ХВАТАЕТ ({diff} Искр)`;
             btn.innerText = formatStr.replace('{diff}', diff);
         }
     }
 
     async function buyExp() {
-        if(sparks < 500 || isExchanging) return;
+        const price = 1000;
+        if(sparks < price || isExchanging) return;
         
         isExchanging = true; 
 
         const btn = document.getElementById('exchange-btn');
-        let packs = Math.floor(sparks / 500);
-        let cost = packs * 500;
+        let packs = Math.floor(sparks / price);
+        let cost = packs * price;
         let expReward = packs * 10;
 
         btn.innerText = window.translations && window.translations['shop_processing'] ? window.translations['shop_processing'] : "ОБРАБОТКА...";
@@ -486,9 +595,6 @@
                 global_level: gLvl
             }).eq('username', user);
 
-            // ==========================================
-            // ОТПРАВКА СОБЫТИЯ В ЛЕНТУ (LIVE FEED)
-            // ==========================================
             sb.from('live_feed').insert({
                 username: user,
                 event_type: 'brain_exchange',
@@ -496,7 +602,6 @@
             }).then(({error}) => {
                 if(error) console.error("Ошибка отправки в ленту:", error);
             });
-            // ==========================================
 
             sparks -= cost;
             if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
@@ -521,7 +626,7 @@
         }
     }
 
-    loadWords();
+    loadData();
 </script>
 </body>
 </html>
