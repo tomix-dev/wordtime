@@ -101,10 +101,10 @@
     let isLoginMode = sessionStorage.getItem('authMode') !== 'reg';
     let inviterUsername = null;
 
-    // Считываем реферальный параметр, если он есть
+    // Считываем реферальный параметр
     const startParam = tg.initDataUnsafe?.start_param;
     if (startParam && startParam.startsWith('ref_')) {
-        inviterUsername = startParam.substring(4); // Убираем 'ref_' и получаем имя
+        inviterUsername = startParam.substring(4);
     }
 
     document.addEventListener('translationsReady', () => {
@@ -114,27 +114,23 @@
         }
     });
 
-    // Функция начисления реферального бонуса
+    // Функция начисления реферального бонуса пригласившему
     async function processReferralReward(newUsername) {
-        if (!inviterUsername || inviterUsername === newUsername) return; // Себя пригласить нельзя
+        if (!inviterUsername || inviterUsername === newUsername) return;
 
         try {
-            // Ищем пригласившего в базе
             const { data: inviterStats } = await sb.from('user_progress')
                 .select('coins, referrals_count')
                 .eq('username', inviterUsername)
                 .single();
 
             if (inviterStats) {
-                // Начисляем бонус
                 const newCoins = (inviterStats.coins || 0) + 200;
                 const newRefCount = (inviterStats.referrals_count || 0) + 1;
 
                 await sb.from('user_progress')
                     .update({ coins: newCoins, referrals_count: newRefCount })
                     .eq('username', inviterUsername);
-
-                console.log(`Начислено 200 TIME игроку ${inviterUsername} за приглашение ${newUsername}`);
             }
         } catch (e) {
             console.error("Ошибка при начислении реф. бонуса:", e);
@@ -158,18 +154,18 @@
         try {
             if (tgUser) {
                 let { data: account } = await sb.from('user_progress').select('*').eq('tg_id', tgUser.id).maybeSingle();
+                
                 if (account) {
                     localStorage.setItem('wt_user', account.username);
                     localStorage.setItem('wt_login_method', 'telegram');
                 } else {
                     const newName = tgUser.username || tgUser.first_name || ("User" + tgUser.id);
                     
-                    // Стартовые параметры для новичка
+                    // БОНУС НОВИЧКУ ПРИ АВТОРЕГИСТРАЦИИ ТЕЛЕГРАМ
                     let initialCoins = 0; 
-                    // Если хочешь давать новичку бонус по рефералке - раскомментируй строку ниже:
-                    // if(inviterUsername) initialCoins = 50; 
+                    if(inviterUsername) initialCoins = 50; 
 
-                    await sb.from('user_progress').insert([{ 
+                    const { error } = await sb.from('user_progress').insert([{ 
                         username: newName, 
                         tg_id: tgUser.id, 
                         current_level: 1, 
@@ -179,23 +175,27 @@
                         created_at: new Date().toISOString()
                     }]);
 
+                    // Если вдруг имя занято или ошибка базы - выкидываем на ручной ввод
+                    if (error) throw error;
+
                     localStorage.setItem('wt_user', newName);
                     localStorage.setItem('wt_login_method', 'telegram');
 
-                    // Запускаем начисление бонуса пригласившему
                     await processReferralReward(newName);
                 }
-                await wait(2000);
+                
+                await wait(1000);
                 window.location.href = './main.html';
 
             } else if (savedUser) {
-                await wait(2000);
+                await wait(1000);
                 window.location.href = './main.html';
             } else {
-                await wait(2000);
+                await wait(1500);
                 showLoginUI();
             }
         } catch (e) {
+            console.error("Ошибка автовхода:", e);
             showLoginUI();
         }
     };
@@ -267,7 +267,7 @@
                 let { data: acc } = await sb.from('user_progress').select('*').eq('username', u).single();
                 if(acc && acc.password === p) {
                     localStorage.setItem('wt_user', u);
-                    localStorage.setItem('wt_password', p); // Запоминаем для кнопки ВЫХОД
+                    localStorage.setItem('wt_password', p);
                     window.location.href = './main.html';
                 } else {
                     alert(window.translations ? window.translations['auth_err_login'] : "Ошибка входа");
@@ -275,8 +275,10 @@
                     btn.disabled = false;
                 }
             } else {
+                
+                // БОНУС НОВИЧКУ ПРИ РУЧНОЙ РЕГИСТРАЦИИ
                 let initialCoins = 0; 
-                 if(inviterUsername) initialCoins = 50; // Бонус новичку
+                if(inviterUsername) initialCoins = 50; 
 
                 const { error } = await sb.from('user_progress').insert([{ 
                     username: u, 
@@ -292,7 +294,6 @@
                     localStorage.setItem('wt_user', u);
                     localStorage.setItem('wt_password', p);
 
-                    // Запускаем начисление бонуса пригласившему
                     await processReferralReward(u);
 
                     window.location.href = './main.html';
