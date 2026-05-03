@@ -25,15 +25,28 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (4 КНОПКИ) --- */
-        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        /* --- ТАБ-БАР (ПРЕМИУМ ДИЗАЙН С НЕОНОМ) --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
-        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
-        .tab-item.active { color: var(--gold); }
-        .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+        
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
+        
+        /* Активная вкладка */
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        
+        /* Неоновое свечение позади активной иконки */
+        .tab-item.active::before {
+            content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
+            border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate;
+        }
+
+        @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
 
         /* --- КОНТЕНТ --- */
         main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px; display: flex; flex-direction: column; visibility: hidden; }
@@ -161,6 +174,10 @@
             <span class="tab-icon">👤</span>
             <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
+        </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
             <span class="tab-label" data-i18n="tab_settings">Настройки</span>
@@ -270,7 +287,6 @@
     }
 
     function getMaxPower() {
-        // Уровень = Макс сила клика (ограничение до 100)
         return Math.min(globalLevel, 100);
     }
 
@@ -280,17 +296,14 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
             
-            // 1. Получаем глобальный уровень
             let { data: stats } = await sb.from('user_progress').select('global_level').eq('username', user).single();
             if (stats && stats.global_level) {
                 globalLevel = stats.global_level;
             }
 
-            // Корректируем силу, если она больше положенного лимита
             let maxP = getMaxPower();
             if (clickPower > maxP) clickPower = maxP;
 
-            // 2. Подтягиваем слова
             const { data: words } = await sb.from('words').select(`id, eng, ${appLang}`).limit(100);
             if(words && words.length >= 3) {
                 pool = words;
@@ -322,19 +335,15 @@
         const now = Date.now();
         clickTimes.push(now);
         
-        // Оставляем только клики за последнюю секунду
         clickTimes = clickTimes.filter(t => now - t < 1000);
         
-        // Лимит: 20 кликов в секунду
         if (clickTimes.length > 20) return true;
 
-        // Лимит по одинаковым координатам
         let x = e.clientX || (e.touches && e.touches[0].clientX);
         let y = e.clientY || (e.touches && e.touches[0].clientY);
         
         if (x !== undefined && x === lastClickX && y === lastClickY) {
             identicalClickCount++;
-            // Снижено до 60 кликов подряд в одну пиксель-точку
             if (identicalClickCount > 60) return true; 
         } else {
             identicalClickCount = 0;
@@ -352,9 +361,8 @@
         identicalClickCount = 0;
         if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
 
-        // ЖЕСТКОЕ НАКАЗАНИЕ ЗА ЧИТЫ
-        sparks = Math.floor(sparks * 0.5); // -50% искр
-        clickPower = Math.max(1, Math.floor(clickPower * 0.5)); // -50% силы, но не меньше 1
+        sparks = Math.floor(sparks * 0.5); 
+        clickPower = Math.max(1, Math.floor(clickPower * 0.5)); 
         updateUI(); 
         
         const overlay = document.getElementById('anti-clicker-overlay');
@@ -363,17 +371,14 @@
         setTimeout(() => {
             overlay.classList.remove('show');
             isLocked = false;
-        }, 3000); // Блокировка на 3 секунды
+        }, 3000); 
     }
 
     // --- ЛОГИКА КЛИКЕРА ---
     function handleClick(e) {
-        // ЗАПРЕТ МУЛЬТИ-ТАПА: Игнорируем касания другими пальцами
         if (e.type === 'pointerdown' && !e.isPrimary) return;
-        if (e.touches && e.touches.length > 1) return; // Строгая защита от 2+ касаний
+        if (e.touches && e.touches.length > 1) return; 
 
-        // АППАРАТНЫЙ ШЛЮЗ: Минимум 40 миллисекунд между кликами 
-        // (жестко режет одновременные удары разными пальцами)
         let now = Date.now();
         if (now - lastTapTime < 40) return;
         lastTapTime = now;
@@ -457,10 +462,8 @@
         isBossFight = true;
         if(window.navigator.vibrate) window.navigator.vibrate([30, 50, 30, 50, 100]);
         
-        // Фильтруем пул, убирая те слова, которые игрок уже угадал на боссе
         let availableWords = pool.filter(w => !usedBossWords.includes(w.id));
         
-        // Если слова закончились, обнуляем массив (начинаем по новому кругу)
         if (availableWords.length === 0) {
             usedBossWords = [];
             availableWords = [...pool];
@@ -470,7 +473,6 @@
         document.getElementById('boss-word').innerText = currentBossWord.eng;
 
         let options = [currentBossWord];
-        // Для вариантов ответов можем брать любые слова из пула
         while(options.length < 3) {
             let rnd = pool[Math.floor(Math.random() * pool.length)];
             if(!options.find(w => w.id === rnd.id)) options.push(rnd);
@@ -503,7 +505,7 @@
         }, 3200);
     }
 
-    function answerBoss(selectedId, btnElement) {
+    async function answerBoss(selectedId, btnElement) {
         if(!isBossFight) return;
         clearTimeout(bossTimerInterval);
         isBossFight = false;
@@ -515,20 +517,44 @@
             if(window.navigator.vibrate) window.navigator.vibrate(100);
             if(btnElement) btnElement.classList.add('correct');
             
-            // Добавляем слово в список угаданных, чтобы не повторялось
             usedBossWords.push(currentBossWord.id);
             
-            // Начисляем силу (если не уперлись в лимит)
             let maxP = getMaxPower();
             if (clickPower < maxP) {
                 clickPower += 1; 
             }
+
+            // --- ДВИГАТЕЛЬ СЕРИИ (ОГОНЬКА) ---
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (localStorage.getItem('wt_last_played') !== todayStr) {
+                try {
+                    let { data: stats } = await sb.from('user_progress').select('current_streak, last_played_date').eq('username', user).single();
+                    let newStreak = (stats?.current_streak || 0) + 1;
+                    let lastDateStr = stats?.last_played_date || null;
+
+                    if (lastDateStr) {
+                        const lastD = new Date(lastDateStr); lastD.setHours(0,0,0,0);
+                        const todayD = new Date(); todayD.setHours(0,0,0,0);
+                        if ((todayD - lastD) / 86400000 > 1) {
+                            newStreak = 1;
+                        }
+                    }
+
+                    await sb.from('user_progress').update({ 
+                        current_streak: newStreak, 
+                        last_played_date: todayStr 
+                    }).eq('username', user);
+                    
+                    localStorage.setItem('wt_last_played', todayStr);
+                } catch(e) { console.error("Ошибка сохранения серии:", e); }
+            }
+            // ---------------------------------
+
         } else {
             // ПОРАЖЕНИЕ
             if(window.navigator.vibrate) window.navigator.vibrate([80, 80, 80]);
             if(btnElement) btnElement.classList.add('wrong');
             
-            // Наказание: -30% искр и -10 силы (мин. 1)
             sparks = Math.floor(sparks * 0.7);
             clickPower = Math.max(1, clickPower - 10);
         }
@@ -552,7 +578,7 @@
 
     function checkShopBtn() {
         const btn = document.getElementById('exchange-btn');
-        const price = 1000; // Новый курс: 1000 искр = 10 EXP
+        const price = 1000; 
         
         if (sparks >= price) {
             let packs = Math.floor(sparks / price);

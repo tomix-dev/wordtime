@@ -25,15 +25,28 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (4 КНОПКИ) --- */
-        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        /* --- ТАБ-БАР (ПРЕМИУМ ДИЗАЙН С НЕОНОМ) --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
-        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
-        .tab-item.active { color: var(--gold); }
-        .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+        
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
+        
+        /* Активная вкладка */
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        
+        /* Неоновое свечение позади активной иконки */
+        .tab-item.active::before {
+            content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
+            border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate;
+        }
+
+        @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
 
         /* --- КОНТЕНТ --- */
         main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px; visibility: hidden; }
@@ -102,6 +115,10 @@
         <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
             <span class="tab-icon">👤</span>
             <span class="tab-label" data-i18n="tab_profile">Профиль</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
@@ -267,7 +284,7 @@
         let passedText = window.translations ? window.translations['level_passed'] : "УРОВЕНЬ <br><span>ПРОЙДЕН!</span>";
         document.getElementById('tf-word').innerHTML = passedText;
 
-        let { data: stats } = await sb.from('user_progress').select('global_exp, global_level').eq('username', user).single();
+        let { data: stats } = await sb.from('user_progress').select('global_exp, global_level, current_streak, last_played_date').eq('username', user).single();
         
         let gExp = (stats?.global_exp || 0) + 5; 
         let gLvl = stats?.global_level || 1;
@@ -282,9 +299,32 @@
             }
         }
 
+        // --- ДВИГАТЕЛЬ СЕРИИ (ОГОНЬКА) ---
+        const todayStr = new Date().toISOString().split('T')[0];
+        let newStreak = stats?.current_streak || 0;
+        let lastDateStr = stats?.last_played_date || null;
+        
+        if (localStorage.getItem('wt_last_played') !== todayStr) {
+            newStreak += 1; // Увеличиваем серию
+            
+            if (lastDateStr) {
+                const lastD = new Date(lastDateStr); lastD.setHours(0,0,0,0);
+                const todayD = new Date(); todayD.setHours(0,0,0,0);
+                // Если разница больше 1 дня - сбрасываем серию до 1
+                if ((todayD - lastD) / 86400000 > 1) {
+                    newStreak = 1;
+                }
+            }
+            localStorage.setItem('wt_last_played', todayStr);
+            lastDateStr = todayStr;
+        }
+        // ---------------------------------
+
         await sb.from('user_progress').update({ 
             global_exp: gExp,
-            global_level: gLvl
+            global_level: gLvl,
+            current_streak: newStreak,         // Пишем новую серию
+            last_played_date: lastDateStr      // Пишем дату
         }).eq('username', user);
 
         // ==========================================

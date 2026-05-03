@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Квесты</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88; --blue: #00bfff; --purple: #b026ff; --coin: #00d2ff;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; overflow-x: hidden; padding-bottom: 110px; 
+        }
+        
+        main { 
+            width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px);
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            visibility: hidden;
+        }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+       /* --- ТАБ-БАР (УЛУЧШЕННЫЙ ДИЗАЙН) --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar.ready { opacity: 1; }
+        
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        
+        /* Активная вкладка */
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ (КЛАССИКА) --- */
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; margin-top: 10px; }
+        .page-title { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
+        
+        .balances { display: flex; gap: 10px; }
+        .balance-pill { background: var(--glass); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 15px; font-weight: 900; font-size: 12px; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(10px); }
+        .b-coin { color: var(--coin); }
+        .b-exp { color: var(--gold); }
+
+        /* --- КАРТОЧКА КВЕСТА --- */
+        .quest-list { display: flex; flex-direction: column; gap: 18px; }
+        .quest-card { 
+            background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); 
+            border: 1px solid var(--glass-border); border-radius: 20px; 
+            padding: 20px; position: relative; overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        .quest-card.completed { border-color: var(--green); background: rgba(0, 255, 136, 0.05); }
+
+        .q-header { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
+        .q-icon { width: 50px; height: 50px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; box-shadow: inset 0 0 15px rgba(255,255,255,0.02); }
+        .q-info { flex: 1; }
+        .q-title { font-size: 14px; font-weight: 900; color: #fff; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+        .q-desc { font-size: 9px; color: #777; font-weight: 700; line-height: 1.4; }
+
+        /* ТЕКУЩЕЕ ЗАДАНИЕ */
+        .q-current-task { background: rgba(212, 175, 55, 0.05); border-left: 3px solid var(--gold); padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 15px; font-size: 11px; font-weight: 700; color: #ddd; line-height: 1.4; }
+        .q-task-label { font-size: 8px; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 3px; }
+
+        /* ЭТАПЫ (Точечки) */
+        .q-stages { display: flex; gap: 6px; margin-bottom: 15px; }
+        .stage-dot { width: 10px; height: 10px; border-radius: 50%; background: #222; border: 1px solid #444; transition: 0.3s; }
+        .stage-dot.done { background: var(--green); border-color: var(--green); box-shadow: 0 0 8px rgba(0, 255, 136, 0.5); }
+        .stage-dot.active { background: var(--gold); border-color: var(--gold-light); box-shadow: 0 0 8px rgba(212, 175, 55, 0.5); }
+
+        /* ПРОГРЕСС-БАР */
+        .q-progress-container { margin-bottom: 20px; }
+        .q-progress-text { display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; color: #aaa; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+        .q-progress-bar { width: 100%; height: 8px; background: rgba(0,0,0,0.6); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .q-progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(212,175,55,0.4); }
+
+        /* НИЖНЯЯ ПАНЕЛЬ (Награды и Кнопка) */
+        .q-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 15px; }
+        .q-rewards { display: flex; gap: 8px; }
+        .reward-tag { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 5px; }
+        .r-coin { color: var(--coin); }
+        .r-exp { color: var(--gold); }
+
+        .q-btn { 
+            background: #222; border: 1px solid #444; color: #888; font-weight: 900; font-size: 10px; 
+            padding: 12px 20px; border-radius: 14px; text-transform: uppercase; letter-spacing: 1.5px; 
+            transition: 0.3s;
+        }
+        .q-btn.ready { background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; color: #000; box-shadow: 0 5px 15px rgba(212,175,55,0.3); cursor: pointer; }
+        .q-btn.ready:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(212,175,55,0.4); }
+        .q-btn.finished { background: rgba(0,255,136,0.1); border: 1px solid var(--green); color: var(--green); pointer-events: none;}
+
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar" id="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label" data-i18n="tab_home">Главная</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-label" data-i18n="tab_play">Играть</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label" data-i18n="tab_profile">Профиль</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item active">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label" data-i18n="tab_settings">Настройки</span>
+        </a>
+    </div>
+</div>
+
+<main id="main-content">
+    <div class="header-top">
+        <div class="page-title" data-i18n="quests_title">КВЕСТЫ</div>
+        <div class="balances">
+            <div class="balance-pill b-coin">⏳ <span id="ui-coins">0</span></div>
+            <div class="balance-pill b-exp">⭐ <span id="ui-exp">0</span></div>
+        </div>
+    </div>
+
+    <div class="quest-list" id="quest-container">
+        <div style="text-align: center; color: #666; font-size: 10px; font-weight: 700; padding: 20px;">ЗАГРУЗКА...</div>
+    </div>
+</main>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    const user = localStorage.getItem('wt_user');
+    if(!user) window.location.href = 'index.html';
+
+    // Конфиг всех квестов
+    const QUESTS = [
+        {
+            id: 'days_online', icon: '🗓️', 
+            title: 'СТАРОЖИЛА ПРОЕКТА', desc: 'Будь с нами каждый день и забирай награды.',
+            taskKey: 'quest_task_days', defaultTask: 'Пробыть на проекте {goal} дней',
+            stages: [
+                { goal: 7, c: 100, x: 200 },
+                { goal: 14, c: 300, x: 500 },
+                { goal: 30, c: 1000, x: 1500 }
+            ]
+        },
+        {
+            id: 'global_level', icon: '🌟', 
+            title: 'ГЛОБАЛЬНОЕ ПРЕВОСХОДСТВО', desc: 'Повышай свой глобальный уровень аккаунта.',
+            taskKey: 'quest_task_global', defaultTask: 'Достигнуть {goal} уровня аккаунта',
+            stages: [
+                { goal: 25, c: 200, x: 0 },
+                { goal: 50, c: 500, x: 0 },
+                { goal: 100, c: 1200, x: 0 },
+                { goal: 150, c: 2500, x: 0 },
+                { goal: 200, c: 5000, x: 0 }
+            ]
+        },
+        {
+            id: 'pair_level', icon: '🎴', 
+            title: 'МАСТЕР ПАР', desc: 'Достигни крутых высот в режиме "Найди пару".',
+            taskKey: 'quest_task_pair', defaultTask: 'Достигнуть {goal} уровня в Найди пару',
+            stages: [
+                { goal: 50, c: 150, x: 300 },
+                { goal: 100, c: 400, x: 800 },
+                { goal: 150, c: 900, x: 1500 },
+                { goal: 200, c: 2000, x: 3000 }
+            ]
+        },
+        {
+            id: 'tf_level', icon: '⚖️', 
+            title: 'ДЕТЕКТОР ЛЖИ', desc: 'Прокачай свои инстинкты в режиме True/False.',
+            taskKey: 'quest_task_tf', defaultTask: 'Достигнуть {goal} уровня в True/False',
+            stages: [
+                { goal: 25, c: 100, x: 200 },
+                { goal: 75, c: 350, x: 700 },
+                { goal: 150, c: 800, x: 1600 },
+                { goal: 250, c: 2000, x: 4000 }
+            ]
+        },
+        {
+            id: 'rush_rounds', icon: '🔥', 
+            title: 'СПИДРАННЕР', desc: 'Пройди уровни на время в режиме Speed Rush.',
+            taskKey: 'quest_task_rush', defaultTask: 'Пройти {goal} раундов в Speed Rush',
+            stages: [
+                { goal: 10, c: 150, x: 300 },
+                { goal: 20, c: 400, x: 800 },
+                { goal: 30, c: 1000, x: 2000 }
+            ]
+        },
+        {
+            id: 'sparks_farm', icon: '🧠', 
+            title: 'ГЕНЕРАТОР ИДЕЙ', desc: 'Накопи искры на балансе в Brain Clicker.',
+            taskKey: 'quest_task_sparks', defaultTask: 'Накопить {goal} искр в Brain Clicker',
+            stages: [
+                { goal: 10000, c: 100, x: 200 },
+                { goal: 50000, c: 500, x: 1000 },
+                { goal: 100000, c: 1500, x: 3000 }
+            ]
+        }
+    ];
+
+    let dbData = null;
+    let localData = {};
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function initQuests() {
+        try {
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Получаем данные из БД
+            const { data, error } = await sb.from('user_progress').select('*').eq('username', user).single();
+            if (error) throw error;
+            
+            dbData = data;
+            if(!dbData.claimed_quests) dbData.claimed_quests = {};
+            if(dbData.coins === undefined || dbData.coins === null) dbData.coins = 0;
+
+            // Собираем локальные данные
+            localData.sparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
+            localData.tfLevel = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
+
+            updateTopBalance();
+            renderCards();
+
+            document.getElementById('main-content').classList.add('ready');
+        } catch (e) {
+            console.error("Ошибка загрузки квестов:", e);
+        }
+    }
+
+    function updateTopBalance() {
+        document.getElementById('ui-coins').innerText = dbData.coins;
+        document.getElementById('ui-exp').innerText = dbData.global_exp;
+    }
+
+    function getCurrentValueForQuest(id) {
+        switch(id) {
+            case 'days_online':
+                const createdDate = new Date(dbData.created_at);
+                return Math.max(1, Math.floor((new Date() - createdDate) / 86400000));
+            case 'global_level':
+                return dbData.global_level || 1;
+            case 'pair_level':
+                return dbData.current_level || 1;
+            case 'tf_level':
+                return localData.tfLevel;
+            case 'rush_rounds':
+                return dbData.rush_level || 1;
+            case 'sparks_farm':
+                return localData.sparks;
+            default: return 0;
+        }
+    }
+
+    function renderCards() {
+        const container = document.getElementById('quest-container');
+        container.innerHTML = '';
+
+        const txtClaim = window.translations?.['quest_btn_claim'] || 'ЗАБРАТЬ';
+        const txtProg = window.translations?.['quest_btn_progress'] || 'В ПРОЦЕССЕ';
+        const txtDone = window.translations?.['quest_completed'] || 'ВЫПОЛНЕНО';
+        const txtPrefix = window.translations?.['quest_task_prefix'] || 'ТЕКУЩЕЕ ЗАДАНИЕ:';
+
+        QUESTS.forEach(q => {
+            let claimedIndex = dbData.claimed_quests[q.id] || 0;
+            let isFullyCompleted = claimedIndex >= q.stages.length;
+            let currentVal = getCurrentValueForQuest(q.id);
+            
+            // Если квест выполнен, показываем последний этап, иначе текущий
+            let activeStageIndex = isFullyCompleted ? q.stages.length - 1 : claimedIndex;
+            let stage = q.stages[activeStageIndex];
+            
+            let percent = Math.min(100, (currentVal / stage.goal) * 100);
+            let canClaim = currentVal >= stage.goal && !isFullyCompleted;
+
+            // Формируем текст текущего задания
+            let taskTemplate = window.translations?.[q.taskKey] || q.defaultTask;
+            let currentTaskText = taskTemplate.replace('{goal}', stage.goal);
+
+            // Генерация точек этапов
+            let dotsHtml = '';
+            for (let i = 0; i < q.stages.length; i++) {
+                if (i < claimedIndex) dotsHtml += `<div class="stage-dot done"></div>`;
+                else if (i === claimedIndex && !isFullyCompleted) dotsHtml += `<div class="stage-dot active"></div>`;
+                else dotsHtml += `<div class="stage-dot"></div>`;
+            }
+
+            let btnHtml = '';
+            let progressHtml = '';
+
+            if (isFullyCompleted) {
+                btnHtml = `<div class="q-btn finished">✔️ ${txtDone}</div>`;
+                progressHtml = `
+                    <div class="q-progress-container">
+                        <div class="q-progress-bar"><div class="q-progress-fill" style="width: 100%; background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,0.5);"></div></div>
+                    </div>`;
+            } else {
+                let btnClass = canClaim ? 'q-btn ready' : 'q-btn';
+                let btnText = canClaim ? txtClaim : txtProg;
+                let onClick = canClaim ? `onclick="claimReward('${q.id}', ${claimedIndex})"` : '';
+                
+                btnHtml = `<button class="${btnClass}" id="btn-${q.id}" ${onClick}>${btnText}</button>`;
+                
+                progressHtml = `
+                    <div class="q-progress-container">
+                        <div class="q-progress-text"><span>ПРОГРЕСС</span> <span>${currentVal} / ${stage.goal}</span></div>
+                        <div class="q-progress-bar"><div class="q-progress-fill" style="width: ${percent}%"></div></div>
+                    </div>`;
+            }
+
+            // Рендерим награды
+            let rewardsHtml = '';
+            if (stage.c > 0) rewardsHtml += `<div class="reward-tag r-coin">⏳ ${stage.c}</div>`;
+            if (stage.x > 0) rewardsHtml += `<div class="reward-tag r-exp">⭐ ${stage.x}</div>`;
+
+            let cardHtml = `
+                <div class="quest-card ${isFullyCompleted ? 'completed' : ''}">
+                    <div class="q-header">
+                        <div class="q-icon">${q.icon}</div>
+                        <div class="q-info">
+                            <div class="q-title">${q.title}</div>
+                            <div class="q-desc">${q.desc}</div>
+                        </div>
+                    </div>
+                    
+                    ${!isFullyCompleted ? `
+                    <div class="q-current-task">
+                        <span class="q-task-label">${txtPrefix}</span>
+                        ${currentTaskText}
+                    </div>` : ''}
+
+                    <div class="q-stages">${dotsHtml}</div>
+                    ${progressHtml}
+                    
+                    <div class="q-footer">
+                        <div class="q-rewards">${rewardsHtml}</div>
+                        ${btnHtml}
+                    </div>
+                </div>
+            `;
+            container.innerHTML += cardHtml;
+        });
+    }
+
+    window.claimReward = async function(questId, stageIndex) {
+        if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
+        
+        const btn = document.getElementById(`btn-${questId}`);
+        btn.innerText = '⏳...';
+        btn.style.pointerEvents = 'none';
+
+        const questDef = QUESTS.find(q => q.id === questId);
+        const stage = questDef.stages[stageIndex];
+
+        // Математика прокачки уровня от опыта
+        let gExp = (dbData.global_exp || 0) + stage.x; 
+        let gLvl = dbData.global_level || 1;
+
+        while (true) {
+            let neededExp = gLvl * 10;
+            if (gExp >= neededExp) {
+                gExp -= neededExp;
+                gLvl += 1;
+            } else {
+                break;
+            }
+        }
+
+        let newCoins = (dbData.coins || 0) + stage.c;
+        
+        // Обновляем JSONB квестов
+        let updatedClaimed = { ...dbData.claimed_quests };
+        updatedClaimed[questId] = stageIndex + 1;
+
+        try {
+            await sb.from('user_progress').update({
+                global_exp: gExp,
+                global_level: gLvl,
+                coins: newCoins,
+                claimed_quests: updatedClaimed
+            }).eq('username', user);
+
+            // Отправка в Live Feed (По желанию, если квест жирный)
+            if (stageIndex >= questDef.stages.length - 1) {
+                sb.from('live_feed').insert({
+                    username: user,
+                    event_type: 'lvl_up', // Можно сделать кастомный тип 'quest_done'
+                    event_val: 'КВЕСТ'
+                }).then(({error}) => { if(error) console.error(error); });
+            }
+
+            // Обновляем локальные данные для мгновенного рендера
+            dbData.global_exp = gExp;
+            dbData.global_level = gLvl;
+            dbData.coins = newCoins;
+            dbData.claimed_quests = updatedClaimed;
+
+            updateTopBalance();
+            renderCards();
+
+        } catch (e) {
+            console.error("Ошибка при сохранении квеста:", e);
+            btn.innerText = 'ОШИБКА';
+        }
+    };
+
+    document.addEventListener('translationsReady', initQuests);
+    if (window.translations && Object.keys(window.translations).length > 0) {
+        initQuests();
+    }
+</script>
+</body>
+</html>

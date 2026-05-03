@@ -87,21 +87,26 @@
         }
         .logout-btn:active { background: rgba(255, 75, 75, 0.1); transform: scale(0.97); }
 
-        /* --- ТАБ-БАР (4 КНОПКИ) --- */
-        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; }
-        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; flex: 1; transition: 0.3s; }
-        .tab-item.active { color: var(--gold); }
-        .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+      /* --- ТАБ-БАР (УЛУЧШЕННЫЙ ДИЗАЙН) --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar.ready { opacity: 1; }
+        
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        
+        /* Активная вкладка */
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
     </style>
 </head>
 <body>
 
 <div class="bg-pattern"></div>
-
 <div class="tab-bar-container">
-    <div class="tab-bar">
+    <div class="tab-bar" id="tab-bar">
         <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item">
             <span class="tab-icon">🏠</span>
             <span class="tab-label" data-i18n="tab_home">Главная</span>
@@ -113,6 +118,10 @@
         <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item">
             <span class="tab-icon">👤</span>
             <span class="tab-label" data-i18n="tab_profile">Профиль</span>
+        </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
         </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item active">
             <span class="tab-icon">⚙️</span>

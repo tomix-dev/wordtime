@@ -12,7 +12,7 @@
         :root {
             --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
             --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
-            --green: #00ff88;
+            --green: #00ff88; --red: #ff4b4b;
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
@@ -33,25 +33,19 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (4 КНОПКИ) --- */
-        .tab-bar-container {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 110px;
-            background: linear-gradient(to top, var(--bg) 60%, transparent);
-            display: flex; justify-content: center; align-items: flex-end;
-            padding-bottom: 25px; z-index: 1000; pointer-events: none;
-        }
-        .tab-bar {
-            pointer-events: auto; width: 95%; max-width: 380px; height: 65px;
-            background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border); border-radius: 22px;
-            display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-            transition: opacity 0.5s ease;
-        }
-        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
-        .tab-item.active { color: var(--gold); }
-        .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
-        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+       /* --- ТАБ-БАР (УЛУЧШЕННЫЙ ДИЗАЙН) --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar.ready { opacity: 1; }
+        
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        
+        /* Активная вкладка */
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
 
         /* --- КАРТОЧКИ РЕЖИМОВ --- */
         .brand-header { text-align: center; margin-top: 10px; margin-bottom: 30px; }
@@ -61,18 +55,36 @@
         .mode-card { 
             background: var(--glass); border: 1px solid var(--glass-border); 
             border-radius: 20px; padding: 25px 20px; display: flex; flex-direction: column; 
-            align-items: center; text-align: center; cursor: pointer; transition: 0.2s ease; 
+            align-items: center; text-align: center; cursor: pointer; transition: 0.3s ease; 
             backdrop-filter: blur(10px); position: relative; overflow: hidden;
         }
         .mode-card:active { transform: scale(0.96); border-color: var(--gold); background: rgba(212, 175, 55, 0.08); }
-        .mode-icon { font-size: 42px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2)); }
-        .mode-title { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-        .mode-desc { font-size: 10px; color: #888; font-weight: 700; line-height: 1.4; }
+        .mode-icon { font-size: 42px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2)); transition: 0.3s; }
+        .mode-title { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .mode-desc { font-size: 10px; color: #888; font-weight: 700; line-height: 1.4; transition: 0.3s; }
         
-        .mode-coming { opacity: 0.6; pointer-events: none; }
-        .mode-coming .mode-title { color: #666; }
         .badge { position: absolute; top: 15px; right: 15px; background: rgba(212, 175, 55, 0.2); color: var(--gold); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 10px; border: 1px solid var(--glass-border); letter-spacing: 1px; }
         .badge.new { color: var(--green); border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.1); }
+
+        /* --- ЗАБЛОКИРОВАННАЯ КАРТОЧКА --- */
+        .mode-card.locked { 
+            background: rgba(20, 20, 20, 0.8); border-color: #333; pointer-events: none; 
+            cursor: not-allowed; box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+        .mode-card.locked .mode-icon { filter: grayscale(100%) opacity(0.3); }
+        .mode-card.locked .mode-title { color: #555; }
+        .mode-card.locked .mode-desc { color: #444; }
+        .mode-card.locked .badge { display: none; }
+        
+        .lock-overlay {
+            position: absolute; inset: 0; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; background: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(2px); z-index: 10; opacity: 0; transition: 0.3s;
+        }
+        .mode-card.locked .lock-overlay { opacity: 1; }
+        .lock-icon { font-size: 32px; filter: drop-shadow(0 0 10px rgba(255, 75, 75, 0.4)); margin-bottom: 8px; }
+        .lock-text { font-size: 10px; font-weight: 900; color: var(--red); text-transform: uppercase; letter-spacing: 1px; background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 10px; border: 1px solid rgba(255, 75, 75, 0.3); }
+
     </style>
 </head>
 <body>
@@ -93,6 +105,10 @@
             <span class="tab-icon">👤</span>
             <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
+        </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
             <span class="tab-label" data-i18n="tab_settings">Настройки</span>
@@ -105,42 +121,46 @@
         <h1 class="brand-logo" data-i18n="mode_header">РЕЖИМЫ ИГРЫ</h1>
     </div>
 
-    <div class="mode-container">
-        <!-- НАЙДИ ПАРУ -->
-        <div class="mode-card" onclick="fadeNavigate('find.html')">
-            <span class="mode-icon">🧩</span>
-            <div class="mode-title" data-i18n="mode_find_title">НАЙДИ ПАРУ</div>
-            <div class="mode-desc" data-i18n="mode_find_desc">Соединяй слова и их переводы</div>
-        </div>
-
-        <!-- ПРАВДА ИЛИ ЛОЖЬ -->
-        <div class="mode-card" onclick="fadeNavigate('true.html')">
-            <span class="mode-icon">⚖️</span>
-            <div class="mode-title" data-i18n="mode_true_title">ПРАВДА ИЛИ ЛОЖЬ</div>
-            <div class="mode-desc" data-i18n="mode_true_desc">Определи верный ли перевод</div>
-        </div>
-
-        <!-- SPEED RUSH -->
-        <div class="mode-card" onclick="fadeNavigate('click.html')">
-            <span class="mode-icon">⚡</span>
-            <div class="mode-title" data-i18n="mode_speed_title">SPEED RUSH</div>
-            <div class="mode-desc" data-i18n="mode_speed_desc">Угадай как можно больше слов за 60 секунд</div>
-        </div>
-
-        <!-- BRAIN CLICKER -->
-        <div class="mode-card" onclick="fadeNavigate('brain.html')">
-            <span class="badge new" data-i18n="badge_new">NEW</span>
-            <span class="mode-icon">🧠</span>
-            <div class="mode-title" data-i18n="mode_brain_title">BRAIN CLICKER</div>
-            <div class="mode-desc" data-i18n="mode_brain_desc">Кликай и сражайся с боссами</div>
-        </div>
+    <div class="mode-container" id="mode-list">
+        <div style="text-align: center; color: #666; font-size: 10px; font-weight: 700; padding: 20px;">ЗАГРУЗКА...</div>
     </div>
 </main>
 
 <script>
-    // Проверка авторизации
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
     const user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
+
+    // Конфиг режимов игры
+    const MODES = [
+        {
+            id: 'find', url: 'find.html', reqLvl: 1,
+            icon: '🧩', titleKey: 'mode_find_title', descKey: 'mode_find_desc',
+            defaultTitle: 'НАЙДИ ПАРУ', defaultDesc: 'Соединяй слова и их переводы',
+            badge: null
+        },
+        {
+            id: 'true', url: 'true.html', reqLvl: 5,
+            icon: '⚖️', titleKey: 'mode_true_title', descKey: 'mode_true_desc',
+            defaultTitle: 'ПРАВДА ИЛИ ЛОЖЬ', defaultDesc: 'Определи верный ли перевод',
+            badge: null
+        },
+        {
+            id: 'rush', url: 'speed_rush.html', reqLvl: 10,
+            icon: '⚡', titleKey: 'mode_speed_title', descKey: 'mode_speed_desc',
+            defaultTitle: 'SPEED RUSH', defaultDesc: 'Угадай как можно больше слов за 60 секунд',
+            badge: null
+        },
+        {
+            id: 'brain', url: 'brain.html', reqLvl: 20,
+            icon: '🧠', titleKey: 'mode_brain_title', descKey: 'mode_brain_desc',
+            defaultTitle: 'BRAIN CLICKER', defaultDesc: 'Кликай и сражайся с боссами',
+            badge: 'NEW'
+        }
+    ];
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -151,18 +171,93 @@
         setTimeout(() => { window.location.href = url; }, 400); 
     }
 
-    // Появление страницы только после готовности переводов
-    document.addEventListener('translationsReady', () => {
-        requestAnimationFrame(() => {
-            document.getElementById('main-content').classList.add('ready');
-            document.getElementById('tab-bar').classList.add('ready');
-        });
-    });
+    async function loadModes() {
+        try {
+            if (!window.translations) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
 
-    // Если переводчик уже отработал до того как мы повесили слушатель
+            // Получаем уровень игрока из базы
+            let playerLvl = 1;
+            const { data } = await sb.from('user_progress').select('global_level').eq('username', user).single();
+            if (data && data.global_level) {
+                playerLvl = data.global_level;
+            }
+
+            renderModes(playerLvl);
+
+            requestAnimationFrame(() => {
+                document.getElementById('main-content').classList.add('ready');
+                document.getElementById('tab-bar').classList.add('ready');
+            });
+
+        } catch (e) {
+            console.error(e);
+            renderModes(1); // В случае ошибки пускаем как 1 лвл
+            document.getElementById('main-content').classList.add('ready');
+        }
+    }
+
+    function renderModes(playerLvl) {
+        const container = document.getElementById('mode-list');
+        container.innerHTML = '';
+
+        // Находим первый заблокированный режим (чтобы написать ему "Нужен {lvl} уровень")
+        let firstLockedFound = false;
+
+        MODES.forEach(mode => {
+            let isLocked = playerLvl < mode.reqLvl;
+            let title = window.translations?.[mode.titleKey] || mode.defaultTitle;
+            let desc = window.translations?.[mode.descKey] || mode.defaultDesc;
+            
+            let badgeHtml = '';
+            if (mode.badge === 'NEW') {
+                badgeHtml = `<span class="badge new" data-i18n="badge_new">${window.translations?.['badge_new'] || 'NEW'}</span>`;
+            }
+
+            let lockHtml = '';
+            let lockClass = '';
+            let onClick = `onclick="fadeNavigate('${mode.url}')"`;
+
+            if (isLocked) {
+                lockClass = 'locked';
+                onClick = ''; // Отключаем клик
+                
+                let lockMsg = '';
+                if (!firstLockedFound) {
+                    // Это первый недоступный режим в списке — пишем, какой уровень нужен
+                    let template = window.translations?.['mode_locked_lvl'] || 'Нужен {lvl} уровень';
+                    lockMsg = template.replace('{lvl}', mode.reqLvl);
+                    firstLockedFound = true;
+                } else {
+                    // Это режимы, которые идут ДАЛЬШЕ первого заблокированного
+                    lockMsg = window.translations?.['mode_locked_prev'] || 'Сначала открой предыдущую игру';
+                }
+
+                lockHtml = `
+                    <div class="lock-overlay">
+                        <div class="lock-icon">🔒</div>
+                        <div class="lock-text">${lockMsg}</div>
+                    </div>
+                `;
+            }
+
+            let cardHtml = `
+                <div class="mode-card ${lockClass}" ${onClick}>
+                    ${badgeHtml}
+                    ${lockHtml}
+                    <span class="mode-icon">${mode.icon}</span>
+                    <div class="mode-title">${title}</div>
+                    <div class="mode-desc">${desc}</div>
+                </div>
+            `;
+            container.innerHTML += cardHtml;
+        });
+    }
+
+    document.addEventListener('translationsReady', loadModes);
     if (window.translations && Object.keys(window.translations).length > 0) {
-        document.getElementById('main-content').classList.add('ready');
-        document.getElementById('tab-bar').classList.add('ready');
+        loadModes();
     }
 </script>
 </body>

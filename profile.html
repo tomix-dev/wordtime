@@ -38,26 +38,67 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (4 КНОПКИ) --- */
-        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 380px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.5s ease; }
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
-        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #444; transition: 0.3s; flex: 1; }
-        .tab-item.active { color: var(--gold); }
-        .tab-icon { font-size: 18px; margin-bottom: 3px; }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
-
+        
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        
         /* --- ВЕРХНЯЯ ЧАСТЬ (ПРОФИЛЬ) --- */
         .profile-header { text-align: center; margin-top: 15px; margin-bottom: 20px; }
-        .username { font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; color: #fff; }
+        .username { font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; color: #fff; }
+        
+        /* Ряд для бейджей (Уровень + Огонек) */
+        .badges-row { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; }
         
         .level-badge { 
-            display: inline-block; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); 
-            padding: 5px 15px; border-radius: 12px; font-size: 12px; font-weight: 900; color: var(--gold-light);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); margin-bottom: 15px;
+            background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); 
+            padding: 6px 15px; border-radius: 12px; font-size: 12px; font-weight: 900; color: var(--gold-light);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); 
         }
 
+        /* --- СИСТЕМА СЕРИИ (ОГОНЕК) --- */
+        .streak-badge {
+            display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; 
+            font-weight: 900; font-size: 13px; transition: 0.3s;
+        }
+        .streak-icon { font-size: 14px; transition: 0.3s; filter: grayscale(1); opacity: 0.3; }
+        .streak-count { color: #555; }
+        
+        /* Этапы эволюции огонька через CSS фильтры */
+        .streak-badge.s-1 { background: rgba(255, 215, 0, 0.1); border-color: var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+        .streak-badge.s-1 .streak-icon { filter: grayscale(0); opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); }
+        .streak-badge.s-1 .streak-count { color: var(--gold-light); }
+
+        .streak-badge.s-7 { background: rgba(255, 140, 0, 0.1); border-color: #ff8c00; box-shadow: 0 0 10px rgba(255, 140, 0, 0.2); }
+        .streak-badge.s-7 .streak-icon { filter: grayscale(0) hue-rotate(-20deg) saturate(200%) drop-shadow(0 0 8px #ff8c00); opacity: 1; }
+        .streak-badge.s-7 .streak-count { color: #ff8c00; }
+
+        .streak-badge.s-14 { background: rgba(255, 75, 75, 0.1); border-color: var(--red); box-shadow: 0 0 10px rgba(255, 75, 75, 0.3); }
+        .streak-badge.s-14 .streak-icon { filter: grayscale(0) hue-rotate(-50deg) saturate(300%) drop-shadow(0 0 10px var(--red)); opacity: 1; }
+        .streak-badge.s-14 .streak-count { color: var(--red); }
+
+        .streak-badge.s-30 { background: rgba(0, 191, 255, 0.1); border-color: var(--blue); box-shadow: 0 0 10px rgba(0, 191, 255, 0.3); }
+        .streak-badge.s-30 .streak-icon { filter: grayscale(0) hue-rotate(180deg) saturate(200%) drop-shadow(0 0 10px var(--blue)); opacity: 1; }
+        .streak-badge.s-30 .streak-count { color: var(--blue); }
+
+        .streak-badge.s-45 { background: rgba(0, 255, 136, 0.1); border-color: var(--green); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+        .streak-badge.s-45 .streak-icon { filter: grayscale(0) hue-rotate(90deg) saturate(200%) drop-shadow(0 0 10px var(--green)); opacity: 1; }
+        .streak-badge.s-45 .streak-count { color: var(--green); }
+
+        .streak-badge.s-60 { background: rgba(176, 38, 255, 0.1); border-color: var(--purple); box-shadow: 0 0 15px rgba(176, 38, 255, 0.4); }
+        .streak-badge.s-60 .streak-icon { filter: grayscale(0) hue-rotate(260deg) saturate(200%) drop-shadow(0 0 15px var(--purple)); opacity: 1; transform: scale(1.1); }
+        .streak-badge.s-60 .streak-count { color: #d884ff; text-shadow: 0 0 10px var(--purple); }
+
+        /* --- EXP BAR --- */
         .exp-container { width: 80%; margin: 0 auto; text-align: center; }
         .exp-text { font-size: 9px; color: #888; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; }
         .exp-bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
@@ -78,8 +119,7 @@
             border-radius: 30px; display: flex; justify-content: center; align-items: center;
             font-size: 80px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
             z-index: 1; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            user-select: none;
-            overflow: hidden; 
+            user-select: none; overflow: hidden; 
         }
         .character-avatar:active { transform: scale(0.95); }
         .character-title {
@@ -102,15 +142,8 @@
 
         /* --- ДАННЫЕ АККАУНТА --- */
         .section-title { font-size: 10px; color: var(--gold); letter-spacing: 3px; text-align: center; margin-bottom: 15px; font-weight: 900; text-transform: uppercase; }
-        .acc-info-card {
-            background: var(--glass); border: 1px solid var(--glass-border);
-            border-radius: 20px; padding: 20px; backdrop-filter: blur(10px);
-            margin-bottom: 35px;
-        }
-        .acc-info-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
+        .acc-info-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); margin-bottom: 35px; }
+        .acc-info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .acc-info-row:first-child { padding-top: 0; }
         .acc-info-row:last-child { padding-bottom: 0; border-bottom: none; }
         .acc-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
@@ -125,33 +158,32 @@
         .ach-prog { width: 70%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 8px; overflow: hidden; display: none; }
         .ach-prog-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.5s ease; }
 
-        /* 1. В ПРОЦЕССЕ (Следующий уровень) */
+        /* Статусы ачивок */
         .ach-box.in-progress { border-color: rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.05); }
         .ach-box.in-progress .ach-emoji { filter: grayscale(0.5); opacity: 0.6; }
         .ach-box.in-progress .ach-txt { color: var(--gold-light); }
         .ach-box.in-progress .ach-prog { display: block; }
-
-        /* 2. АКТИВНЫЕ (Уже получены) */
         .ach-box.active { border-color: var(--green); background: rgba(0, 255, 136, 0.05); }
         .ach-box.active .ach-emoji { filter: grayscale(0); opacity: 1; }
         .ach-box.active .ach-txt { color: var(--green); }
         .ach-box.active .ach-prog { display: none; }
-
-        /* 3. ЗАКРЫТЫЕ (Замочки и размытие) */
         .ach-box.locked .ach-emoji { filter: blur(5px) grayscale(1); opacity: 0.15; }
-        .ach-box.locked::after { 
-            content: '🔒'; 
-            position: absolute; 
-            font-size: 20px; 
-            top: 40%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
-            opacity: 0.8;
-        }
+        .ach-box.locked::after { content: '🔒'; position: absolute; font-size: 20px; top: 40%; left: 50%; transform: translate(-50%, -50%); text-shadow: 0 2px 5px rgba(0,0,0,0.8); opacity: 0.8; }
         .ach-box.locked .ach-txt { color: #555; }
 
+        /* ОВЕРЛЕЙ УРОВНЯ */
+        .lvl-up-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 3000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .lvl-up-overlay.show { opacity: 1; pointer-events: auto; }
+        .lvl-up-card { background: linear-gradient(145deg, rgba(20,20,20,0.95), rgba(10,10,10,1)); border: 2px solid var(--gold); border-radius: 25px; padding: 40px 30px; text-align: center; width: 85%; max-width: 350px; transform: scale(0.8); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 15px 50px rgba(212, 175, 55, 0.3); }
+        .lvl-up-overlay.show .lvl-up-card { transform: scale(1); }
+        .lvl-up-icon { font-size: 60px; margin-bottom: 15px; animation: popIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .lvl-up-title { font-size: 22px; font-weight: 900; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
+        .lvl-up-desc { font-size: 12px; color: #ccc; font-weight: 700; margin-bottom: 30px; line-height: 1.5; }
+        .lvl-up-btn { background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; color: #000; font-size: 12px; font-weight: 900; padding: 15px 30px; border-radius: 15px; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        .lvl-up-btn:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4); }
+
         @keyframes pulseGlow { 0% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -172,6 +204,10 @@
             <span class="tab-icon">👤</span>
             <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label" data-i18n="tab_quests">Квесты</span>
+        </a>
         <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item">
             <span class="tab-icon">⚙️</span>
             <span class="tab-label" data-i18n="tab_settings">Настройки</span>
@@ -182,7 +218,16 @@
 <main id="profile-content">
     <div class="profile-header">
         <div class="username" id="user-name">...</div>
-        <div class="level-badge" id="level-badge">LVL 1</div>
+        
+        <!-- ОГОНЕК И УРОВЕНЬ -->
+        <div class="badges-row">
+            <div class="level-badge" id="level-badge">LVL 1</div>
+            <div class="streak-badge" id="streak-badge">
+                <span class="streak-icon">🔥</span>
+                <span class="streak-count" id="streak-count"></span>
+            </div>
+        </div>
+
         <div class="exp-container">
             <div class="exp-text" id="exp-text">0 / 10 EXP</div>
             <div class="exp-bar-bg"><div class="exp-bar-fill" id="exp-fill"></div></div>
@@ -194,7 +239,6 @@
         <div class="character-avatar" id="avatar-img" onclick="pokeAvatar()"></div>
         <div class="character-title" id="avatar-title">Загрузка...</div>
         
-        <!-- ПРОГРЕСС СЛЕДУЮЩЕГО ПИТОМЦА -->
         <div class="pet-progress-container">
             <div class="pet-prog-text" id="pet-prog-text">...</div>
             <div class="pet-prog-bg"><div class="pet-prog-fill" id="pet-prog-fill"></div></div>
@@ -258,6 +302,16 @@
         <div class="ach-box" id="ach-350"><span class="ach-emoji">🌠</span><span class="ach-txt">350 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-350"></div></div></div>
     </div>
 </main>
+
+<!-- ОВЕРЛЕЙ НОВОГО УРОВНЯ -->
+<div class="lvl-up-overlay" id="lvl-up-overlay">
+    <div class="lvl-up-card">
+        <div class="lvl-up-icon">🌟</div>
+        <div class="lvl-up-title" data-i18n="lvl_up_title">НОВЫЙ УРОВЕНЬ!</div>
+        <div class="lvl-up-desc" id="lvl-up-desc">Ты достиг уровня!</div>
+        <button class="lvl-up-btn" onclick="closeLevelUp()" data-i18n="btn_continue">ПРОДОЛЖИТЬ</button>
+    </div>
+</div>
 
 <script>
     const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
@@ -390,6 +444,77 @@
         });
     }
 
+    // --- ЛОГИКА ОВЕРЛЕЯ УРОВНЯ ---
+    function checkLevelUp(currentDbLvl) {
+        let savedLvl = localStorage.getItem('wt_last_global_lvl');
+        if (!savedLvl) {
+            localStorage.setItem('wt_last_global_lvl', currentDbLvl);
+            return;
+        }
+        savedLvl = parseInt(savedLvl);
+        if (currentDbLvl > savedLvl) {
+            showLevelUpCard(currentDbLvl);
+            localStorage.setItem('wt_last_global_lvl', currentDbLvl);
+        }
+    }
+
+    function showLevelUpCard(newLevel) {
+        const overlay = document.getElementById('lvl-up-overlay');
+        const descEl = document.getElementById('lvl-up-desc');
+        let formatStr = window.translations && window.translations['lvl_up_desc'] ? window.translations['lvl_up_desc'] : 'Ты достиг {lvl} уровня!';
+        descEl.innerText = formatStr.replace('{lvl}', newLevel);
+        if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100, 50, 200]);
+        overlay.classList.add('show');
+    }
+
+    function closeLevelUp() {
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        document.getElementById('lvl-up-overlay').classList.remove('show');
+    }
+
+    // --- ЛОГИКА ОГОНЬКА (СЕРИИ) ---
+    function updateStreakUI(currentStreak, lastPlayedStr) {
+        const streakBadge = document.getElementById('streak-badge');
+        const streakCount = document.getElementById('streak-count');
+        
+        let streak = currentStreak || 0;
+
+        // Проверяем, не сгорела ли серия (разница больше 1 дня)
+        if (lastPlayedStr) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Сбрасываем часы для честного сравнения дат
+            
+            const lastPlayed = new Date(lastPlayedStr);
+            lastPlayed.setHours(0, 0, 0, 0);
+
+            const diffTime = today - lastPlayed;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 1) {
+                streak = 0; // Серия сгорела 😢
+                // Фоновое обновление базы, чтобы зафиксировать потерю серии
+                sb.from('user_progress').update({ current_streak: 0 }).eq('username', user);
+            }
+        } else {
+            streak = 0;
+        }
+
+        // Рендерим стили
+        streakBadge.className = 'streak-badge'; // Сброс
+        if (streak === 0) {
+            streakCount.innerText = '';
+        } else {
+            streakCount.innerText = streak;
+            // Раздаем красивые классы в зависимости от длины серии
+            if (streak >= 60) streakBadge.classList.add('s-60');
+            else if (streak >= 45) streakBadge.classList.add('s-45');
+            else if (streak >= 30) streakBadge.classList.add('s-30');
+            else if (streak >= 14) streakBadge.classList.add('s-14');
+            else if (streak >= 7) streakBadge.classList.add('s-7');
+            else streakBadge.classList.add('s-1');
+        }
+    }
+
     async function loadProfileData() {
         try {
             if (!window.translations) {
@@ -409,10 +534,16 @@
                 const totalPairs = p.total_pairs_found || 0;
                 const localSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
 
+                // Проверка на Level UP
+                checkLevelUp(gLvl);
+
                 // Шапка
                 document.getElementById('level-badge').innerText = `LVL ${gLvl}`;
                 document.getElementById('exp-text').innerText = `${gExp} / ${neededExp} EXP`;
                 document.getElementById('exp-fill').style.width = `${(gExp / neededExp) * 100}%`;
+
+                // ОГОНЕК (СЕРИЯ ДНЕЙ)
+                updateStreakUI(p.current_streak, p.last_played_date);
 
                 // Статистика
                 document.getElementById('user-days').innerText = diffDays;
@@ -425,8 +556,6 @@
                 const year = regDate.getFullYear();
                 document.getElementById('acc-regdate').innerText = `${day}.${month}.${year}`;
 
-                // --- ПРИНУДИТЕЛЬНЫЙ ПЕРЕВОД СТАТУСА И РОЛИ ---
-                
                 // Статус
                 const statusEl = document.getElementById('acc-status-val');
                 statusEl.innerText = window.translations && window.translations['acc_status_active'] ? window.translations['acc_status_active'] : 'АКТИВЕН';
@@ -435,7 +564,6 @@
                 const role = p.role || 'Player';
                 const roleEl = document.getElementById('acc-role');
                 const roleKey = `role_${role.toLowerCase()}`;
-                
                 roleEl.innerText = window.translations && window.translations[roleKey] ? window.translations[roleKey] : role.toUpperCase();
                 
                 if (role === 'Admin') roleEl.style.color = 'var(--red)';
