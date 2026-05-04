@@ -345,7 +345,6 @@
             let fBtnTxt = txtLocked;
             let fOnClick = '';
             if (freeClaimed) fBtnTxt = txtClaimed;
-            // ВОТ ТУТ МЫ ПРИВЯЗАЛИ НОВУЮ ФУНКЦИЮ:
             else if (freeCanClaim) { fBtnTxt = txtClaim; fOnClick = `onclick="claimWordPassReward(${r.lvl}, 'free', this)"`; }
 
             // VIP LOGIC
@@ -358,7 +357,6 @@
             let vBtnTxt = txtLocked;
             let vOnClick = '';
             if (vipClaimed) vBtnTxt = txtClaimed;
-            // И ТУТ ТОЖЕ:
             else if (vipCanClaim) { vBtnTxt = txtClaim; vOnClick = `onclick="claimWordPassReward(${r.lvl}, 'vip', this)"`; }
             else if (isUnlocked && !dbData.wp_vip_active) vBtnTxt = 'VIP ONLY';
 
@@ -415,7 +413,7 @@
     }
 
     // ==================================================
-    // 🛡️ НОВАЯ СЕРВЕРНАЯ ФУНКЦИЯ ЗАЩИТЫ
+    // 🛡️ СБОР НАГРАД (Без токенов, напрямую)
     // ==================================================
     async function claimWordPassReward(lvl, trackType, btnElement) {
         if(isProcessing || btnElement.classList.contains('claimed') || btnElement.disabled) return;
@@ -427,24 +425,20 @@
         btnElement.disabled = true;
 
         try {
-const wtToken = localStorage.getItem('wt_token'); 
-
-cconst res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-wordpass', {
-    method: 'POST',
-    headers: { 
-        'Content-Type': 'application/json' 
-        // Заголовок Authorization УДАЛЕН
-    },
-    body: JSON.stringify({ 
-        username: user, // ВОЗВРАЩАЕМ ЮЗЕРНЕЙМ В ЗАПРОС (берется из переменной user в начале файла)
-        level: lvl,     
-        type: trackType 
-    })
-});
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-wordpass', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ 
+                    username: user, 
+                    level: lvl,     
+                    type: trackType 
+                })
+            });
 
             const data = await res.json();
 
-            // Если сервер сказал "Нет" (мало опыта или уже брал)
             if (data.error) {
                 alert("❌ Ошибка: " + data.error);
                 btnElement.innerHTML = originalText;
@@ -453,24 +447,18 @@ cconst res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/
                 return;
             }
 
-            // Успех! Сервер уже начислил всё в БД.
-            // Теперь просто обновляем визуал на экране.
-
             if (trackType === 'free') {
                 dbData.wp_claimed_free.push(lvl);
             } else {
                 dbData.wp_claimed_vip.push(lvl);
             }
 
-            // Если наградой были искры, обновляем их в localStorage
             if (data.rewardType === 'sparks') {
                 let s = parseInt(localStorage.getItem('wt_sparks')) || 0;
                 localStorage.setItem('wt_sparks', s + data.rewardAmount);
             } else if (data.rewardType === 'coins') {
-                // Если коины, обновляем баланс шапки
                 dbData.coins = (dbData.coins || 0) + data.rewardAmount;
             }
-            // (Кейсы и фермы тоже выданы на сервере, визуально тут ничего менять не надо)
 
             renderHeader();
             renderTrack();
