@@ -8,7 +8,39 @@
     <script src="translator.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
+        /* --- КАРТОЧКА КОШЕЛЬКА TIME COINS --- */
+.wallet-card {
+    background: linear-gradient(145deg, rgba(0, 191, 255, 0.1), rgba(10, 10, 10, 0.95));
+    border: 1px solid rgba(0, 191, 255, 0.3);
+    border-radius: 20px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 25px rgba(0, 191, 255, 0.1);
+}
+.wallet-info { display: flex; align-items: center; gap: 10px; }
+.wallet-label { font-size: 9px; font-weight: 800; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; }
+.wallet-val { font-size: 20px; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(0, 191, 255, 0.4); }
+.topup-btn {
+    background: var(--blue);
+    color: #000;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+    box-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
+}
+.topup-btn:active { transform: scale(0.9); background: #fff; }
+		:root {
             --bg: #050505;
             --gold: #D4AF37;
             --gold-light: #FFD700;
@@ -159,6 +191,30 @@
         .m-stat span:first-child { font-size: 8px; color: #666; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
         .m-stat span:last-child { font-size: 14px; font-weight: 900; color: #fff; }
 
+        /* --- КИБЕР-ФЕРМА БАННЕР --- */
+        .cyber-farm-banner {
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(135deg, rgba(176, 38, 255, 0.2), rgba(10, 10, 10, 0.9));
+            border: 1px solid var(--purple); border-radius: 20px; padding: 20px;
+            margin-bottom: 35px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(176, 38, 255, 0.2), inset 0 0 15px rgba(176, 38, 255, 0.1);
+            position: relative; overflow: hidden;
+        }
+        .cyber-farm-banner::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(176, 38, 255, 0.15) 0%, transparent 60%);
+            animation: rotateGlow 10s linear infinite; pointer-events: none;
+        }
+        @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
+        
+        .cyber-farm-banner:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(176, 38, 255, 0.3); }
+        .cf-left { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
+        .cf-icon { font-size: 32px; filter: drop-shadow(0 0 10px var(--purple)); }
+        .cf-title { font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; text-shadow: 0 0 10px rgba(176, 38, 255, 0.5); }
+        .cf-desc { font-size: 9px; font-weight: 800; color: #d884ff; text-transform: uppercase; letter-spacing: 1px; }
+        .cf-arrow { font-size: 18px; color: var(--purple); font-weight: 900; position: relative; z-index: 1; text-shadow: 0 0 10px var(--purple); }
+
+
         /* --- ДАННЫЕ АККАУНТА --- */
         .section-title { font-size: 10px; color: var(--gold); letter-spacing: 3px; text-align: center; margin-bottom: 15px; font-weight: 900; text-transform: uppercase; }
         .acc-info-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); margin-bottom: 35px; }
@@ -264,7 +320,7 @@
         </div>
     </div>
 
-    <!-- КНОПКИ КАЛЕНДАРЯ И ИНВЕНТАРЯ (ПЕРЕНЕСЕНЫ СЮДА) -->
+    <!-- КНОПКИ КАЛЕНДАРЯ И ИНВЕНТАРЯ -->
     <div class="profile-actions">
         <button class="action-btn calendar-btn" onclick="fadeNavigate('calendar.html')">
             <span class="action-icon">📅</span>
@@ -275,7 +331,17 @@
             <span data-i18n="btn_inventory">ИНВЕНТАРЬ</span>
         </button>
     </div>
-
+	<!-- КАРТОЧКА КОШЕЛЬКА (TIME COINS) -->
+<div class="wallet-card">
+    <div class="wallet-info">
+        <div style="font-size: 24px;">⏳</div>
+        <div>
+            <div class="wallet-label" data-i18n="wallet_balance">БАЛАНС TIME</div>
+            <div class="wallet-val" id="wallet-coins">0</div>
+        </div>
+    </div>
+    <button class="topup-btn" onclick="fadeNavigate('topup.html')">+</button>
+</div>
     <div class="mini-stats">
         <div class="m-stat">
             <span data-i18n="stat_days">ДНЕЙ В ИГРЕ</span>
@@ -289,6 +355,18 @@
             <span data-i18n="stat_sparks">ИСКР</span>
             <span id="total-sparks">0</span>
         </div>
+    </div>
+
+    <!-- БАННЕР КИБЕР-ФЕРМЫ -->
+    <div class="cyber-farm-banner" onclick="fadeNavigate('farm.html')">
+        <div class="cf-left">
+            <div class="cf-icon">⚡</div>
+            <div>
+                <div class="cf-title" data-i18n="farm_title">CYBER FARM</div>
+                <div class="cf-desc" data-i18n="farm_desc">Майни искры в фоновом режиме!</div>
+            </div>
+        </div>
+        <div class="cf-arrow">▶</div>
     </div>
 
     <!-- ДАННЫЕ АККАУНТА -->
@@ -563,7 +641,8 @@
                 const localSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
 
                 checkLevelUp(gLvl);
-
+// Найди место, где обновляются тексты, и добавь:
+document.getElementById('wallet-coins').innerText = p.coins || 0;
                 document.getElementById('level-badge').innerText = `LVL ${gLvl}`;
                 document.getElementById('exp-text').innerText = `${gExp} / ${neededExp} EXP`;
                 document.getElementById('exp-fill').style.width = `${(gExp / neededExp) * 100}%`;

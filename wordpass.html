@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — WordPass</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88; --blue: #00bfff; --purple: #b026ff; --red: #ff4b4b;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; overflow-x: hidden; padding-bottom: 110px; 
+        }
+
+        main { 
+            width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px); transition: 0.4s; visibility: hidden;
+            display: flex; flex-direction: column;
+        }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; pointer-events: none;}
+
+        /* --- ШАПКА --- */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--glass); border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: 14px; color: #aaa; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: 0.3s; cursor: pointer; }
+        .back-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); color: #fff; border-color: var(--gold); }
+
+        /* --- БАННЕР СЕЗОНА --- */
+        .wp-banner {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(10, 10, 10, 0.9));
+            border: 1px solid var(--gold); border-radius: 20px; padding: 25px 20px;
+            text-align: center; margin-bottom: 25px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15);
+        }
+        .wp-banner::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 60%); animation: rotateGlow 15s linear infinite; pointer-events: none; }
+        @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
+
+        .wp-title { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.5); position: relative; z-index: 1; }
+        .wp-desc { font-size: 10px; color: var(--gold); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; position: relative; z-index: 1; margin-bottom: 20px; }
+
+        /* Прогресс Батл Пасса */
+        .wp-prog-info { display: flex; justify-content: space-between; font-size: 10px; font-weight: 900; color: #aaa; margin-bottom: 8px; text-transform: uppercase; position: relative; z-index: 1; letter-spacing: 1px;}
+        .wp-prog-info span:last-child { color: var(--gold-light); }
+        .wp-bar-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.6); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; z-index: 1; }
+        .wp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #fff); width: 0%; transition: width 0.5s; box-shadow: 0 0 10px var(--gold); }
+
+        .buy-vip-btn {
+            background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none;
+            color: #000; font-size: 12px; font-weight: 900; padding: 12px 0; width: 100%;
+            border-radius: 14px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.2s; box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4); margin-top: 20px; position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .buy-vip-btn:active { transform: scale(0.97); box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4); }
+        .buy-vip-btn.active { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); color: var(--gold); box-shadow: none; pointer-events: none; padding: 16px 0; }
+
+        /* --- ЛЕНТА НАГРАД --- */
+        .track-headers { display: flex; justify-content: space-between; padding: 0 20px; margin-bottom: 15px; font-size: 10px; font-weight: 900; letter-spacing: 2px; }
+        .track-h-free { color: #888; flex: 1; text-align: left; }
+        .track-h-vip { color: var(--gold); flex: 1; text-align: right; text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+
+        .wp-track { display: flex; flex-direction: column; gap: 10px; position: relative; padding-bottom: 20px;}
+        /* Центральная линия */
+        .wp-track::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; background: rgba(255,255,255,0.05); z-index: 0; }
+
+        .wp-row { display: flex; align-items: center; position: relative; z-index: 1; width: 100%; }
+        
+        .wp-lvl-marker { 
+            width: 34px; height: 34px; background: #111; border: 2px solid #333; 
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+            font-size: 12px; font-weight: 900; color: #666; margin: 0 15px; flex-shrink: 0; z-index: 2; transition: 0.3s;
+        }
+        .wp-row.unlocked .wp-lvl-marker { border-color: var(--gold); color: #fff; background: rgba(212, 175, 55, 0.2); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+
+        .reward-card {
+            flex: 1; background: rgba(20,20,20,0.8); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 12px 10px; display: flex; flex-direction: column; 
+            align-items: center; text-align: center; gap: 6px; backdrop-filter: blur(5px);
+            transition: 0.3s; opacity: 0.5; filter: grayscale(1);
+        }
+        .reward-card.vip-side { border-color: rgba(212, 175, 55, 0.3); background: linear-gradient(145deg, rgba(30,25,10,0.8), rgba(15,12,5,0.9)); }
+        
+        /* Состояния карточек */
+        .wp-row.unlocked .reward-card { opacity: 1; filter: grayscale(0); }
+        .reward-card.can-claim { border-color: var(--green); box-shadow: 0 0 15px rgba(0, 255, 136, 0.2); }
+        .reward-card.vip-side.can-claim { border-color: var(--gold-light); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+        .reward-card.claimed { border-color: #333; background: rgba(10,10,10,0.5); opacity: 0.4; }
+
+        .r-icon { font-size: 24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); margin-bottom: 2px;}
+        .r-name { font-size: 9px; font-weight: 800; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; height: 22px; display: flex; align-items: center; justify-content: center;}
+        .reward-card.vip-side .r-name { color: var(--gold-light); }
+
+        .r-btn {
+            background: #222; border: 1px solid #444; color: #666; font-size: 8px; font-weight: 900;
+            padding: 8px 0; width: 100%; border-radius: 8px; text-transform: uppercase; transition: 0.2s;
+        }
+        .reward-card.can-claim .r-btn { background: var(--green); color: #000; border: none; cursor: pointer; }
+        .reward-card.can-claim .r-btn:active { transform: scale(0.95); }
+        .reward-card.vip-side.can-claim .r-btn { background: linear-gradient(45deg, var(--gold), var(--gold-light)); color: #000; }
+        .reward-card.claimed .r-btn { background: transparent; border-color: #333; color: #555; }
+
+        /* Особое выделение 30 уровня */
+        .wp-row.lvl-30 .wp-lvl-marker { width: 44px; height: 44px; font-size: 16px; border-color: var(--purple); background: rgba(176, 38, 255, 0.2); box-shadow: 0 0 20px rgba(176, 38, 255, 0.5); color: #fff;}
+        .wp-row.lvl-30 .reward-card.vip-side { border-color: var(--purple); background: linear-gradient(145deg, rgba(40,10,50,0.9), rgba(15,5,20,0.95)); }
+        .wp-row.lvl-30 .reward-card.vip-side .r-icon { font-size: 36px; filter: drop-shadow(0 0 15px var(--purple)); }
+        .wp-row.lvl-30 .reward-card.vip-side .r-name { color: #d884ff; text-shadow: 0 0 10px var(--purple); }
+        .wp-row.lvl-30 .reward-card.vip-side.can-claim .r-btn { background: var(--purple); color: #fff; }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: 0.3s; flex: 1; position: relative;}
+        .tab-icon { font-size: 20px; margin-bottom: 4px; filter: grayscale(100%) opacity(0.6); transition: 0.3s; z-index: 2;}
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2;}
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<main id="main-content">
+    <div class="top-header">
+        <div onclick="fadeNavigate('main.html')" class="back-btn">
+            <span style="font-size: 12px;">◀</span> <span data-i18n="tab_home">ГЛАВНАЯ</span>
+        </div>
+        <div style="font-size: 11px; font-weight: 900; color: var(--gold); letter-spacing: 1px;">
+            <span id="ui-coins">0</span> ⏳
+        </div>
+    </div>
+
+    <div class="wp-banner">
+        <div class="wp-title" data-i18n="wp_title">WORD PASS</div>
+        <div class="wp-desc" data-i18n="wp_season_desc">СЕЗОН 1: НЕОНОВЫЙ РАССВЕТ</div>
+        
+        <div class="wp-prog-info">
+            <span>WP УРОВЕНЬ <span id="wp-curr-lvl">1</span></span>
+            <span id="wp-exp-text">0 / 100 EXP</span>
+        </div>
+        <div class="wp-bar-bg"><div class="wp-bar-fill" id="wp-exp-fill"></div></div>
+
+        <button class="buy-vip-btn" id="buy-vip-btn" onclick="buyVip()">...</button>
+    </div>
+
+    <div class="track-headers">
+        <div class="track-h-free" data-i18n="wp_free_track">БЕСПЛАТНО</div>
+        <div class="track-h-vip" data-i18n="wp_vip_track">VIP ПАСС</div>
+    </div>
+
+    <div class="wp-track" id="wp-track">
+        <!-- Уровни генерируются JS -->
+    </div>
+</main>
+
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item"><span class="tab-icon">🏠</span><span class="tab-label" data-i18n="tab_home">Главная</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item"><span class="tab-icon">🎮</span><span class="tab-label" data-i18n="tab_play">Играть</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item"><span class="tab-icon">👤</span><span class="tab-label" data-i18n="tab_profile">Профиль</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item"><span class="tab-icon">📜</span><span class="tab-label" data-i18n="tab_quests">Квесты</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tab_settings">Настройки</span></a>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    const user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    let dbData = null;
+    let isProcessing = false;
+    const VIP_PRICE = 9999;
+    const MAX_LEVEL = 30;
+
+    function getRequiredExpForNextLvl(lvl) {
+        if (lvl < 10) return 100;
+        if (lvl < 20) return 200;
+        return 300;
+    }
+
+    // ГЕНЕРАЦИЯ 30 УРОВНЕЙ ДЛЯ ОТОБРАЖЕНИЯ НА ЭКРАНЕ
+    const WP_REWARDS = Array.from({length: 30}, (_, i) => {
+        let lvl = i + 1;
+        let free = { type: 'sparks', val: 100, icon: '🧠', name: '100 ИСКР' };
+        let vip = { type: 'sparks', val: 300, icon: '🧠', name: '300 ИСКР' };
+
+        if (lvl % 2 === 0) { 
+            free = { type: 'coins', val: 50, icon: '⏳', name: '50 TIME' }; 
+            vip = { type: 'coins', val: 150, icon: '⏳', name: '150 TIME' }; 
+        }
+        if (lvl % 3 === 0) {
+            free = { type: 'case_normal', val: 1, icon: '📦', name: 'ОБЫЧНЫЙ КЕЙС' };
+        }
+        if (lvl % 4 === 0) {
+            if (lvl % 8 === 0) vip = { type: 'case_premium', val: 2, icon: '💎', name: '2x ПРЕМИУМ' };
+            else vip = { type: 'case_stylish', val: 3, icon: '🧰', name: '3x СТИЛЬНЫХ' };
+        }
+        if (lvl === 10) { 
+            free = { type: 'case_stylish', val: 1, icon: '🧰', name: 'СТИЛЬНЫЙ КЕЙС' }; 
+            vip = { type: 'farm_v1', val: 1, icon: '🖥️', name: 'ФЕРМА V-1' }; 
+        }
+        if (lvl === 15) { 
+            free = { type: 'case_normal', val: 3, icon: '📦', name: '3x ОБЫЧНЫХ' }; 
+            vip = { type: 'case_premium', val: 1, icon: '💎', name: 'ПРЕМИУМ КЕЙС' }; 
+        }
+        if (lvl === 20) { 
+            free = { type: 'farm_v1', val: 1, icon: '🖥️', name: 'ФЕРМА V-1' }; 
+            vip = { type: 'farm_v2', val: 1, icon: '🗄️', name: 'ФЕРМА V-2' }; 
+        }
+        if (lvl === 25) { 
+            free = { type: 'case_stylish', val: 2, icon: '🧰', name: '2x СТИЛЬНЫХ' }; 
+            vip = { type: 'case_premium', val: 2, icon: '💎', name: '2x ПРЕМИУМ' }; 
+        }
+        if (lvl === 30) { 
+            free = { type: 'case_premium', val: 1, icon: '💎', name: 'ПРЕМИУМ КЕЙС' }; 
+            vip = { type: 'farm_v3', val: 1, icon: '⚛️', name: 'ФЕРМА V-3' }; 
+        }
+
+        return { lvl, free, vip };
+    });
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function loadWordPass() {
+        try {
+            if (!window.translations) await new Promise(res => setTimeout(res, 500));
+
+            const { data, error } = await sb.from('user_progress').select('*').eq('username', user).single();
+            if (error) throw error;
+            dbData = data;
+            
+            if(dbData.wp_exp === undefined) dbData.wp_exp = 0;
+            if(dbData.wp_level === undefined) dbData.wp_level = 1;
+            if(dbData.wp_vip_active === undefined) dbData.wp_vip_active = false;
+            if(!dbData.wp_claimed_free) dbData.wp_claimed_free = [];
+            if(!dbData.wp_claimed_vip) dbData.wp_claimed_vip = [];
+            if(!dbData.cases) dbData.cases = { normal: 0, stylish: 0, premium: 0 };
+            if(!dbData.farms) dbData.farms = { v1: 0, v2: 0, v3: 0, v4: 0 };
+
+            let remainingExp = dbData.wp_exp || 0;
+            let correctLvl = 1;
+            while (correctLvl < MAX_LEVEL) {
+                let req = getRequiredExpForNextLvl(correctLvl);
+                if (remainingExp >= req) {
+                    remainingExp -= req;
+                    correctLvl++;
+                } else {
+                    break;
+                }
+            }
+
+            if (correctLvl !== dbData.wp_level) {
+                dbData.wp_level = correctLvl;
+                await sb.from('user_progress').update({ wp_level: correctLvl }).eq('username', user);
+            }
+
+            renderHeader();
+            renderTrack();
+            document.getElementById('main-content').classList.add('ready');
+
+        } catch (e) { console.error("Ошибка загрузки WP:", e); }
+    }
+
+    function renderHeader() {
+        document.getElementById('ui-coins').innerText = dbData.coins || 0;
+        document.getElementById('wp-curr-lvl').innerText = dbData.wp_level;
+        
+        let reqExp = getRequiredExpForNextLvl(dbData.wp_level);
+        
+        let tempExp = dbData.wp_exp || 0;
+        let tempLvl = 1;
+        while (tempLvl < MAX_LEVEL) {
+            let req = getRequiredExpForNextLvl(tempLvl);
+            if (tempExp >= req) {
+                tempExp -= req;
+                tempLvl++;
+            } else {
+                break;
+            }
+        }
+        
+        let expInCurrentLevel = dbData.wp_level >= MAX_LEVEL ? reqExp : tempExp;
+        document.getElementById('wp-exp-text').innerText = `${expInCurrentLevel} / ${reqExp} EXP`;
+        
+        let percent = (expInCurrentLevel / reqExp) * 100;
+        document.getElementById('wp-exp-fill').style.width = `${percent}%`;
+
+        const btn = document.getElementById('buy-vip-btn');
+        if (dbData.wp_vip_active) {
+            btn.classList.add('active');
+            btn.innerHTML = window.translations?.['wp_vip_active'] || 'VIP АКТИВЕН';
+        } else {
+            let buyTxt = window.translations?.['wp_buy_vip_text'] || 'КУПИТЬ VIP';
+            btn.innerHTML = `
+                <div style="position: absolute; top: -8px; right: 10px; background: var(--red); color: #fff; font-size: 8px; font-weight: 900; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 5px 10px rgba(255,75,75,0.4); letter-spacing: 1px; transform: rotate(5deg);">🔥 АКЦИЯ</div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                    <span>${buyTxt}</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="text-decoration: line-through; color: #555; font-size: 10px;">15000</span>
+                        <span style="font-size: 14px;">${VIP_PRICE} ⏳</span>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function renderTrack() {
+        const track = document.getElementById('wp-track');
+        track.innerHTML = '';
+
+        const txtClaim = window.translations?.['wp_claim_btn'] || 'ЗАБРАТЬ';
+        const txtClaimed = window.translations?.['wp_claimed_btn'] || 'ПОЛУЧЕНО';
+        const txtLocked = window.translations?.['wp_locked_btn'] || 'БЛОК';
+
+        WP_REWARDS.forEach(r => {
+            const isUnlocked = dbData.wp_level >= r.lvl;
+            
+            // FREE LOGIC
+            const freeClaimed = dbData.wp_claimed_free.includes(r.lvl);
+            const freeCanClaim = isUnlocked && !freeClaimed;
+            let fCardClass = 'reward-card';
+            if(freeCanClaim) fCardClass += ' can-claim';
+            if(freeClaimed) fCardClass += ' claimed';
+            
+            let fBtnTxt = txtLocked;
+            let fOnClick = '';
+            if (freeClaimed) fBtnTxt = txtClaimed;
+            // ВОТ ТУТ МЫ ПРИВЯЗАЛИ НОВУЮ ФУНКЦИЮ:
+            else if (freeCanClaim) { fBtnTxt = txtClaim; fOnClick = `onclick="claimWordPassReward(${r.lvl}, 'free', this)"`; }
+
+            // VIP LOGIC
+            const vipClaimed = dbData.wp_claimed_vip.includes(r.lvl);
+            const vipCanClaim = isUnlocked && dbData.wp_vip_active && !vipClaimed;
+            let vCardClass = 'reward-card vip-side';
+            if(vipCanClaim) vCardClass += ' can-claim';
+            if(vipClaimed) vCardClass += ' claimed';
+
+            let vBtnTxt = txtLocked;
+            let vOnClick = '';
+            if (vipClaimed) vBtnTxt = txtClaimed;
+            // И ТУТ ТОЖЕ:
+            else if (vipCanClaim) { vBtnTxt = txtClaim; vOnClick = `onclick="claimWordPassReward(${r.lvl}, 'vip', this)"`; }
+            else if (isUnlocked && !dbData.wp_vip_active) vBtnTxt = 'VIP ONLY';
+
+            let rowClass = `wp-row ${isUnlocked ? 'unlocked' : ''} ${r.lvl === 30 ? 'lvl-30' : ''}`;
+
+            track.innerHTML += `
+                <div class="${rowClass}">
+                    <div class="${fCardClass}">
+                        <div class="r-icon">${r.free.icon}</div>
+                        <div class="r-name">${r.free.name}</div>
+                        <button class="r-btn" ${fOnClick}>${fBtnTxt}</button>
+                    </div>
+                    
+                    <div class="wp-lvl-marker">${r.lvl}</div>
+                    
+                    <div class="${vCardClass}">
+                        <div class="r-icon">${r.vip.icon}</div>
+                        <div class="r-name">${r.vip.name}</div>
+                        <button class="r-btn" ${vOnClick}>${vBtnTxt}</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async function buyVip() {
+        if(isProcessing || dbData.wp_vip_active) return;
+        if((dbData.coins || 0) < VIP_PRICE) {
+            alert("Не хватает TIME коинов!");
+            return;
+        }
+
+        isProcessing = true;
+        if(window.navigator.vibrate) window.navigator.vibrate(50);
+        const btn = document.getElementById('buy-vip-btn');
+        btn.innerHTML = '...';
+
+        try {
+            let newCoins = dbData.coins - VIP_PRICE;
+            await sb.from('user_progress').update({ 
+                coins: newCoins,
+                wp_vip_active: true
+            }).eq('username', user);
+            
+            dbData.coins = newCoins;
+            dbData.wp_vip_active = true;
+            
+            renderHeader();
+            renderTrack();
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 150]);
+        } catch(e) { console.error("Ошибка покупки VIP:", e); btn.innerHTML = 'ОШИБКА'; }
+
+        isProcessing = false;
+    }
+
+    // ==================================================
+    // 🛡️ НОВАЯ СЕРВЕРНАЯ ФУНКЦИЯ ЗАЩИТЫ
+    // ==================================================
+    async function claimWordPassReward(lvl, trackType, btnElement) {
+        if(isProcessing || btnElement.classList.contains('claimed') || btnElement.disabled) return;
+        isProcessing = true;
+        if(window.navigator.vibrate) window.navigator.vibrate(50);
+
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = "⏳";
+        btnElement.disabled = true;
+
+        try {
+            // Обращаемся к нашей новой функции
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-wordpass', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: user,
+                    level: lvl,
+                    type: trackType
+                })
+            });
+
+            const data = await res.json();
+
+            // Если сервер сказал "Нет" (мало опыта или уже брал)
+            if (data.error) {
+                alert("❌ Ошибка: " + data.error);
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+                isProcessing = false;
+                return;
+            }
+
+            // Успех! Сервер уже начислил всё в БД.
+            // Теперь просто обновляем визуал на экране.
+
+            if (trackType === 'free') {
+                dbData.wp_claimed_free.push(lvl);
+            } else {
+                dbData.wp_claimed_vip.push(lvl);
+            }
+
+            // Если наградой были искры, обновляем их в localStorage
+            if (data.rewardType === 'sparks') {
+                let s = parseInt(localStorage.getItem('wt_sparks')) || 0;
+                localStorage.setItem('wt_sparks', s + data.rewardAmount);
+            } else if (data.rewardType === 'coins') {
+                // Если коины, обновляем баланс шапки
+                dbData.coins = (dbData.coins || 0) + data.rewardAmount;
+            }
+            // (Кейсы и фермы тоже выданы на сервере, визуально тут ничего менять не надо)
+
+            renderHeader();
+            renderTrack();
+
+        } catch(e) {
+            console.error("Ошибка при сборе:", e);
+            alert("🌐 Ошибка сети. Попробуйте позже.");
+            btnElement.innerHTML = originalText;
+            btnElement.disabled = false;
+        }
+
+        isProcessing = false;
+    }
+
+    document.addEventListener('translationsReady', loadWordPass);
+    if (window.translations && Object.keys(window.translations).length > 0) {
+        loadWordPass();
+    }
+</script>
+</body>
+</html>

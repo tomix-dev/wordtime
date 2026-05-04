@@ -113,14 +113,13 @@
             box-shadow: 0 10px 25px rgba(0, 255, 136, 0.3);
         }
 
-        /* --- ТАБ-БАР (Стандартный на 5 кнопок) --- */
+        /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
         .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
         .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
         .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
         
-        /* Профиль теперь активный */
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
@@ -156,12 +155,10 @@
             <span class="tab-icon">🎮</span>
             <span class="tab-label" data-i18n="tab_play">Играть</span>
         </a>
-        <!-- Профиль теперь активен -->
         <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item active">
             <span class="tab-icon">👤</span>
             <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
-        <!-- Возвращаем Квесты -->
         <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
             <span class="tab-icon">📜</span>
             <span class="tab-label" data-i18n="tab_quests">Квесты</span>
@@ -234,11 +231,6 @@
     let dbData = null;
     let isOpening = false;
 
-    // Взвешенный рандом: шанс на минималку выше
-    function roll(min, max) {
-        return Math.floor(min + (max - min) * Math.pow(Math.random(), 2.5));
-    }
-
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
         const main = document.querySelector('main');
@@ -304,71 +296,75 @@
         });
     }
 
+    // 🛡️ ОТКРЫТИЕ КЕЙСА ЧЕРЕЗ СЕРВЕР
     async function startOpening(type, icon) {
         if(isOpening || dbData.cases[type] <= 0) return;
         isOpening = true;
 
         if(window.navigator.vibrate) window.navigator.vibrate([40, 100, 40]);
 
+        // Включаем визуал загрузки (трясущийся кейс)
         document.getElementById('case-anim-icon').innerText = icon;
         document.getElementById('opening-stage').style.display = 'block';
         document.getElementById('reward-stage').style.display = 'none';
+        document.getElementById('reward-stage').classList.remove('show');
         document.getElementById('loot-overlay').classList.add('show');
 
-        // Ролл типа награды (40% EXP, 30% TIME, 30% SPARKS)
-        let r = Math.random();
-        let rewardType = r < 0.4 ? 'exp' : (r < 0.7 ? 'time' : 'sparks');
-        let amount = 0;
+        try {
+            // Стучимся на сервер
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/open-case', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, caseType: type })
+            });
 
-        // Новые урезанные лимиты
-        if(type === 'normal') {
-            if(rewardType === 'exp') amount = roll(10, 31);
-            else if(rewardType === 'time') amount = roll(5, 16);
-            else amount = roll(100, 401);
-        } else if(type === 'stylish') {
-            if(rewardType === 'exp') amount = roll(50, 101);
-            else if(rewardType === 'time') amount = roll(20, 51);
-            else amount = roll(500, 1501);
-        } else {
-            if(rewardType === 'exp') amount = roll(100, 301);
-            else if(rewardType === 'time') amount = roll(60, 151);
-            else amount = roll(2000, 3001);
-        }
+            const data = await res.json();
 
-        setTimeout(async () => {
-            try {
-                let newCases = { ...dbData.cases };
-                newCases[type] -= 1;
+            if (data.error) {
+                alert("Ошибка: " + data.error);
+                closeLoot();
+                return;
+            }
+
+            // ИСКУССТВЕННАЯ ЗАДЕРЖКА ДЛЯ ИНТРИГИ
+            // Сервер отвечает мгновенно, но мы крутим рулетку 1.8 секунды ради визуала
+            setTimeout(() => {
+                // Синхронизируем локальные данные с ответом сервера
+                dbData.cases = data.updatedData.cases;
                 
-                let updates = { cases: newCases };
-                
-                if(rewardType === 'exp') {
-                    let gExp = (dbData.global_exp || 0) + amount;
-                    let gLvl = dbData.global_level || 1;
-                    while(gExp >= gLvl * 10) { gExp -= gLvl * 10; gLvl++; }
-                    updates.global_exp = gExp; updates.global_level = gLvl;
-                } else if(rewardType === 'time') {
-                    updates.coins = (dbData.coins || 0) + amount;
-                } else {
+                if (data.rewardType === 'exp') {
+                    dbData.global_exp = data.updatedData.global_exp;
+                    dbData.global_level = data.updatedData.global_level;
+                } else if (data.rewardType === 'time') {
+                    dbData.coins = data.updatedData.coins;
+                } else if (data.rewardType === 'sparks') {
                     let s = parseInt(localStorage.getItem('wt_sparks')) || 0;
-                    localStorage.setItem('wt_sparks', s + amount);
+                    localStorage.setItem('wt_sparks', s + data.amount);
                 }
 
-                await sb.from('user_progress').update(updates).eq('username', user);
-                dbData = { ...dbData, ...updates };
-
+                // Прячем анимацию и показываем награду
                 document.getElementById('opening-stage').style.display = 'none';
-                document.getElementById('res-reward-icon').innerText = (rewardType === 'exp' ? '⭐' : (rewardType === 'time' ? '⏳' : '🧠'));
-                document.getElementById('res-reward-val').innerText = `+${amount}`;
+                
+                let rIcon = data.rewardType === 'exp' ? '⭐' : (data.rewardType === 'time' ? '⏳' : '🧠');
+                document.getElementById('res-reward-icon').innerText = rIcon;
+                document.getElementById('res-reward-val').innerText = `+${data.amount}`;
+                
                 document.getElementById('reward-stage').style.display = 'block';
-                document.getElementById('reward-stage').classList.add('show');
+                
+                // Небольшой хак: добавляем класс show чуть позже, чтобы сработала CSS анимация
+                setTimeout(() => document.getElementById('reward-stage').classList.add('show'), 10);
                 
                 if(window.navigator.vibrate) window.navigator.vibrate(150);
                 
                 updateUI();
                 renderInventory();
-            } catch(e) { console.error(e); closeLoot(); }
-        }, 1800);
+            }, 1800);
+
+        } catch (e) {
+            console.error("Ошибка при открытии:", e);
+            alert("Ошибка сети!");
+            closeLoot();
+        }
     }
 
     function closeLoot() {

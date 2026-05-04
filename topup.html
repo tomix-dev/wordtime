@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Премиум Пополнение</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.15);
+            --blue-stars: #0088cc; --blue-light: #00afff; --green: #00ff88; --red: #ff4b4b;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; min-height: 100dvh; padding-bottom: 60px; }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.03) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        main { width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; opacity: 0; transform: translateY(15px); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); visibility: hidden; }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        /* --- ШАПКА --- */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--glass); border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: 14px; color: #aaa; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; }
+        .back-btn:active { background: rgba(212, 175, 55, 0.1); color: #fff; transform: scale(0.95); }
+
+        .header-title { text-align: center; margin-bottom: 35px; }
+        .page-title { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 8px; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .page-desc { font-size: 10px; color: var(--gold); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- STARTER PACK --- */
+        .starter-section { margin-bottom: 40px; }
+        .starter-pack {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(10, 10, 10, 0.95));
+            border: 2px solid var(--green); border-radius: 25px; padding: 25px;
+            position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0, 255, 136, 0.25);
+            animation: pulseGreen 3s infinite alternate;
+        }
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); } 100% { box-shadow: 0 0 50px rgba(0, 255, 136, 0.4); } }
+
+        /* --- КАРТОЧКИ ПАКЕТОВ --- */
+        .packs-container { display: flex; flex-direction: column; gap: 20px; }
+        .pack-card {
+            background: linear-gradient(145deg, rgba(25,25,25,0.9), rgba(10,10,10,1));
+            border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: relative; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .pack-card:active { transform: scale(0.97); }
+        
+        .pack-card.premium { border-color: var(--gold); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15); }
+        .pack-card.whale { border-color: var(--blue-light); box-shadow: 0 10px 30px rgba(0, 175, 255, 0.2); }
+
+        .pack-left { flex: 1; }
+        .pack-name { font-size: 14px; font-weight: 900; color: #fff; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase; }
+        .pack-desc { font-size: 9px; color: #777; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pack-benefit { display: inline-block; margin-top: 10px; background: rgba(0, 255, 136, 0.1); color: var(--green); font-size: 8px; font-weight: 900; padding: 4px 10px; border-radius: 8px; text-transform: uppercase; }
+
+        .pack-right { text-align: right; min-width: 120px; }
+        .pack-val { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 2px; }
+        .pack-bonus-val { font-size: 10px; font-weight: 800; color: var(--green); margin-bottom: 12px; display: block; }
+
+        .stars-btn {
+            background: var(--blue-stars); color: #fff; border: none; border-radius: 12px;
+            padding: 10px 0; width: 100%; font-weight: 900; font-size: 13px;
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.4); transition: 0.2s;
+        }
+        .stars-btn:active { transform: scale(0.95); }
+        
+        .price-row { display: flex; align-items: center; gap: 6px; }
+        .old-price { font-size: 9px; color: rgba(255,255,255,0.4); text-decoration: line-through; font-weight: 700; }
+        .new-price { display: flex; align-items: center; gap: 4px; font-size: 14px; }
+        .stars-icon { width: 14px; height: 14px; }
+
+        .profit-badge {
+            position: absolute; top: 0; left: 0; background: var(--red); color: #fff;
+            font-size: 7px; font-weight: 900; padding: 5px 12px; border-bottom-right-radius: 12px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<main id="topup-page">
+    <div class="top-header">
+        <div onclick="fadeNavigate('profile.html')" class="back-btn">
+            <span>◀</span> <span data-i18n="back_to_profile">Профиль</span>
+        </div>
+    </div>
+
+    <div class="header-title">
+        <div class="page-title" data-i18n="topup_title">ПОПОЛНЕНИЕ</div>
+        <div class="page-desc" data-i18n="topup_desc">Купи TIME для быстрого развития!</div>
+    </div>
+
+    <!-- STARTER PACK -->
+    <div class="starter-section">
+        <div class="starter-pack" onclick="buyPack('starter', 99)">
+            <div class="profit-badge" style="background: #fff; color: #000;">ОЧЕНЬ ВЫГОДНО</div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="font-size: 50px;">🚀</div>
+                <div style="flex: 1;">
+                    <div class="pack-name" style="color: var(--green); font-size: 18px;" data-i18n="topup_starter_title">СТАРТОВЫЙ НАБОР</div>
+                    <div class="pack-desc" style="color: #eee;" data-i18n="topup_starter_desc">8000 ⏳ + 2 Стильных Кейса + Буст. ДОСТУПНО ТОЛЬКО 1 РАЗ!</div>
+                    <button class="stars-btn" style="margin-top: 15px; background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);">
+                        <div class="price-row">
+                            <span class="old-price" style="color: rgba(0,0,0,0.5);">299</span>
+                            <div class="new-price"><img src="https://i.ibb.co/278DZS1z/stars.png" class="stars-icon"> 99</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="packs-container" id="packs-list">
+        <!-- ПАК 1: ГОРДОСТЬ ВРЕМЕНИ -->
+        <div class="pack-card" onclick="buyPack('pack_1', 50)">
+            <div class="pack-left">
+                <div class="pack-name" data-i18n="pack_1_name">ГОРДОСТЬ ВРЕМЕНИ</div>
+                <div class="pack-desc" data-i18n="pack_1_desc">Первый шаг к успеху</div>
+            </div>
+            <div class="pack-right">
+                <div class="pack-val">2 000 ⏳</div>
+                <button class="stars-btn">
+                    <div class="new-price"><img src="https://i.ibb.co/278DZS1z/stars.png" class="stars-icon"> 50</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ПАК 2: НАБОР ИГРОКА -->
+        <div class="pack-card" onclick="buyPack('pack_2', 150)">
+            <div class="profit-badge">ВЫГОДНО</div>
+            <div class="pack-left">
+                <div class="pack-name" data-i18n="pack_2_name">НАБОР ИГРОКА</div>
+                <div class="pack-desc" data-i18n="pack_2_desc">Хватает на покупку кейсов и бусты</div>
+            </div>
+            <div class="pack-right">
+                <div class="pack-val">6 300 ⏳</div>
+                <span class="pack-bonus-val">+300 БОНУС</span>
+                <button class="stars-btn">
+                    <div class="new-price"><img src="https://i.ibb.co/278DZS1z/stars.png" class="stars-icon"> 150</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ПАК 3: VIP ПАК -->
+        <div class="pack-card premium" onclick="buyPack('pack_3', 199)">
+            <div class="profit-badge" style="background: var(--gold);">СКИДКА</div>
+            <div class="pack-left">
+                <div class="pack-name" style="color: var(--gold-light);" data-i18n="pack_3_name">VIP ПАК</div>
+                <div class="pack-desc" data-i18n="pack_3_desc">Идеально для WordPass</div>
+            </div>
+            <div class="pack-right">
+                <div class="pack-val">11 000 ⏳</div>
+                <span class="pack-bonus-val">+1000 БОНУС</span>
+                <button class="stars-btn" style="background: linear-gradient(45deg, var(--gold), #f39c12); color: #000;">
+                    <div class="price-row">
+                        <span class="old-price" style="color: rgba(0,0,0,0.5);">250</span>
+                        <div class="new-price"><img src="https://i.ibb.co/278DZS1z/stars.png" class="stars-icon"> 199</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ПАК 4: НАБОР ИНВЕСТОРА -->
+        <div class="pack-card" onclick="buyPack('pack_4', 399)">
+            <div class="profit-badge">АКЦИЯ</div>
+            <div class="pack-left">
+                <div class="pack-name" data-i18n="pack_4_name">НАБОР ИНВЕСТОРА</div>
+                <div class="pack-desc" data-i18n="pack_4_desc">Для крутой Фермы и Роли</div>
+            </div>
+            <div class="pack-right">
+                <div class="pack-val">24 000 ⏳</div>
+                <span class="pack-bonus-val">+4000 БОНУС</span>
+                <button class="stars-btn">
+                    <div class="price-row">
+                        <span class="old-price">500</span>
+                        <div class="new-price"><img src="https://i.ibb.co/278DZS1z/stars.png" class="stars-icon"> 399</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ПАК 5: ВЛАСТЕЛИН ВРЕМЕНИ -->
+        <div class="pack-card whale" onclick="buyPack('pack_5', 999)">
+            <div class="profit-badge" style="background: var(--blue-light);">МАКС. ВЫГОДА</div>
+            <div class="pack-left">
+                <div class="pack-name" style="color: var(--blue-light);" data-i18n="pack_5_name">ВЛАСТЕЛИН ВРЕМЕНИ</div>
+                <div class="pack-desc" data-i18n="pack_5_desc">Хватит на все</div>
+            </div>
+            <div class="pack-right">
+                <div class="pack-val">65 000 ⏳</div>
+                <span class="pack-bonus-val">+15000 БОНУС</span>
+                <button class="stars-btn" style="background: linear-gradient(45deg, var(--blue-stars), var(--blue-light));">
+                    <div class="price-row">
+                        <span class="old-price">1250</span>
+                        <div class="new-price"><img src="https://i.ibb.co/278DZS1z/stars.png" class="stars-icon"> 999</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const tg = window.Telegram.WebApp;
+
+    window.onload = () => {
+        document.getElementById('topup-page').classList.add('ready');
+    };
+
+    function fadeNavigate(url) {
+        document.querySelector('main').style.opacity = '0';
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function buyPack(id, stars) {
+        if(window.navigator.vibrate) window.navigator.vibrate(50);
+        
+        // Показываем индикатор загрузки, чтобы игрок не спамил клики
+        tg.MainButton.text = "СОЗДАЕМ ИНВОЙС...";
+        tg.MainButton.show();
+        tg.MainButton.showProgress();
+
+        try {
+            // СТУЧИМСЯ В СЕРВЕРНУЮ ФУНКЦИЮ SUPABASE
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/telegram-pay/create-invoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    packId: id, 
+                    stars: stars, 
+                    username: localStorage.getItem('wt_user') // передаем ник юзера
+                })
+            });
+            
+            const data = await res.json();
+            
+            if (data.error) {
+                tg.showAlert("Ошибка генерации чека: " + data.error);
+                tg.MainButton.hide();
+                return;
+            }
+
+            // Открываем официальную шторку оплаты Stars в Телеграме
+            tg.MainButton.hide();
+            tg.openInvoice(data.invoiceLink, function(status) {
+                if (status === 'paid') {
+                    tg.showAlert(window.translations?.['msg_payment_success'] || 'Оплата прошла успешно! Коины скоро поступят на баланс.');
+                    // Перекидываем на главную для обновления данных
+                    setTimeout(() => fadeNavigate('main.html'), 2000);
+                } else if (status === 'failed' || status === 'cancelled') {
+                    tg.showAlert(window.translations?.['msg_payment_fail'] || 'Оплата отменена или произошла ошибка.');
+                }
+            });
+
+        } catch (e) {
+            console.error("Payment error:", e);
+            tg.showAlert('Ошибка сети. Попробуйте позже.');
+            tg.MainButton.hide();
+        }
+    }
+</script>
+</body>
+</html>

@@ -179,11 +179,12 @@
     const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
     const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
     const sb = supabase.createClient(S_URL, S_KEY);
+    const tg = window.Telegram?.WebApp; // Для уведомлений
 
     const user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // Конфиг всех квестов
+    // Конфиг всех квестов (оставляем для рендера)
     const QUESTS = [
         {
             id: 'days_online', icon: '🗓️', 
@@ -253,6 +254,7 @@
 
     let dbData = null;
     let localData = {};
+    let isProcessing = false; // Защита от спам-кликов
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -269,7 +271,6 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            // Получаем данные из БД
             const { data, error } = await sb.from('user_progress').select('*').eq('username', user).single();
             if (error) throw error;
             
@@ -277,7 +278,7 @@
             if(!dbData.claimed_quests) dbData.claimed_quests = {};
             if(dbData.coins === undefined || dbData.coins === null) dbData.coins = 0;
 
-            // Собираем локальные данные
+            // Обновляем локальные данные для квестов, которых нет в основной БД
             localData.sparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
             localData.tfLevel = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
 
@@ -295,6 +296,7 @@
         document.getElementById('ui-exp').innerText = dbData.global_exp;
     }
 
+    // Визуальный расчет прогресса (для отображения на сайте)
     function getCurrentValueForQuest(id) {
         switch(id) {
             case 'days_online':
@@ -328,18 +330,15 @@
             let isFullyCompleted = claimedIndex >= q.stages.length;
             let currentVal = getCurrentValueForQuest(q.id);
             
-            // Если квест выполнен, показываем последний этап, иначе текущий
             let activeStageIndex = isFullyCompleted ? q.stages.length - 1 : claimedIndex;
             let stage = q.stages[activeStageIndex];
             
             let percent = Math.min(100, (currentVal / stage.goal) * 100);
             let canClaim = currentVal >= stage.goal && !isFullyCompleted;
 
-            // Формируем текст текущего задания
             let taskTemplate = window.translations?.[q.taskKey] || q.defaultTask;
             let currentTaskText = taskTemplate.replace('{goal}', stage.goal);
 
-            // Генерация точек этапов
             let dotsHtml = '';
             for (let i = 0; i < q.stages.length; i++) {
                 if (i < claimedIndex) dotsHtml += `<div class="stage-dot done"></div>`;
@@ -370,7 +369,6 @@
                     </div>`;
             }
 
-            // Рендерим награды
             let rewardsHtml = '';
             if (stage.c > 0) rewardsHtml += `<div class="reward-tag r-coin">⏳ ${stage.c}</div>`;
             if (stage.x > 0) rewardsHtml += `<div class="reward-tag r-exp">⭐ ${stage.x}</div>`;
@@ -404,66 +402,67 @@
         });
     }
 
+    // 🛡️ ТЕПЕРЬ НАГРАДЫ ВЫДАЕТ СЕРВЕР
     window.claimReward = async function(questId, stageIndex) {
+        if(isProcessing) return;
+        isProcessing = true;
+
         if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
         
         const btn = document.getElementById(`btn-${questId}`);
+        const originalText = btn.innerText;
         btn.innerText = '⏳...';
         btn.style.pointerEvents = 'none';
 
-        const questDef = QUESTS.find(q => q.id === questId);
-        const stage = questDef.stages[stageIndex];
-
-        // Математика прокачки уровня от опыта
-        let gExp = (dbData.global_exp || 0) + stage.x; 
-        let gLvl = dbData.global_level || 1;
-
-        while (true) {
-            let neededExp = gLvl * 10;
-            if (gExp >= neededExp) {
-                gExp -= neededExp;
-                gLvl += 1;
-            } else {
-                break;
-            }
-        }
-
-        let newCoins = (dbData.coins || 0) + stage.c;
-        
-        // Обновляем JSONB квестов
-        let updatedClaimed = { ...dbData.claimed_quests };
-        updatedClaimed[questId] = stageIndex + 1;
+        // Собираем прогресс для "клиентских" квестов (чтобы сервер знал результат)
+        let clientProgress = 0;
+        if (questId === 'sparks_farm') clientProgress = parseInt(localStorage.getItem('wt_sparks')) || 0;
+        if (questId === 'tf_level') clientProgress = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
 
         try {
-            await sb.from('user_progress').update({
-                global_exp: gExp,
-                global_level: gLvl,
-                coins: newCoins,
-                claimed_quests: updatedClaimed
-            }).eq('username', user);
+            // Обращаемся к твоей новой Edge Function
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/complete-quest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: user, 
+                    questId: questId, 
+                    stageIndex: stageIndex,
+                    clientProgress: clientProgress 
+                })
+            });
 
-            // Отправка в Live Feed (По желанию, если квест жирный)
-            if (stageIndex >= questDef.stages.length - 1) {
-                sb.from('live_feed').insert({
-                    username: user,
-                    event_type: 'lvl_up', // Можно сделать кастомный тип 'quest_done'
-                    event_val: 'КВЕСТ'
-                }).then(({error}) => { if(error) console.error(error); });
+            const data = await res.json();
+
+            if (data.error) {
+                // Используем showAlert если Telegram WebApp доступен, иначе alert
+                if (tg) tg.showAlert("❌ Ошибка: " + data.error);
+                else alert("Ошибка: " + data.error);
+
+                btn.innerText = originalText;
+                btn.style.pointerEvents = 'auto';
+                isProcessing = false;
+                return;
             }
 
-            // Обновляем локальные данные для мгновенного рендера
-            dbData.global_exp = gExp;
-            dbData.global_level = gLvl;
-            dbData.coins = newCoins;
-            dbData.claimed_quests = updatedClaimed;
+            // УСПЕХ! Обновляем данные на основе ответа сервера
+            dbData.global_exp = data.newExp;
+            dbData.global_level = data.newLvl;
+            dbData.coins = data.newCoins;
+            dbData.claimed_quests = data.claimedQuests;
 
+            if (tg) tg.showAlert("🎉 Награда получена!");
+            
             updateTopBalance();
             renderCards();
 
         } catch (e) {
-            console.error("Ошибка при сохранении квеста:", e);
-            btn.innerText = 'ОШИБКА';
+            console.error("Ошибка при связи с сервером:", e);
+            if (tg) tg.showAlert("🌐 Ошибка сети. Попробуйте позже.");
+            btn.innerText = originalText;
+            btn.style.pointerEvents = 'auto';
         }
+        isProcessing = false;
     };
 
     document.addEventListener('translationsReady', initQuests);

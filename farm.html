@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WordTime — Ферма</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88; --blue: #00bfff; --purple: #b026ff; --red: #ff4b4b;
+        }
+
+        html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            min-height: 100dvh; overflow-x: hidden; padding-bottom: 110px; 
+        }
+
+        main { 
+            width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
+            opacity: 0; transform: translateY(15px); transition: 0.4s; visibility: hidden;
+        }
+        main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(176, 38, 255, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+
+        /* --- ШАПКА --- */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { 
+            display: inline-flex; align-items: center; gap: 6px; 
+            background: var(--glass); border: 1px solid var(--glass-border); 
+            padding: 8px 14px; border-radius: 14px; color: #aaa; 
+            font-size: 10px; font-weight: 800; text-transform: uppercase; 
+            letter-spacing: 1px; text-decoration: none; transition: 0.3s; cursor: pointer; 
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); color: #fff; border-color: var(--gold); }
+
+        .header-title { text-align: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; text-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        .page-desc { font-size: 10px; color: var(--purple); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- ПАНЕЛЬ СБОРА --- */
+        .claim-box {
+            background: linear-gradient(145deg, rgba(20,20,20,0.9), rgba(10,10,10,1));
+            border: 1px solid var(--purple); border-radius: 25px; padding: 25px;
+            text-align: center; margin-bottom: 30px; position: relative; overflow: hidden;
+            box-shadow: 0 15px 40px rgba(176, 38, 255, 0.15);
+        }
+        .claim-box::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(176, 38, 255, 0.1) 0%, transparent 60%);
+            animation: rotateGlow 10s linear infinite; pointer-events: none;
+        }
+        @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
+
+        .claim-title { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; position: relative; z-index: 1; }
+        .claim-amount { font-size: 42px; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(176, 38, 255, 0.6); margin-bottom: 20px; font-variant-numeric: tabular-nums; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .claim-amount span { color: var(--purple); font-size: 32px; }
+
+        .claim-btn {
+            background: linear-gradient(45deg, var(--purple), #d884ff); border: none;
+            color: #fff; font-size: 14px; font-weight: 900; padding: 16px 0; width: 100%;
+            border-radius: 16px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.2s; box-shadow: 0 8px 25px rgba(176, 38, 255, 0.4); position: relative; z-index: 1;
+        }
+        .claim-btn:active { transform: scale(0.95); box-shadow: 0 4px 15px rgba(176, 38, 255, 0.4); }
+        .claim-btn:disabled { background: #333; color: #666; box-shadow: none; transform: none; cursor: not-allowed; }
+
+        .storage-bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; margin-top: 15px; position: relative; z-index: 1; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .storage-bar-fill { height: 100%; background: var(--purple); width: 0%; transition: width 1s linear; box-shadow: 0 0 10px var(--purple); }
+
+        .balance-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px; }
+        .bal-text { font-size: 11px; font-weight: 900; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .bal-val { font-size: 16px; font-weight: 900; color: var(--blue); text-shadow: 0 0 10px rgba(0, 191, 255, 0.3); }
+
+        /* --- СПИСОК ФЕРМ --- */
+        .farm-grid { display: flex; flex-direction: column; gap: 15px; }
+        
+        .farm-card {
+            background: linear-gradient(145deg, rgba(25,25,25,0.8), rgba(10,10,10,0.95));
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px;
+            display: flex; align-items: center; gap: 15px; transition: 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4); position: relative; overflow: hidden;
+        }
+
+        /* --- БЕЙДЖ СКИДКИ --- */
+        .discount-badge {
+            position: absolute; top: 0; right: 0; background: var(--red); color: #fff;
+            font-size: 8px; font-weight: 900; padding: 4px 10px; border-bottom-left-radius: 12px;
+            box-shadow: 0 5px 15px rgba(255, 75, 75, 0.4); z-index: 5; letter-spacing: 1px;
+        }
+
+        .f-icon-wrap { width: 60px; height: 60px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 32px; flex-shrink: 0; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
+        .f-info { flex: 1; }
+        .f-name { font-size: 13px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .f-income { font-size: 9px; font-weight: 800; color: var(--green); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .f-owned { font-size: 9px; color: #777; font-weight: 700; text-transform: uppercase; }
+        .f-owned span { color: var(--gold); font-weight: 900; }
+
+        .f-buy-btn {
+            background: rgba(0, 191, 255, 0.1); border: 1px solid var(--blue); color: var(--blue);
+            font-size: 11px; font-weight: 900; padding: 10px 14px; border-radius: 14px;
+            cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 85px; position: relative;
+        }
+        .f-buy-btn:active { transform: scale(0.95); background: var(--blue); color: #000; }
+        .f-buy-btn.locked { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: #666; pointer-events: none; }
+        
+        .btn-price { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .old-price { font-size: 9px; color: #888; text-decoration: line-through; font-weight: 700; opacity: 0.7; }
+        .new-price { font-size: 13px; font-weight: 900; display: flex; align-items: center; gap: 3px;}
+
+        .tier-v1 .f-icon-wrap { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1)); }
+        .tier-v2 { border-color: rgba(0, 191, 255, 0.3); } .tier-v2 .f-icon-wrap { filter: drop-shadow(0 0 15px rgba(0, 191, 255, 0.3)); } .tier-v2 .f-income { color: var(--blue); }
+        .tier-v3 { border-color: rgba(212, 175, 55, 0.4); } .tier-v3 .f-icon-wrap { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4)); } .tier-v3 .f-income { color: var(--gold); }
+        .tier-v4 { border-color: rgba(176, 38, 255, 0.5); background: linear-gradient(145deg, rgba(30,10,40,0.8), rgba(10,10,10,1)); } .tier-v4 .f-icon-wrap { filter: drop-shadow(0 0 20px rgba(176, 38, 255, 0.6)); transform: scale(1.05); } .tier-v4 .f-name { color: #d884ff; text-shadow: 0 0 10px rgba(176, 38, 255, 0.5); } .tier-v4 .f-income { color: var(--purple); }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: 0.3s; flex: 1; position: relative;}
+        .tab-icon { font-size: 20px; margin-bottom: 4px; filter: grayscale(100%) opacity(0.6); transition: 0.3s; z-index: 2;}
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2;}
+        
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: pulseTab 2s infinite alternate; }
+        @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<main id="main-content">
+    <div class="top-header">
+        <div onclick="fadeNavigate('profile.html')" class="back-btn">
+            <span style="font-size: 12px;">◀</span> <span data-i18n="back_to_profile">К ПРОФИЛЮ</span>
+        </div>
+    </div>
+
+    <div class="header-title">
+        <div class="page-title" data-i18n="farm_title">КИБЕР-ФЕРМА</div>
+        <div class="page-desc" data-i18n="farm_desc">Майни искры в фоновом режиме!</div>
+    </div>
+
+    <div class="claim-box">
+        <div class="claim-title">ДОСТУПНО ДЛЯ СБОРА</div>
+        <div class="claim-amount" id="claim-amount">0 <span>🧠</span></div>
+        <button class="claim-btn" id="claim-btn" onclick="claimSparks()" data-i18n="farm_claim_btn">СОБРАТЬ ИСКРЫ</button>
+        <div class="storage-bar-bg"><div class="storage-bar-fill" id="storage-fill"></div></div>
+    </div>
+
+    <div class="balance-info">
+        <div class="bal-text">БАЛАНС КОИНОВ</div>
+        <div class="bal-val"><span id="user-coins">0</span> ⏳</div>
+    </div>
+
+    <div class="farm-grid" id="farm-grid">
+        <!-- Генерируется через JS -->
+    </div>
+</main>
+
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item"><span class="tab-icon">🏠</span><span class="tab-label" data-i18n="tab_home">Главная</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item"><span class="tab-icon">🎮</span><span class="tab-label" data-i18n="tab_play">Играть</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item active"><span class="tab-icon">👤</span><span class="tab-label" data-i18n="tab_profile">Профиль</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item"><span class="tab-icon">📜</span><span class="tab-label" data-i18n="tab_quests">Квесты</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tab_settings">Настройки</span></a>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+
+    const user = localStorage.getItem('wt_user');
+    if (!user) window.location.href = 'index.html';
+
+    let dbData = null;
+    let farmData = { v1: 0, v2: 0, v3: 0, v4: 0 };
+    let lastClaimDate = new Date();
+    let pendingSparks = 0;
+    let totalSparksPerMinute = 0;
+    let liveTimer = null;
+    let isProcessing = false;
+
+    const FARMS = [
+        { id: 'v1', icon: '🖥️', nameKey: 'farm_v1', income: 1, price: 750, oldPrice: 1000, theme: 'tier-v1' },
+        { id: 'v2', icon: '🗄️', nameKey: 'farm_v2', income: 6, price: 3750, oldPrice: 5000, theme: 'tier-v2' },
+        { id: 'v3', icon: '⚛️', nameKey: 'farm_v3', income: 20, price: 11250, oldPrice: 15000, theme: 'tier-v3' },
+        { id: 'v4', icon: '🌌', nameKey: 'farm_v4', income: 75, price: 37500, oldPrice: 50000, theme: 'tier-v4' }
+    ];
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(15px)';
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    async function loadFarms() {
+        try {
+            if (!window.translations) await new Promise(res => setTimeout(res, 500));
+
+            const { data, error } = await sb.from('user_progress').select('coins, farms, last_farm_claim').eq('username', user).single();
+            if (error) throw error;
+            dbData = data;
+            
+            if (dbData.farms) farmData = dbData.farms;
+            if (dbData.last_farm_claim) lastClaimDate = new Date(dbData.last_farm_claim);
+            else lastClaimDate = new Date();
+
+            calculateIncome();
+            renderFarms();
+            startLiveCounter();
+
+            document.getElementById('main-content').classList.add('ready');
+
+        } catch (e) { console.error("Ошибка загрузки фермы:", e); }
+    }
+
+    function calculateIncome() {
+        totalSparksPerMinute = 0;
+        FARMS.forEach(f => {
+            totalSparksPerMinute += (farmData[f.id] || 0) * f.income;
+        });
+    }
+
+    function startLiveCounter() {
+        if (liveTimer) clearInterval(liveTimer);
+        updatePendingSparks();
+        liveTimer = setInterval(updatePendingSparks, 1000); 
+    }
+
+    // Визуальный счетчик на клиенте (Сервер проверяет всё еще раз при нажатии кнопки)
+    function updatePendingSparks() {
+        if (totalSparksPerMinute === 0) {
+            document.getElementById('claim-amount').innerHTML = `0 <span>🧠</span>`;
+            document.getElementById('claim-btn').disabled = true;
+            document.getElementById('storage-fill').style.width = '0%';
+            return;
+        }
+
+        const now = new Date();
+        const diffMs = now - lastClaimDate;
+        
+        const MAX_TIME_MS = 86400000; 
+        const clampedMs = Math.min(diffMs, MAX_TIME_MS);
+        
+        pendingSparks = Math.floor((clampedMs / 60000) * totalSparksPerMinute);
+
+        document.getElementById('claim-amount').innerHTML = `${pendingSparks} <span>🧠</span>`;
+        document.getElementById('claim-btn').disabled = pendingSparks <= 0;
+
+        const percent = (clampedMs / MAX_TIME_MS) * 100;
+        document.getElementById('storage-fill').style.width = `${percent}%`;
+    }
+
+    function renderFarms() {
+        const timeCoins = dbData.coins || 0;
+        document.getElementById('user-coins').innerText = timeCoins;
+
+        const grid = document.getElementById('farm-grid');
+        grid.innerHTML = '';
+
+        const txtBuy = window.translations?.['farm_buy_btn'] || 'КУПИТЬ';
+        const txtIncome = window.translations?.['farm_income'] || 'ИСКР/МИН';
+
+        FARMS.forEach(f => {
+            const displayName = window.translations?.[f.nameKey] || f.nameKey;
+            const count = farmData[f.id] || 0;
+            const canAfford = timeCoins >= f.price;
+            
+            let btnClass = canAfford ? 'f-buy-btn' : 'f-buy-btn locked';
+
+            grid.innerHTML += `
+                <div class="farm-card ${f.theme}">
+                    <div class="discount-badge">-25%</div>
+                    <div class="f-icon-wrap">${f.icon}</div>
+                    <div class="f-info">
+                        <div class="f-name">${displayName}</div>
+                        <div class="f-income">+${f.income} ${txtIncome}</div>
+                        <div class="f-owned">КУПЛЕНО: <span>${count}</span></div>
+                    </div>
+                    <button class="${btnClass}" onclick="buyFarm('${f.id}')">
+                        <span style="font-size: 8px;">${txtBuy}</span>
+                        <div class="btn-price">
+                            <span class="old-price">${f.oldPrice}</span>
+                            <span class="new-price">${f.price} ⏳</span>
+                        </div>
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    // 🛡️ СБОР ИСКР ЧЕРЕЗ СЕРВЕР
+    async function claimSparks() {
+        if(isProcessing || pendingSparks <= 0) return;
+        isProcessing = true;
+        if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
+
+        const btn = document.getElementById('claim-btn');
+        const originalText = btn.innerText;
+        btn.innerText = '⏳ ЗАГРУЗКА...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/farm-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, action: 'claim' })
+            });
+
+            const data = await res.json();
+            
+            if (data.error) {
+                alert("Ошибка: " + data.error);
+            } else {
+                // Добавляем Искры, которые разрешил сервер
+                let currentSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
+                localStorage.setItem('wt_sparks', currentSparks + data.claimedSparks);
+
+                lastClaimDate = new Date();
+                updatePendingSparks(); 
+
+                btn.innerText = '✅ УСПЕШНО!';
+            }
+
+        } catch (e) {
+            console.error("Ошибка при сборе:", e);
+            btn.innerText = 'ОШИБКА СЕТИ';
+        }
+
+        setTimeout(() => {
+            btn.innerText = originalText;
+            isProcessing = false;
+            updatePendingSparks(); // Обновит доступность кнопки
+        }, 1500);
+    }
+
+    // 🛡️ ПОКУПКА ФЕРМ ЧЕРЕЗ СЕРВЕР
+    async function buyFarm(farmId) {
+        if(isProcessing) return;
+        isProcessing = true;
+        
+        if(window.navigator.vibrate) window.navigator.vibrate(50);
+
+        try {
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/farm-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, action: 'buy', farmId: farmId })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                alert("Ошибка: " + data.error);
+            } else {
+                // Если при покупке сервер автособрал искры, плюсуем их
+                if (data.claimedSparks > 0) {
+                    let currentSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
+                    localStorage.setItem('wt_sparks', currentSparks + data.claimedSparks);
+                }
+
+                // Обновляем данные локально на основе ответа сервера
+                dbData.coins = data.newCoins;
+                farmData = data.newFarms;
+                lastClaimDate = new Date();
+
+                calculateIncome();
+                renderFarms();
+                updatePendingSparks();
+
+                if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+            }
+
+        } catch(e) { 
+            console.error("Ошибка покупки фермы:", e);
+            alert("Ошибка сети. Попробуйте позже.");
+        }
+
+        isProcessing = false;
+    }
+
+    document.addEventListener('translationsReady', loadFarms);
+    if (window.translations && Object.keys(window.translations).length > 0) {
+        loadFarms();
+    }
+</script>
+</body>
+</html>

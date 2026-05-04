@@ -32,14 +32,13 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (Стандартный на 5 кнопок) --- */
+        /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
         .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
         .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
         .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
         
-        /* Профиль теперь активный */
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
@@ -102,7 +101,7 @@
         .day-card.today .day-reward { background: linear-gradient(45deg, var(--gold), var(--gold-light)); color: #000; padding: 5px 12px; border-radius: 10px; box-shadow: 0 5px 10px rgba(212,175,55,0.4); letter-spacing: 1px; }
         .day-card.today:active { transform: scale(0.95); }
 
-        /* Выделение кейсов (Особые дни) */
+        /* Выделение кейсов */
         .day-card.case-day .day-icon { font-size: 34px; }
         .day-card.case-day.locked .day-reward { color: var(--blue); }
 
@@ -153,12 +152,10 @@
             <span class="tab-icon">🎮</span>
             <span class="tab-label" data-i18n="tab_play">Играть</span>
         </a>
-        <!-- Профиль теперь активен -->
         <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item active">
             <span class="tab-icon">👤</span>
             <span class="tab-label" data-i18n="tab_profile">Профиль</span>
         </a>
-        <!-- Возвращаем Квесты -->
         <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item">
             <span class="tab-icon">📜</span>
             <span class="tab-label" data-i18n="tab_quests">Квесты</span>
@@ -209,11 +206,6 @@
     let currentDay = 0;
     let isProcessing = false;
 
-    // --- ФОРМУЛА ВЗВЕШЕННОГО РАНДОМА ---
-    function getWeightedRandom(min, max) {
-        return Math.floor(min + (max - min) * Math.pow(Math.random(), 2));
-    }
-
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
         const main = document.querySelector('main');
@@ -227,25 +219,14 @@
         try {
             if (!window.translations) await new Promise(res => setTimeout(res, 500));
 
+            // Клиент генерирует сетку на основе своего времени (только для визуала)
             const now = new Date();
-            const currentMonthStr = `${now.getFullYear()}-${now.getMonth() + 1}`;
             currentDay = now.getDate();
             daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
             let { data, error } = await sb.from('user_progress').select('*').eq('username', user).single();
             if (error) throw error;
             dbData = data;
-
-            if (dbData.calendar_month !== currentMonthStr) {
-                dbData.calendar_month = currentMonthStr;
-                dbData.calendar_claimed = [];
-                await sb.from('user_progress').update({
-                    calendar_month: currentMonthStr,
-                    calendar_claimed: []
-                }).eq('username', user);
-            }
-
-            if(!dbData.cases) dbData.cases = { normal: 0, stylish: 0, premium: 0 };
 
             renderGrid();
             document.getElementById('main-content').classList.add('ready');
@@ -302,7 +283,8 @@
             }
 
             let extraClass = conf.isCase ? 'case-day' : '';
-            let onClick = (statusClass === 'today') ? `onclick="claimToday(${i}, '${conf.type}', '${conf.icon}')"` : '';
+            // Передаем только id дня, всё остальное сервер сделает сам
+            let onClick = (statusClass === 'today') ? `onclick="claimToday(${i})"` : '';
 
             let html = `
                 <div class="day-card ${statusClass} ${extraClass}" id="day-${i}" ${onClick}>
@@ -315,7 +297,8 @@
         }
     }
 
-    async function claimToday(day, type, icon) {
+    // 🛡️ СБОР НАГРАДЫ ЧЕРЕЗ СЕРВЕР
+    async function claimToday(day) {
         if(isProcessing) return;
         isProcessing = true;
         if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
@@ -324,61 +307,60 @@
         card.style.pointerEvents = 'none';
         card.querySelector('.day-reward').innerText = '...';
 
-        let amountStr = '';
-        let finalTitle = '';
-
         try {
-            let updates = { calendar_claimed: [...(dbData.calendar_claimed || []), day] };
+            // Обращаемся к серверу. Он сам знает, какой сегодня день по UTC
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-calendar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user }) 
+            });
 
-            if (type.startsWith('case_')) {
-                let caseType = type.split('_')[1]; 
-                let cases = { ...dbData.cases };
-                cases[caseType] = (cases[caseType] || 0) + 1;
-                updates.cases = cases;
-                
-                finalTitle = window.translations?.[`case_${caseType}`] || type;
+            const data = await res.json();
+
+            if (data.error) {
+                alert("Ошибка: " + data.error);
+                card.style.pointerEvents = 'auto';
+                card.querySelector('.day-reward').innerText = 'ОШИБКА';
+                isProcessing = false;
+                return;
+            }
+
+            // Синхронизируем базу данных на клиенте с ответом сервера
+            dbData = { ...dbData, ...data.updatedData };
+            
+            let finalTitle = '';
+            let amountStr = '';
+            let rIcon = '🎁';
+
+            // Отрисовка результатов, которые прислал сервер
+            if (data.rewardType.startsWith('case_')) {
+                let caseType = data.rewardType.split('_')[1]; 
+                finalTitle = window.translations?.[`case_${caseType}`] || data.rewardType;
                 amountStr = '+1 В ИНВЕНТАРЬ';
-
+                rIcon = data.rewardType === 'case_premium' ? '💎' : (data.rewardType === 'case_normal' ? '📦' : '🧰');
             } else {
-                let rollType = ['exp', 'time', 'sparks'][Math.floor(Math.random() * 3)];
-                
-                if (rollType === 'exp') {
-                    let amount = getWeightedRandom(10, 31); 
-                    let gExp = (dbData.global_exp || 0) + amount; 
-                    let gLvl = dbData.global_level || 1;
-                    while (gExp >= gLvl * 10) { gExp -= gLvl * 10; gLvl++; }
-                    updates.global_exp = gExp; updates.global_level = gLvl;
-                    
+                amountStr = `+${data.amount}`;
+                if (data.rewardType === 'exp') {
                     finalTitle = window.translations?.['reward_exp'] || 'ОПЫТ';
-                    amountStr = `+${amount}`;
-                    icon = '⭐';
-                } 
-                else if (rollType === 'time') {
-                    let amount = getWeightedRandom(5, 151); 
-                    updates.coins = (dbData.coins || 0) + amount;
+                    rIcon = '⭐';
+                } else if (data.rewardType === 'time') {
                     finalTitle = window.translations?.['reward_time'] || 'TIME';
-                    amountStr = `+${amount}`;
-                    icon = '⏳';
-                } 
-                else {
-                    let amount = getWeightedRandom(100, 3001); 
+                    rIcon = '⏳';
+                } else if (data.rewardType === 'sparks') {
+                    // Искры сохраняем локально, как обычно
                     let locSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
-                    localStorage.setItem('wt_sparks', locSparks + amount);
+                    localStorage.setItem('wt_sparks', locSparks + data.amount);
                     finalTitle = window.translations?.['reward_sparks'] || 'ИСКРЫ';
-                    amountStr = `+${amount}`;
-                    icon = '🧠';
+                    rIcon = '🧠';
                 }
             }
 
-            await sb.from('user_progress').update(updates).eq('username', user);
-            dbData = { ...dbData, ...updates };
-
-            document.getElementById('r-icon').innerText = icon;
+            document.getElementById('r-icon').innerText = rIcon;
             document.getElementById('r-title').innerText = finalTitle;
             document.getElementById('r-amount').innerText = amountStr;
             
             document.getElementById('reward-overlay').classList.add('show');
-            renderGrid();
+            renderGrid(); // Перерисовываем календарь, чтобы день стал "ПОЛУЧЕНО"
 
         } catch(e) {
             console.error("Ошибка при получении награды:", e);

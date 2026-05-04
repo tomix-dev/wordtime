@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WordTime — Modes</title>
-    <!-- ВЕРНУЛИ SUPABASE НА МЕСТО -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="translator.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
@@ -158,6 +157,12 @@
             id: 'brain', url: 'brain.html', reqLvl: 20,
             icon: '🧠', titleKey: 'mode_brain_title', descKey: 'mode_brain_desc',
             defaultTitle: 'BRAIN CLICKER', defaultDesc: 'Кликай и сражайся с боссами',
+            badge: null
+        },
+        {
+            id: 'tower', url: 'tower.html', reqLvl: 30, // Сделали 30 уровень для доступа
+            icon: '🏢', titleKey: 'mode_tower_title', descKey: 'mode_tower_desc',
+            defaultTitle: 'NEON STACKER', defaultDesc: 'Строй башню из слов и лови баланс',
             badge: 'NEW'
         }
     ];
