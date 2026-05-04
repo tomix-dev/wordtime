@@ -225,52 +225,62 @@
         setTimeout(() => { window.location.href = url; }, 400); 
     }
 
-    async function buyPack(id, stars) {
-        if(window.navigator.vibrate) window.navigator.vibrate(50);
-        
-        // Показываем индикатор загрузки, чтобы игрок не спамил клики
-        tg.MainButton.text = "СОЗДАЕМ ИНВОЙС...";
-        tg.MainButton.show();
-        tg.MainButton.showProgress();
-
-        try {
-            // СТУЧИМСЯ В СЕРВЕРНУЮ ФУНКЦИЮ SUPABASE
-            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/telegram-pay/create-invoice', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    packId: id, 
-                    stars: stars, 
-                    username: localStorage.getItem('wt_user') // передаем ник юзера
-                })
-            });
-            
-            const data = await res.json();
-            
-            if (data.error) {
-                tg.showAlert("Ошибка генерации чека: " + data.error);
-                tg.MainButton.hide();
-                return;
-            }
-
-            // Открываем официальную шторку оплаты Stars в Телеграме
-            tg.MainButton.hide();
-            tg.openInvoice(data.invoiceLink, function(status) {
-                if (status === 'paid') {
-                    tg.showAlert(window.translations?.['msg_payment_success'] || 'Оплата прошла успешно! Коины скоро поступят на баланс.');
-                    // Перекидываем на главную для обновления данных
-                    setTimeout(() => fadeNavigate('main.html'), 2000);
-                } else if (status === 'failed' || status === 'cancelled') {
-                    tg.showAlert(window.translations?.['msg_payment_fail'] || 'Оплата отменена или произошла ошибка.');
-                }
-            });
-
-        } catch (e) {
-            console.error("Payment error:", e);
-            tg.showAlert('Ошибка сети. Попробуйте позже.');
-            tg.MainButton.hide();
-        }
+  async function buyPack(id, stars) {
+    if(window.navigator.vibrate) window.navigator.vibrate(50);
+    
+    const username = localStorage.getItem('wt_user');
+    if (!username) {
+        tg.showAlert("Ошибка: Ник пользователя не найден. Перезайдите в приложение.");
+        return;
     }
+
+    tg.MainButton.text = "СОЗДАЕМ ИНВОЙС...";
+    tg.MainButton.show();
+    tg.MainButton.showProgress();
+
+    try {
+        // Добавляем проверку, что мы стучимся по правильному адресу
+        const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/telegram-pay/create-invoice', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+                // Мы убрали проверку JWT, поэтому здесь больше ничего не нужно
+            },
+            body: JSON.stringify({ 
+                packId: id, 
+                stars: stars, 
+                username: username
+            })
+        });
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Ошибка сервера (${res.status}): ${errorText}`);
+        }
+
+        const data = await res.json();
+        
+        if (data.error) {
+            tg.showAlert("Ошибка Telegram: " + data.error);
+            tg.MainButton.hide();
+            return;
+        }
+
+        tg.MainButton.hide();
+        tg.openInvoice(data.invoiceLink, function(status) {
+            if (status === 'paid') {
+                tg.showAlert('Оплата прошла успешно! Баланс обновится в течение минуты.');
+                setTimeout(() => fadeNavigate('main.html'), 1500);
+            }
+        });
+
+    } catch (e) {
+        console.error("Full error:", e);
+        // Если видишь это сообщение — значит запрос даже не ушел или сервер его сбросил
+        tg.showAlert('Ошибка соединения с сервером. Проверьте интернет или логи Supabase.');
+        tg.MainButton.hide();
+    }
+}
 </script>
 </body>
 </html>
