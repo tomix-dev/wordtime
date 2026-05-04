@@ -19,14 +19,7 @@
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
-
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            -webkit-tap-highlight-color: transparent; 
-            user-select: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
         
         body { 
             background-color: var(--bg); 
@@ -40,28 +33,20 @@
             position: relative;
         }
 
-        .bg-pattern { 
-            position: fixed; inset: 0; 
-            background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); 
-            background-size: 32px 32px; 
-            z-index: -1; 
-        }
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ТАБ-БАР (ПРЕМИУМ ДИЗАЙН С НЕОНОМ) --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
-        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
         
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
         .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
         .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2; }
         
-        /* Активная вкладка */
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
         
-        /* Неоновое свечение позади активной иконки */
         .tab-item.active::before {
             content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
             width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
@@ -70,7 +55,6 @@
 
         @keyframes pulseTab { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
 
-        /* --- АНИМАЦИЯ КОНТЕНТА --- */
         main { 
             flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; 
             opacity: 0; transform: translateY(15px);
@@ -79,7 +63,6 @@
         }
         main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
 
-        /* --- КНОПКА НАЗАД --- */
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .back-btn { 
             display: inline-flex; align-items: center; gap: 5px; color: #888; 
@@ -88,7 +71,6 @@
         }
         .back-btn:active { color: var(--gold); }
 
-        /* --- ИНДИКАТОР БУСТА --- */
         .boost-badge {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             background: rgba(0, 255, 136, 0.15); border: 1px solid var(--green);
@@ -100,7 +82,6 @@
         .boost-badge.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; position: absolute; }
         .boost-timer { color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
 
-        /* --- ПРОГРЕСС-БАР --- */
         .progress-section { 
             margin-bottom: 25px; background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); 
             padding: 15px 20px; border-radius: 20px; border: 1px solid var(--glass-border);
@@ -114,7 +95,6 @@
         }
         .bar-fill.boosted { background: linear-gradient(90deg, var(--green), #00ffcc); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
 
-        /* --- ИГРОВОЕ ПОЛЕ --- */
         .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; align-content: start; }
         .col { display: flex; flex-direction: column; gap: 12px; }
 
@@ -153,7 +133,6 @@
             40%, 60% { transform: translate3d(6px, 0, 0); }
         }
 
-        /* --- ВСПЛЫВАЮЩИЙ ТЕКСТ ОПЫТА --- */
         .floating-exp {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 32px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(212,175,55,0.8);
@@ -206,7 +185,6 @@
         </div>
     </div>
 
-    <!-- ИНДИКАТОР БУСТА X2 ОПЫТ -->
     <div class="boost-badge hidden" id="boost-badge">
         🧪 x2 ОПЫТ (<span class="boost-timer" id="boost-timer">00:00</span>)
     </div>
@@ -225,7 +203,6 @@
     </div>
 </main>
 
-<!-- Эффект начисления опыта по завершению -->
 <div class="floating-exp" id="floating-exp">+5 ОПЫТ</div>
 
 <script>
@@ -242,7 +219,6 @@
     let matchedInLevel = localStorage.getItem('wt_last_prog') || 0;
     let pool = [], selE = null, selR = null;
 
-    // Переменные буста
     let boostExpUntil = null;
     let isBoostActive = false;
     let boostTimerInterval = null;
@@ -262,7 +238,6 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            // Запрашиваем заодно и boost_exp_until
             let { data: prog } = await sb.from('user_progress').select('current_level, matched_count, boost_exp_until').eq('username', user).single();
             if(prog) {
                 currentLevel = prog.current_level || 1;
@@ -281,7 +256,7 @@
                 if(words && words.length > 0) {
                     pool = words;
                     initBoard();
-                    startBoostCheck(); // Запускаем проверку буста
+                    startBoostCheck();
                     requestAnimationFrame(() => {
                         document.getElementById('main-content').classList.add('ready');
                     });
@@ -295,10 +270,8 @@
         }
     }
 
-    // --- ЛОГИКА ТАЙМЕРА БУСТА ---
     function startBoostCheck() {
         if (!boostExpUntil) return;
-        
         checkBoost();
         if (boostTimerInterval) clearInterval(boostTimerInterval);
         boostTimerInterval = setInterval(checkBoost, 1000);
@@ -309,15 +282,12 @@
             disableBoostVisuals();
             return;
         }
-
         const now = new Date();
         const expiry = new Date(boostExpUntil);
-
         if (expiry > now) {
             isBoostActive = true;
             document.getElementById('boost-badge').classList.remove('hidden');
             document.getElementById('bar-fill').classList.add('boosted');
-
             let diffSec = Math.floor((expiry - now) / 1000);
             let m = String(Math.floor(diffSec / 60)).padStart(2, '0');
             let s = String(diffSec % 60).padStart(2, '0');
@@ -339,10 +309,8 @@
         const eCol = document.getElementById('eng-col');
         const lCol = document.getElementById('lang-col');
         eCol.innerHTML = ''; lCol.innerHTML = '';
-        
         pool.forEach(w => eCol.appendChild(createCard(w.eng, w.id, 'eng')));
         [...pool].sort(() => Math.random() - 0.5).forEach(w => lCol.appendChild(createCard(w[appLang], w.id, 'lang')));
-        
         updateUI();
     }
 
@@ -356,11 +324,9 @@
     function selectCard(d, type) {
         if(d.classList.contains('correct')) return;
         if(window.navigator.vibrate) window.navigator.vibrate(10);
-
         if(type === 'eng') { if(selE) selE.classList.remove('selected'); selE = d; }
         else { if(selR) selR.classList.remove('selected'); selR = d; }
         d.classList.add('selected');
-
         if(selE && selR) {
             const e = selE; const r = selR;
             selE = null; selR = null; 
@@ -371,21 +337,17 @@
     async function checkMatch(cardE, cardR) {
         if(cardE.dataset.id === cardR.dataset.id) {
             if(window.navigator.vibrate) window.navigator.vibrate(50);
-            
             cardE.className = 'card correct'; 
             cardR.className = 'card correct';
             matchedInLevel++;
             localStorage.setItem('wt_last_prog', matchedInLevel);
             sb.from('user_progress').update({ matched_count: matchedInLevel }).eq('username', user);
             updateUI();
-            
             if(matchedInLevel === 5) {
-                // Красивое завершение уровня перед перезагрузкой
                 setTimeout(handleLevelComplete, 300);
             }
         } else {
             if(window.navigator.vibrate) window.navigator.vibrate([50, 80, 50]);
-            
             cardE.classList.add('wrong'); cardR.classList.add('wrong');
             setTimeout(() => { 
                 cardE.classList.remove('wrong', 'selected'); 
@@ -395,7 +357,6 @@
     }
 
     async function handleLevelComplete() {
-        // Показываем анимацию опыта
         const expEl = document.getElementById('floating-exp');
         const earnedExp = isBoostActive ? 10 : 5;
         
@@ -404,25 +365,25 @@
         expEl.classList.add('show');
         if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 150]);
 
-        // Сохраняем прогресс
         const nextLvl = parseInt(currentLevel) + 1;
         
+        // 🏆 ТЕПЕРЬ ЗАБИРАЕМ И WP_EXP ТОЖЕ
         let { data: stats } = await sb.from('user_progress')
-            .select('total_pairs_found, global_exp, global_level, current_streak, last_played_date')
+            .select('total_pairs_found, global_exp, global_level, current_streak, last_played_date, wp_exp')
             .eq('username', user).single();
             
         let newTotal = (stats?.total_pairs_found || 0) + 5;
-        
         let gExp = (stats?.global_exp || 0) + earnedExp; 
         let gLvl = stats?.global_level || 1;
+        
+        // Начисляем опыт в Батл Пасс
+        let newWpExp = (stats?.wp_exp || 0) + earnedExp;
 
-        // Цикл на случай, если опыта перевалило на 2 уровня вперед
         while (gExp >= gLvl * 10) {
             gExp -= gLvl * 10;
             gLvl += 1;
         }
 
-        // --- ДВИГАТЕЛЬ СЕРИИ (ОГОНЬКА) ---
         const todayStr = new Date().toISOString().split('T')[0];
         let newStreak = stats?.current_streak || 0;
         let lastDateStr = stats?.last_played_date || null;
@@ -437,11 +398,11 @@
             localStorage.setItem('wt_last_played', todayStr);
             lastDateStr = todayStr;
         }
-        // ---------------------------------
 
         localStorage.setItem('wt_last_lvl', nextLvl);
         localStorage.setItem('wt_last_prog', 0);
 
+        // ОБНОВЛЯЕМ ВСЕ ДАННЫЕ ОДНИМ ЗАПРОСОМ
         await sb.from('user_progress').update({ 
             current_level: nextLvl, 
             matched_count: 0,
@@ -449,7 +410,8 @@
             global_exp: gExp,
             global_level: gLvl,
             current_streak: newStreak,
-            last_played_date: lastDateStr
+            last_played_date: lastDateStr,
+            wp_exp: newWpExp // <-- ВОТ ОН, ОПЫТ БАТЛ ПАССА
         }).eq('username', user);
 
         if (nextLvl % 10 === 0) {
@@ -460,7 +422,7 @@
         
         setTimeout(() => {
             location.reload();
-        }, 1200); // Даем время на анимацию
+        }, 1200);
     }
 
     function updateUI() {
