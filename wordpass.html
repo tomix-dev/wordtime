@@ -427,17 +427,17 @@
         btnElement.disabled = true;
 
         try {
-         const wtToken = localStorage.getItem('wt_token'); 
+const wtToken = localStorage.getItem('wt_token'); 
 
 const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-wordpass', {
     method: 'POST',
     headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${wtToken}` // <-- Вот он, наш щит!
+        'Authorization': `Bearer ${wtToken}` // <-- Наш бронежилет
     },
     body: JSON.stringify({ 
-        level: levelToClaim, 
-        type: rewardType 
+        level: lvl,          // Используем правильную переменную из аргументов
+        type: trackType      // И здесь тоже!
     })
 });
 
