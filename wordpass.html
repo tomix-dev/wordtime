@@ -429,15 +429,16 @@
         try {
 const wtToken = localStorage.getItem('wt_token'); 
 
-const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-wordpass', {
+cconst res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-wordpass', {
     method: 'POST',
     headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${wtToken}` // <-- Наш бронежилет
+        'Content-Type': 'application/json' 
+        // Заголовок Authorization УДАЛЕН
     },
     body: JSON.stringify({ 
-        level: lvl,          // Используем правильную переменную из аргументов
-        type: trackType      // И здесь тоже!
+        username: user, // ВОЗВРАЩАЕМ ЮЗЕРНЕЙМ В ЗАПРОС (берется из переменной user в начале файла)
+        level: lvl,     
+        type: trackType 
     })
 });
 
