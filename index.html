@@ -34,15 +34,13 @@
             background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C, #FBF5B7); 
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             letter-spacing: 5px; text-transform: uppercase;
+            animation: pulseLogo 2.5s ease-in-out infinite alternate;
         }
 
-        .loading-subtitle {
-            font-size: 9px; color: #666; font-weight: 800; letter-spacing: 6px; 
-            text-transform: uppercase; margin-top: 15px;
-            animation: pulseText 1.5s infinite alternate;
+        @keyframes pulseLogo { 
+            0% { filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.1)); transform: scale(1); } 
+            100% { filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.4)); transform: scale(1.03); } 
         }
-
-        @keyframes pulseText { from { opacity: 0.5; } to { opacity: 1; } }
 
         .premium-loader-container {
             width: 180px; height: 2px; background: rgba(255,255,255,0.05); 
@@ -88,7 +86,6 @@
 <!-- СТИЛЬНЫЙ МИНИМАЛИСТИЧНЫЙ ЭКРАН ЗАГРУЗКИ -->
 <div id="loading-screen">
     <div class="brand-logo-large">WordTime</div>
-    <div class="loading-subtitle" id="load-text" data-i18n="load_connect">ПОДКЛЮЧЕНИЕ...</div>
     <div class="premium-loader-container">
         <div class="premium-loader-bar" id="l-fill"></div>
     </div>
@@ -142,7 +139,6 @@
         if(window.translations) {
             document.getElementById('username').placeholder = window.translations['auth_ph_username'] || "USERNAME";
             document.getElementById('password').placeholder = window.translations['auth_ph_password'] || "PASSWORD";
-            document.getElementById('load-text').innerText = window.translations['load_connect'] || "ПОДКЛЮЧЕНИЕ...";
         }
     });
 
