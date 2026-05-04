@@ -317,7 +317,6 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
             
-            // Запрашиваем заодно и boost_sparks_until
             let { data: stats } = await sb.from('user_progress').select('global_level, boost_sparks_until').eq('username', user).single();
             if (stats) {
                 globalLevel = stats.global_level || 1;
@@ -331,7 +330,7 @@
             if(words && words.length >= 3) {
                 pool = words;
                 updateUI();
-                startBoostCheck(); // Запускаем проверку буста
+                startBoostCheck(); 
                 requestAnimationFrame(() => {
                     document.getElementById('main-content').classList.add('ready');
                 });
@@ -345,7 +344,7 @@
     function startBoostCheck() {
         if (!boostSparksUntil) return;
         
-        checkBoost(); // Сразу чекаем
+        checkBoost(); 
         if (boostTimerInterval) clearInterval(boostTimerInterval);
         boostTimerInterval = setInterval(checkBoost, 1000);
     }
@@ -362,7 +361,7 @@
         if (expiry > now) {
             isBoostActive = true;
             document.getElementById('boost-badge').classList.remove('hidden');
-            document.getElementById('clicker-area').classList.add('boosted'); // Меняем стиль на неоновый голубой
+            document.getElementById('clicker-area').classList.add('boosted'); 
 
             let diffSec = Math.floor((expiry - now) / 1000);
             let m = String(Math.floor(diffSec / 60)).padStart(2, '0');
@@ -443,7 +442,6 @@
 
         if(window.navigator.vibrate) window.navigator.vibrate(5);
         
-        // РАСЧЕТ ИСКР С УЧЕТОМ БУСТА
         let earnedSparks = isBoostActive ? (clickPower * 2) : clickPower;
         
         sparks += earnedSparks;
@@ -461,7 +459,7 @@
         
         const floatEl = document.createElement('div');
         floatEl.className = 'floating-text';
-        if (isBoosted) floatEl.classList.add('boosted'); // Добавляем голубой цвет и свечение
+        if (isBoosted) floatEl.classList.add('boosted'); 
         
         floatEl.innerText = text;
         
@@ -555,21 +553,34 @@
             if (clickPower < maxP) clickPower += 1; 
 
             const todayStr = new Date().toISOString().split('T')[0];
-            if (localStorage.getItem('wt_last_played') !== todayStr) {
-                try {
-                    let { data: stats } = await sb.from('user_progress').select('current_streak, last_played_date').eq('username', user).single();
-                    let newStreak = (stats?.current_streak || 0) + 1;
-                    let lastDateStr = stats?.last_played_date || null;
+            try {
+                // 🏆 ВНЕДРЕНИЕ WORD PASS: Вытаскиваем сразу и стрик, и опыт БП!
+                let { data: stats } = await sb.from('user_progress').select('current_streak, last_played_date, wp_exp').eq('username', user).single();
+                
+                let newStreak = stats?.current_streak || 0;
+                let lastDateStr = stats?.last_played_date || null;
 
+                if (localStorage.getItem('wt_last_played') !== todayStr) {
+                    newStreak += 1;
                     if (lastDateStr) {
                         const lastD = new Date(lastDateStr); lastD.setHours(0,0,0,0);
                         const todayD = new Date(); todayD.setHours(0,0,0,0);
                         if ((todayD - lastD) / 86400000 > 1) newStreak = 1;
                     }
-                    await sb.from('user_progress').update({ current_streak: newStreak, last_played_date: todayStr }).eq('username', user);
                     localStorage.setItem('wt_last_played', todayStr);
-                } catch(e) { console.error(e); }
-            }
+                }
+
+                // Начисляем +5 опыта в Батл Пасс за убитого босса!
+                let newWpExp = (stats?.wp_exp || 0) + 5;
+
+                await sb.from('user_progress').update({ 
+                    current_streak: newStreak, 
+                    last_played_date: todayStr,
+                    wp_exp: newWpExp 
+                }).eq('username', user);
+                
+            } catch(e) { console.error(e); }
+            
         } else {
             if(window.navigator.vibrate) window.navigator.vibrate([80, 80, 80]);
             if(btnElement) btnElement.classList.add('wrong');
@@ -617,16 +628,27 @@
         btn.disabled = true;
 
         try {
-            let { data: stats } = await sb.from('user_progress').select('global_exp, global_level').eq('username', user).single();
+            // 🏆 ВНЕДРЕНИЕ WORD PASS: Забираем из базы wp_exp
+            let { data: stats } = await sb.from('user_progress').select('global_exp, global_level, wp_exp').eq('username', user).single();
+            
             let gExp = (stats?.global_exp || 0) + expReward; 
             let gLvl = stats?.global_level || 1;
+            
+            // Начисляем ровно столько же опыта и в Батл Пасс
+            let wpExp = (stats?.wp_exp || 0) + expReward; 
 
             while (true) {
                 let neededExp = gLvl * 10;
                 if (gExp >= neededExp) { gExp -= neededExp; gLvl += 1; } else break;
             }
 
-            await sb.from('user_progress').update({ global_exp: gExp, global_level: gLvl }).eq('username', user);
+            // Заливаем всё сразу в базу
+            await sb.from('user_progress').update({ 
+                global_exp: gExp, 
+                global_level: gLvl,
+                wp_exp: wpExp 
+            }).eq('username', user);
+            
             sb.from('live_feed').insert({ username: user, event_type: 'brain_exchange', event_val: expReward.toString() }).then(({error}) => { if(error) console.error(error); });
 
             sparks -= cost;
