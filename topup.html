@@ -17,7 +17,9 @@
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; min-height: 100dvh; padding-bottom: 60px; }
+        
+        /* Увеличили padding-bottom до 110px чтобы контент не прятался за меню */
+        body { background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; min-height: 100dvh; padding-bottom: 110px; }
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.03) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
@@ -84,6 +86,17 @@
             font-size: 7px; font-weight: 900; padding: 5px 12px; border-bottom-right-radius: 12px;
             text-transform: uppercase; letter-spacing: 1px;
         }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: 0.3s; flex: 1; position: relative;}
+        .tab-icon { font-size: 20px; margin-bottom: 4px; filter: grayscale(100%) opacity(0.6); transition: 0.3s; z-index: 2;}
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2;}
+        
+        /* Активная вкладка (Профиль) */
+        .tab-item.active { color: var(--gold); }
+        .tab-item.active .tab-icon { filter: grayscale(0) opacity(1); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); transform: translateY(-3px); }
 
     </style>
 </head>
@@ -213,6 +226,18 @@
     </div>
 </main>
 
+<!-- ТАБ-БАР -->
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item"><span class="tab-icon">🏠</span><span class="tab-label" data-i18n="tab_home">Главная</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item"><span class="tab-icon">🎮</span><span class="tab-label" data-i18n="tab_play">Играть</span></a>
+        <!-- Вкладка профиль АКТИВНА -->
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item active"><span class="tab-icon">👤</span><span class="tab-label" data-i18n="tab_profile">Профиль</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item"><span class="tab-icon">📜</span><span class="tab-label" data-i18n="tab_quests">Квесты</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tab_settings">Настройки</span></a>
+    </div>
+</div>
+
 <script>
     const tg = window.Telegram.WebApp;
 
@@ -239,12 +264,10 @@
     tg.MainButton.showProgress();
 
     try {
-        // Добавляем проверку, что мы стучимся по правильному адресу
         const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/telegram-pay/create-invoice', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
-                // Мы убрали проверку JWT, поэтому здесь больше ничего не нужно
             },
             body: JSON.stringify({ 
                 packId: id, 
@@ -276,7 +299,6 @@
 
     } catch (e) {
         console.error("Full error:", e);
-        // Если видишь это сообщение — значит запрос даже не ушел или сервер его сбросил
         tg.showAlert('Ошибка соединения с сервером. Проверьте интернет или логи Supabase.');
         tg.MainButton.hide();
     }
