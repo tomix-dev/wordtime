@@ -401,10 +401,12 @@
         document.getElementById('tf-word').innerHTML = passedText;
         document.getElementById('tf-card').className = 'tf-card correct'; // Оставляем зеленое свечение
 
-        let { data: stats } = await sb.from('user_progress').select('global_exp, global_level, current_streak, last_played_date').eq('username', user).single();
+        // 🏆 ВНЕДРЕНИЕ ОПЫТА БАТЛ ПАССА (wp_exp) 🏆
+        let { data: stats } = await sb.from('user_progress').select('global_exp, global_level, current_streak, last_played_date, wp_exp').eq('username', user).single();
         
         let gExp = (stats?.global_exp || 0) + earnedExp; 
         let gLvl = stats?.global_level || 1;
+        let wpExp = (stats?.wp_exp || 0) + earnedExp; // Начисляем в БП
 
         // Цикл проверки повышения уровня
         while (gExp >= gLvl * 10) {
@@ -435,7 +437,8 @@
             global_exp: gExp,
             global_level: gLvl,
             current_streak: newStreak,         
-            last_played_date: lastDateStr      
+            last_played_date: lastDateStr,
+            wp_exp: wpExp // Отправляем обновленный опыт БП в базу
         }).eq('username', user);
 
         if (currentLevel % 10 === 0) {
