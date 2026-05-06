@@ -119,7 +119,7 @@
 
     <div class="settings-container">
         
-        <!-- РЕФЕРАЛЬНАЯ СИСТЕМА (НОВЫЙ ДИЗАЙН) -->
+        <!-- РЕФЕРАЛЬНАЯ СИСТЕМА -->
         <div class="ref-card">
             <div class="ref-header">
                 <span class="ref-title" data-i18n="settings_ref_label">ПРИГЛАСИ ДРУГА</span>
@@ -189,10 +189,8 @@
     let user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // Вписываем бот юзернейм
     const TELEGRAM_BOT_USERNAME = 'WordTimes_bot'; 
 
-    // Проверка для скрытия кнопки ВЫХОД
     const isTelegramApp = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && Object.keys(window.Telegram.WebApp.initDataUnsafe).length > 0) || localStorage.getItem('wt_login_method') === 'telegram';
     const hasPassword = localStorage.getItem('wt_password') !== null;
 
@@ -204,11 +202,9 @@
         const inputEl = document.getElementById('display-name-input');
         inputEl.value = user;
         
-        // Генерация реф ссылки (через Mini App)
         const refLink = `https://t.me/${TELEGRAM_BOT_USERNAME}/app?startapp=ref_${user}`;
         document.getElementById('ref-link-input').value = refLink;
 
-        // Загрузка статистики рефералов
         try {
             const { data: stats } = await sb.from('user_progress').select('referrals_count').eq('username', user).single();
             const refCount = stats?.referrals_count || 0;
@@ -255,7 +251,7 @@
         }, 2000);
     }
 
-    // --- ЛОГИКА ПРОМОКОДОВ ---
+    // --- ОБНОВЛЕННАЯ СЕРВЕРНАЯ ЛОГИКА ПРОМОКОДОВ ---
     async function applyPromo() {
         const inputEl = document.getElementById('promo-input');
         const btnEl = document.getElementById('promo-btn');
@@ -269,52 +265,30 @@
         if(window.navigator.vibrate) window.navigator.vibrate(10);
 
         try {
-            const { data: promoData, error: promoErr } = await sb.from('promo_codes').select('*').eq('code', code).single();
-            
-            if (promoErr || !promoData) {
-                const msgNotFound = window.translations ? window.translations['promo_not_found'] : 'КОД НЕ НАЙДЕН';
-                throw new Error(msgNotFound);
+            const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/apply-promo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, code: code })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                let errMsg = data.error;
+                if (errMsg === 'NOT_FOUND') errMsg = window.translations ? window.translations['promo_not_found'] : 'КОД НЕ НАЙДЕН';
+                if (errMsg === 'LIMIT') errMsg = window.translations ? window.translations['promo_limit'] : 'ЛИМИТ ИСЧЕРПАН';
+                if (errMsg === 'USED') errMsg = window.translations ? window.translations['promo_used'] : 'УЖЕ ИСПОЛЬЗОВАН';
+                throw new Error(errMsg);
             }
 
-            if (promoData.current_uses >= promoData.max_uses) {
-                const msgLimit = window.translations ? window.translations['promo_limit'] : 'ЛИМИТ';
-                throw new Error(msgLimit);
-            }
-
-            const { data: usedData } = await sb.from('used_promocodes').select('*').eq('username', user).eq('code', code).single();
-            
-            if (usedData) {
-                const msgUsed = window.translations ? window.translations['promo_used'] : 'УЖЕ ИСПОЛЬЗОВАН';
-                throw new Error(msgUsed);
-            }
-
-            const { data: userStats } = await sb.from('user_progress').select('*').eq('username', user).single();
-            let updates = {};
-
-            if (promoData.reward_type === 'time') updates.coins = (userStats.coins || 0) + promoData.reward_amount;
-            else if (promoData.reward_type === 'exp') {
-                let gExp = (userStats.global_exp || 0) + promoData.reward_amount;
-                let gLvl = userStats.global_level || 1;
-                while (gExp >= gLvl * 10) { gExp -= gLvl * 10; gLvl++; }
-                updates.global_exp = gExp; updates.global_level = gLvl;
-            } 
-            else if (promoData.reward_type === 'sparks') {
+            // Обрабатываем Искры локально, так как сервер их только подтверждает
+            if (data.reward_type === 'sparks') {
                 let s = parseInt(localStorage.getItem('wt_sparks')) || 0;
-                localStorage.setItem('wt_sparks', s + promoData.reward_amount);
+                localStorage.setItem('wt_sparks', s + data.reward_amount);
             }
-            else if (promoData.reward_type.startsWith('case_')) {
-                let caseType = promoData.reward_type.split('_')[1];
-                let cases = userStats.cases || { normal: 0, stylish: 0, premium: 0 };
-                cases[caseType] = (cases[caseType] || 0) + promoData.reward_amount;
-                updates.cases = cases;
-            }
-
-            if (Object.keys(updates).length > 0) await sb.from('user_progress').update(updates).eq('username', user);
-            await sb.from('promo_codes').update({ current_uses: promoData.current_uses + 1 }).eq('code', code);
-            await sb.from('used_promocodes').insert({ username: user, code: code });
 
             btnEl.style.background = 'var(--green)';
-            btnEl.innerText = `+${promoData.reward_amount} ${promoData.reward_type.toUpperCase()}!`;
+            btnEl.innerText = `+${data.reward_amount} ${data.reward_type.toUpperCase()}!`;
             inputEl.value = '';
             if(window.navigator.vibrate) window.navigator.vibrate([50, 100, 50]);
 

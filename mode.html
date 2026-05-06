@@ -9,9 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505; --gold: #D4AF37; --gold-light: #FFD700;
-            --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(212, 175, 55, 0.2);
-            --green: #00ff88; --red: #ff4b4b;
+            --bg: #050505; 
+            --gold: #D4AF37; 
+            --gold-light: #FFD700;
+            --glass: rgba(255, 255, 255, 0.03); 
+            --glass-border: rgba(212, 175, 55, 0.2);
+            --green: #00ff88; 
+            --red: #ff4b4b;
+            
+            /* Новые цвета для карточек */
+            --surface: #0a0a0a;
+            --surface-light: #111111;
+            --gold-muted: rgba(212, 175, 55, 0.4);
+            --border: rgba(255, 255, 255, 0.06);
+            --text-main: #ffffff;
+            --text-muted: #666666;
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
@@ -32,7 +44,7 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-       /* --- ТАБ-БАР (УЛУЧШЕННЫЙ ДИЗАЙН) --- */
+        /* --- ТАБ-БАР (КЛАССИЧЕСКИЙ СТИЛЬ WORDTIME) --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
         .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
@@ -46,43 +58,66 @@
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
 
-        /* --- КАРТОЧКИ РЕЖИМОВ --- */
+        /* --- ШАПКА (КЛАССИЧЕСКИЙ СТИЛЬ WORDTIME) --- */
         .brand-header { text-align: center; margin-top: 10px; margin-bottom: 30px; }
         .brand-logo { font-size: 28px; font-weight: 900; background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C, #FBF5B7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; text-transform: uppercase; }
 
-        .mode-container { display: flex; flex-direction: column; gap: 15px; }
-        .mode-card { 
-            background: var(--glass); border: 1px solid var(--glass-border); 
-            border-radius: 20px; padding: 25px 20px; display: flex; flex-direction: column; 
-            align-items: center; text-align: center; cursor: pointer; transition: 0.3s ease; 
-            backdrop-filter: blur(10px); position: relative; overflow: hidden;
-        }
-        .mode-card:active { transform: scale(0.96); border-color: var(--gold); background: rgba(212, 175, 55, 0.08); }
-        .mode-icon { font-size: 42px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2)); transition: 0.3s; }
-        .mode-title { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
-        .mode-desc { font-size: 10px; color: #888; font-weight: 700; line-height: 1.4; transition: 0.3s; }
+        /* --- КАРТОЧКИ РЕЖИМОВ (НОВЫЙ ПРЕМИАЛЬНЫЙ СТИЛЬ) --- */
+        .mode-container { display: flex; flex-direction: column; gap: 16px; }
         
-        .badge { position: absolute; top: 15px; right: 15px; background: rgba(212, 175, 55, 0.2); color: var(--gold); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 10px; border: 1px solid var(--glass-border); letter-spacing: 1px; }
-        .badge.new { color: var(--green); border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.1); }
-
-        /* --- ЗАБЛОКИРОВАННАЯ КАРТОЧКА --- */
-        .mode-card.locked { 
-            background: rgba(20, 20, 20, 0.8); border-color: #333; pointer-events: none; 
-            cursor: not-allowed; box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        .mode-card { 
+            background: var(--surface); border: 1px solid var(--border); 
+            border-radius: 20px; padding: 22px 20px; display: flex; flex-direction: row; 
+            align-items: center; gap: 20px; cursor: pointer; transition: 0.2s ease; 
+            position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .mode-card.locked .mode-icon { filter: grayscale(100%) opacity(0.3); }
+        .mode-card:active { transform: scale(0.97); background: var(--surface-light); border-color: var(--gold-muted); }
+        
+        .mode-icon-wrapper {
+            width: 58px; height: 58px; border-radius: 16px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 28px; flex-shrink: 0; box-shadow: inset 0 0 15px rgba(255,255,255,0.02);
+            transition: 0.3s;
+        }
+        .mode-card:active .mode-icon-wrapper { border-color: var(--gold-muted); box-shadow: inset 0 0 15px rgba(212,175,55,0.1); }
+        
+        .mode-info { display: flex; flex-direction: column; text-align: left; flex: 1; }
+        .mode-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 2px; }
+        .mode-desc { font-size: 10px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
+        
+        /* Стильный бейдж */
+        .badge { 
+            position: absolute; top: 0; right: 0; 
+            background: linear-gradient(45deg, var(--gold), var(--gold-light)); color: #000; 
+            font-size: 8px; font-weight: 900; padding: 6px 14px; 
+            border-bottom-left-radius: 16px; letter-spacing: 1px; 
+            box-shadow: -2px 2px 15px rgba(212,175,55,0.3); 
+        }
+        .badge.new { background: linear-gradient(45deg, var(--green), #00cc66); box-shadow: -2px 2px 15px rgba(0,255,136,0.2); }
+
+        /* --- ЗАБЛОКИРОВАННАЯ КАРТОЧКА (ЭФФЕКТ СТЕКЛА) --- */
+        .mode-card.locked { 
+            background: rgba(10, 10, 10, 0.5); pointer-events: none; 
+            cursor: not-allowed; border-color: rgba(255,255,255,0.02); box-shadow: none;
+        }
+        .mode-card.locked .mode-icon-wrapper { opacity: 0.3; filter: grayscale(100%); }
         .mode-card.locked .mode-title { color: #555; }
         .mode-card.locked .mode-desc { color: #444; }
         .mode-card.locked .badge { display: none; }
         
         .lock-overlay {
             position: absolute; inset: 0; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; background: rgba(0,0,0,0.4); 
-            backdrop-filter: blur(2px); z-index: 10; opacity: 0; transition: 0.3s;
+            justify-content: center; align-items: center; background: rgba(5,5,5,0.65); 
+            backdrop-filter: blur(4px); z-index: 10; opacity: 0; transition: 0.3s;
         }
         .mode-card.locked .lock-overlay { opacity: 1; }
-        .lock-icon { font-size: 32px; filter: drop-shadow(0 0 10px rgba(255, 75, 75, 0.4)); margin-bottom: 8px; }
-        .lock-text { font-size: 10px; font-weight: 900; color: var(--red); text-transform: uppercase; letter-spacing: 1px; background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 10px; border: 1px solid rgba(255, 75, 75, 0.3); }
+        .lock-icon { font-size: 22px; opacity: 0.8; filter: grayscale(100%); margin-bottom: 8px; }
+        .lock-text { 
+            font-size: 9px; font-weight: 800; color: #ccc; text-transform: uppercase; 
+            letter-spacing: 2px; background: rgba(0,0,0,0.6); padding: 6px 16px; 
+            border-radius: 12px; border: 1px solid var(--border); 
+        }
 
     </style>
 </head>
@@ -121,7 +156,7 @@
     </div>
 
     <div class="mode-container" id="mode-list">
-        <div style="text-align: center; color: #666; font-size: 10px; font-weight: 700; padding: 20px;">ЗАГРУЗКА...</div>
+        <div style="text-align: center; color: var(--text-muted); font-size: 10px; font-weight: 700; padding: 20px; letter-spacing: 2px;">ЗАГРУЗКА...</div>
     </div>
 </main>
 
@@ -160,7 +195,7 @@
             badge: null
         },
         {
-            id: 'tower', url: 'tower.html', reqLvl: 30, // Сделали 30 уровень для доступа
+            id: 'tower', url: 'tower.html', reqLvl: 30,
             icon: '🏢', titleKey: 'mode_tower_title', descKey: 'mode_tower_desc',
             defaultTitle: 'NEON STACKER', defaultDesc: 'Строй башню из слов и лови баланс',
             badge: 'NEW'
@@ -193,7 +228,6 @@
 
             requestAnimationFrame(() => {
                 document.getElementById('main-content').classList.add('ready');
-                document.getElementById('tab-bar').classList.add('ready');
             });
 
         } catch (e) {
@@ -218,6 +252,8 @@
             let badgeHtml = '';
             if (mode.badge === 'NEW') {
                 badgeHtml = `<span class="badge new" data-i18n="badge_new">${window.translations?.['badge_new'] || 'NEW'}</span>`;
+            } else if (mode.badge) {
+                badgeHtml = `<span class="badge">${mode.badge}</span>`;
             }
 
             let lockHtml = '';
@@ -230,13 +266,11 @@
                 
                 let lockMsg = '';
                 if (!firstLockedFound) {
-                    // Это первый недоступный режим в списке — пишем, какой уровень нужен
-                    let template = window.translations?.['mode_locked_lvl'] || 'Нужен {lvl} уровень';
+                    let template = window.translations?.['mode_locked_lvl'] || 'НУЖЕН {lvl} УРОВЕНЬ';
                     lockMsg = template.replace('{lvl}', mode.reqLvl);
                     firstLockedFound = true;
                 } else {
-                    // Это режимы, которые идут ДАЛЬШЕ первого заблокированного
-                    lockMsg = window.translations?.['mode_locked_prev'] || 'Сначала открой предыдущую игру';
+                    lockMsg = window.translations?.['mode_locked_prev'] || 'СНАЧАЛА ОТКРОЙ ПРЕДЫДУЩУЮ';
                 }
 
                 lockHtml = `
@@ -251,9 +285,13 @@
                 <div class="mode-card ${lockClass}" ${onClick}>
                     ${badgeHtml}
                     ${lockHtml}
-                    <span class="mode-icon">${mode.icon}</span>
-                    <div class="mode-title">${title}</div>
-                    <div class="mode-desc">${desc}</div>
+                    <div class="mode-icon-wrapper">
+                        <span class="mode-icon">${mode.icon}</span>
+                    </div>
+                    <div class="mode-info">
+                        <div class="mode-title">${title}</div>
+                        <div class="mode-desc">${desc}</div>
+                    </div>
                 </div>
             `;
             container.innerHTML += cardHtml;

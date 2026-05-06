@@ -219,7 +219,6 @@
         try {
             if (!window.translations) await new Promise(res => setTimeout(res, 500));
 
-            // Клиент генерирует сетку на основе своего времени (только для визуала)
             const now = new Date();
             currentDay = now.getDate();
             daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -264,7 +263,8 @@
             let statusClass = '';
             let btnText = rewardName;
 
-            const isClaimed = claimedDays.includes(i);
+            // ЖЕЛЕЗНАЯ ПРОВЕРКА: преобразуем к числу, чтобы не было бага '12' !== 12
+            const isClaimed = claimedDays.some(d => Number(d) === i);
 
             if (i < currentDay) {
                 if (isClaimed) {
@@ -283,7 +283,6 @@
             }
 
             let extraClass = conf.isCase ? 'case-day' : '';
-            // Передаем только id дня, всё остальное сервер сделает сам
             let onClick = (statusClass === 'today') ? `onclick="claimToday(${i})"` : '';
 
             let html = `
@@ -297,7 +296,7 @@
         }
     }
 
-    // 🛡️ СБОР НАГРАДЫ ЧЕРЕЗ СЕРВЕР
+    // 🛡️ СБОР НАГРАДЫ ЧЕРЕЗ СЕРВЕР (С ЗАЩИТОЙ ОТ БАГОВ)
     async function claimToday(day) {
         if(isProcessing) return;
         isProcessing = true;
@@ -308,7 +307,6 @@
         card.querySelector('.day-reward').innerText = '...';
 
         try {
-            // Обращаемся к серверу. Он сам знает, какой сегодня день по UTC
             const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/claim-calendar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -317,22 +315,44 @@
 
             const data = await res.json();
 
+            // Если сервер выдал ошибку (например, "уже получено")
             if (data.error) {
-                alert("Ошибка: " + data.error);
-                card.style.pointerEvents = 'auto';
-                card.querySelector('.day-reward').innerText = 'ОШИБКА';
+                const errLower = data.error.toLowerCase();
+                // Если ошибка говорит, что награда уже забрана - просто красим ячейку локально в зеленый
+                if (errLower.includes('уже') || errLower.includes('already')) {
+                    if (!dbData.calendar_claimed) dbData.calendar_claimed = [];
+                    if (!dbData.calendar_claimed.includes(currentDay)) {
+                        dbData.calendar_claimed.push(currentDay);
+                    }
+                    renderGrid();
+                } else {
+                    // Иначе показываем реальную ошибку и оставляем кнопку
+                    alert("Ошибка: " + data.error);
+                    card.style.pointerEvents = 'auto';
+                    card.querySelector('.day-reward').innerText = 'ОШИБКА';
+                }
                 isProcessing = false;
                 return;
             }
 
-            // Синхронизируем базу данных на клиенте с ответом сервера
+            // ПРИНУДИТЕЛЬНО ДОБАВЛЯЕМ ДЕНЬ В МАССИВ НА КЛИЕНТЕ, ЧТОБЫ 100% СТАЛО ЗЕЛЕНЫМ
+            if (!dbData.calendar_claimed) dbData.calendar_claimed = [];
+            if (!dbData.calendar_claimed.includes(currentDay)) {
+                dbData.calendar_claimed.push(currentDay);
+            }
+
+            // Синхронизируем базу данных
             dbData = { ...dbData, ...data.updatedData };
+            
+            // На всякий случай (если сервер вернул старый кэш без нового дня), пушим снова
+            if (!dbData.calendar_claimed.includes(currentDay)) {
+                dbData.calendar_claimed.push(currentDay);
+            }
             
             let finalTitle = '';
             let amountStr = '';
             let rIcon = '🎁';
 
-            // Отрисовка результатов, которые прислал сервер
             if (data.rewardType.startsWith('case_')) {
                 let caseType = data.rewardType.split('_')[1]; 
                 finalTitle = window.translations?.[`case_${caseType}`] || data.rewardType;
@@ -347,7 +367,6 @@
                     finalTitle = window.translations?.['reward_time'] || 'TIME';
                     rIcon = '⏳';
                 } else if (data.rewardType === 'sparks') {
-                    // Искры сохраняем локально, как обычно
                     let locSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
                     localStorage.setItem('wt_sparks', locSparks + data.amount);
                     finalTitle = window.translations?.['reward_sparks'] || 'ИСКРЫ';
@@ -360,7 +379,7 @@
             document.getElementById('r-amount').innerText = amountStr;
             
             document.getElementById('reward-overlay').classList.add('show');
-            renderGrid(); // Перерисовываем календарь, чтобы день стал "ПОЛУЧЕНО"
+            renderGrid(); // Перерисовываем календарь, день железобетонно станет "ПОЛУЧЕНО"
 
         } catch(e) {
             console.error("Ошибка при получении награды:", e);

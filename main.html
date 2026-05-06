@@ -17,6 +17,7 @@
             --green: #00ff88;
             --blue: #00bfff;
             --purple: #b026ff;
+            --red: #ff4b4b;
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
@@ -36,7 +37,7 @@
         }
         main.ready { opacity: 1; transform: translateY(0); visibility: visible; }
 
-        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.06) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
         /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
@@ -53,98 +54,115 @@
 
         /* --- ГЛАВНЫЙ ЭКРАН --- */
         .brand-header { text-align: center; margin-top: 10px; margin-bottom: 25px; }
-        .brand-logo { font-size: 32px; font-weight: 900; background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C, #FBF5B7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 4px; text-transform: uppercase; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.2)); }
+        .brand-logo { 
+            font-size: 34px; font-weight: 900; 
+            background: linear-gradient(45deg, #BF953F, #FCF6BA, #AA771C, #FBF5B7); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            letter-spacing: 4px; text-transform: uppercase; 
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+        }
         
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
-        .stat-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px; text-align: center; backdrop-filter: blur(10px); }
-        .stat-label { display: block; font-size: 7px; color: #666; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; margin-bottom: 6px; }
-        .stat-value { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 1px; }
+        .stat-card { background: linear-gradient(145deg, rgba(30,30,30,0.6), rgba(10,10,10,0.8)); border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px; text-align: center; backdrop-filter: blur(10px); box-shadow: inset 0 0 15px rgba(255,255,255,0.02); }
+        .stat-label { display: block; font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; margin-bottom: 6px; }
+        .stat-value { font-size: 20px; font-weight: 900; color: var(--gold-light); letter-spacing: 1px; text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
 
         .section-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; margin-top: 10px; }
-        .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); }
-        .section-title { font-size: 10px; color: var(--gold); letter-spacing: 3px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
+        .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.3; }
+        .section-title { font-size: 11px; color: var(--gold); letter-spacing: 4px; font-weight: 900; text-transform: uppercase; white-space: nowrap; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
 
         /* --- ЛИДЕРБОРД --- */
         .leaderboard { display: flex; flex-direction: column; gap: 12px; margin-bottom: 35px; }
         .leader-item { 
-            background: var(--glass); border: 1px solid var(--glass-border); 
+            background: linear-gradient(90deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); border: 1px solid var(--glass-border); 
             border-radius: 22px; padding: 12px 18px; display: flex; align-items: center; 
-            position: relative; overflow: hidden; transition: 0.3s;
+            position: relative; overflow: hidden; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
-        .leader-item.is-me { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); }
+        .leader-item.is-me { border-color: var(--gold); background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(10,10,10,0.9)); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); transform: scale(1.02); z-index: 10; }
         
-        .rank-box { width: 35px; height: 35px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-right: 15px; flex-shrink: 0; }
-        .rank-1 { background: linear-gradient(45deg, #BF953F, #FCF6BA); color: #000; }
-        .rank-2 { background: #E5E4E2; color: #000; }
-        .rank-3 { background: #CD7F32; color: #000; }
-        .rank-default { background: rgba(255,255,255,0.05); color: #666; border: 1px solid rgba(255,255,255,0.1); }
+        .rank-box { width: 35px; height: 35px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-right: 15px; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .rank-1 { background: linear-gradient(45deg, #BF953F, #FCF6BA); color: #000; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
+        .rank-2 { background: linear-gradient(45deg, #A9A9A9, #E5E4E2); color: #000; box-shadow: 0 0 15px rgba(229, 228, 226, 0.3); }
+        .rank-3 { background: linear-gradient(45deg, #8B4513, #CD7F32); color: #000; box-shadow: 0 0 15px rgba(205, 127, 50, 0.3); }
+        .rank-default { background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); }
 
         .leader-info { flex: 1; }
-        .leader-name { font-weight: 800; font-size: 13px; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
-        .leader-meta { font-size: 9px; color: #666; font-weight: 700; text-transform: uppercase; }
-        .leader-meta span { color: var(--gold); margin: 0 3px; }
+        .leader-name { font-weight: 900; font-size: 13px; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+        .leader-meta { font-size: 9px; color: #777; font-weight: 800; text-transform: uppercase; }
+        .leader-meta span { color: var(--gold); margin: 0 3px; font-weight: 900; }
 
-        .leader-lvl { background: rgba(212, 175, 55, 0.1); color: var(--gold); padding: 4px 10px; border-radius: 10px; font-weight: 900; font-size: 10px; border: 1px solid var(--glass-border); }
-        .pet-mini-icon { font-size: 16px; }
+        .leader-lvl { background: linear-gradient(45deg, rgba(212, 175, 55, 0.2), transparent); color: var(--gold-light); padding: 5px 12px; border-radius: 12px; font-weight: 900; font-size: 11px; border: 1px solid var(--gold); box-shadow: inset 0 0 10px rgba(212,175,55,0.1); }
+        .pet-mini-icon { font-size: 16px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
 
-        /* --- КНОПКА WORD PASS (ЗОЛОТАЯ) --- */
+        /* --- КНОПКА WORD PASS (СТАТИЧНАЯ, НО С БЛИКОМ) --- */
         .wp-banner-link {
             display: flex; justify-content: space-between; align-items: center;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(10, 10, 10, 0.9));
-            border: 1px solid var(--gold); border-radius: 22px; padding: 20px;
-            margin-bottom: 35px; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15), inset 0 0 15px rgba(212, 175, 55, 0.05);
+            background: linear-gradient(135deg, rgba(40, 30, 0, 0.9), rgba(10, 10, 10, 0.95));
+            border: 2px solid var(--gold); border-radius: 24px; padding: 22px;
+            margin-bottom: 40px; cursor: pointer; transition: 0.2s;
             position: relative; overflow: hidden;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3), inset 0 0 15px rgba(212, 175, 55, 0.1);
         }
-        .wp-banner-link::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 60%);
-            animation: rotateGlow 12s linear infinite; pointer-events: none;
+
+        /* Эффект пролетающего глянцевого блика */
+        .wp-banner-link::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: skewX(-25deg);
+            animation: wpShimmer 4s infinite;
         }
-        .wp-banner-link:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
+        @keyframes wpShimmer {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; } /* Пауза между бликами */
+        }
+
+        .wp-banner-link:active { transform: scale(0.95); box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4); }
         
-        .wp-link-left { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
-        .wp-link-icon { font-size: 32px; filter: drop-shadow(0 0 10px var(--gold)); }
-        .wp-link-title { font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        .wp-link-desc { font-size: 9px; font-weight: 800; color: var(--gold-light); text-transform: uppercase; letter-spacing: 1px; }
-        .wp-link-arrow { font-size: 18px; color: var(--gold); font-weight: 900; position: relative; z-index: 1; text-shadow: 0 0 10px var(--gold); }
+        .wp-link-left { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
+        .wp-link-icon { font-size: 36px; filter: drop-shadow(0 0 15px var(--gold)); }
+        
+        .wp-link-title { font-size: 18px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 4px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); }
+        .wp-link-desc { font-size: 10px; font-weight: 900; color: var(--gold-light); text-transform: uppercase; letter-spacing: 1.5px; }
+        .wp-link-arrow { font-size: 20px; color: var(--gold-light); font-weight: 900; position: relative; z-index: 1; text-shadow: 0 0 15px var(--gold); }
 
         /* --- ЛЕНТА СОБЫТИЙ --- */
         .live-feed-container {
-            background: var(--glass); border: 1px solid var(--glass-border); 
-            border-radius: 22px; padding: 15px; backdrop-filter: blur(10px);
-            margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px;
-            max-height: 350px; overflow-y: auto;
+            background: linear-gradient(180deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); border: 1px solid var(--glass-border); 
+            border-radius: 24px; padding: 18px; backdrop-filter: blur(10px);
+            margin-bottom: 30px; display: flex; flex-direction: column; gap: 14px;
+            max-height: 380px; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .live-feed-container::-webkit-scrollbar { width: 4px; }
         .live-feed-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
         .live-feed-container::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
 
         .feed-item {
-            display: flex; align-items: center; gap: 12px; padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.05); animation: fadeIn 0.5s ease;
+            display: flex; align-items: center; gap: 14px; padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .feed-item:last-child { border-bottom: none; padding-bottom: 0; }
         
         .feed-icon { 
-            width: 35px; height: 35px; border-radius: 12px; display: flex; 
-            align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+            width: 40px; height: 40px; border-radius: 12px; display: flex; 
+            align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
             background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
         }
         .feed-content { flex: 1; }
-        .feed-user { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-        .feed-text { font-size: 9px; color: #aaa; font-weight: 700; line-height: 1.3; }
-        .feed-val { color: var(--gold-light); font-weight: 900; }
-        .feed-time { font-size: 8px; color: #555; font-weight: 800; flex-shrink: 0; margin-left: 10px; }
+        .feed-user { font-size: 12px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; text-shadow: 0 0 5px rgba(255,255,255,0.2); }
+        .feed-text { font-size: 10px; color: #bbb; font-weight: 800; line-height: 1.4; }
+        .feed-val { color: var(--gold-light); font-weight: 900; text-shadow: 0 0 5px rgba(212,175,55,0.4); }
+        .feed-time { font-size: 9px; color: #666; font-weight: 900; flex-shrink: 0; margin-left: 10px; }
 
-        /* Специфичные цвета иконок */
-        .icon-lvl { background: rgba(212, 175, 55, 0.1); border-color: var(--gold); }
-        .icon-pet { background: rgba(176, 38, 255, 0.1); border-color: var(--purple); }
-        .icon-rush { background: rgba(255, 75, 75, 0.1); border-color: var(--red); }
-        .icon-brain { background: rgba(0, 191, 255, 0.1); border-color: var(--blue); }
-        .icon-game { background: rgba(0, 255, 136, 0.1); border-color: var(--green); }
+        /* Специфичные цвета иконок с красивым неоном */
+        .icon-lvl { background: rgba(212, 175, 55, 0.15); border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .icon-pet { background: rgba(176, 38, 255, 0.15); border-color: var(--purple); box-shadow: 0 0 15px rgba(176, 38, 255, 0.2); }
+        .icon-rush { background: rgba(255, 75, 75, 0.15); border-color: var(--red); box-shadow: 0 0 15px rgba(255, 75, 75, 0.2); }
+        .icon-brain { background: rgba(0, 191, 255, 0.15); border-color: var(--blue); box-shadow: 0 0 15px rgba(0, 191, 255, 0.2); }
+        .icon-game { background: rgba(0, 255, 136, 0.15); border-color: var(--green); box-shadow: 0 0 15px rgba(0, 255, 136, 0.2); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -225,7 +243,7 @@
     
     <div class="live-feed-container" id="live-feed-list">
         <!-- События загружаются сюда -->
-        <div style="text-align: center; color: #666; font-size: 10px; font-weight: 700; padding: 10px;">ЗАГРУЗКА...</div>
+        <div style="text-align: center; color: #888; font-size: 11px; font-weight: 900; padding: 20px; letter-spacing: 2px;">ЗАГРУЗКА...</div>
     </div>
 </main>
 
@@ -303,16 +321,14 @@
         
         // --- НОВЫЕ СОБЫТИЯ WORD PASS ---
         } else if (type === 'live_wp_lvl') {
-            iconHtml = `<div class="feed-icon" style="background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); text-shadow: 0 0 5px var(--gold);">🏆</div>`;
+            iconHtml = `<div class="feed-icon" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.3); text-shadow: 0 0 10px var(--gold);">🏆</div>`;
             let rawText = window.translations?.['live_wp_lvl'] || '🎯 <b>{user}</b> достиг <b>{lvl} уровня</b> Word Pass!';
-            // Интегрируем ник прямо в текст и убираем стандартный userDiv сверху
-            textHtml = rawText.replace('{user}', `<span style="color:#fff;">${username}</span>`).replace('{lvl}', `<span class="feed-val">${val}</span>`);
+            textHtml = rawText.replace('{user}', `<span style="color:#fff; font-weight:900;">${username}</span>`).replace('{lvl}', `<span class="feed-val">${val}</span>`);
             userDiv = ''; 
         } else if (type === 'live_wp_vip') {
-            iconHtml = `<div class="feed-icon" style="background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); text-shadow: 0 0 5px var(--gold);">👑</div>`;
+            iconHtml = `<div class="feed-icon" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.3); text-shadow: 0 0 10px var(--gold);">👑</div>`;
             let rawText = window.translations?.['live_wp_vip'] || '👑 <b>{user}</b> купил премиальный VIP Word Pass!';
-            // Интегрируем ник прямо в текст и убираем стандартный userDiv сверху
-            textHtml = rawText.replace('{user}', `<span style="color:#fff;">${username}</span>`);
+            textHtml = rawText.replace('{user}', `<span style="color:#fff; font-weight:900;">${username}</span>`);
             userDiv = ''; 
         } else {
             return '';
@@ -377,10 +393,10 @@
                             <div class="rank-box ${rankClass}">${rankNum}</div>
                             <div class="leader-info">
                                 <div class="leader-name">
-                                    ${u.username.toUpperCase()} ${isMe ? `<span style="color:var(--gold); font-size:8px;">${youTxt}</span>` : ''}
+                                    ${u.username.toUpperCase()} ${isMe ? `<span style="color:var(--gold); font-size:9px;">${youTxt}</span>` : ''}
                                     <span class="pet-mini-icon">${petEmoji}</span>
                                 </div>
-                                <div class="leader-meta">${inGameTxt} ${uDays}</div>
+                                <div class="leader-meta">${inGameTxt} <span>${uDays}</span></div>
                             </div>
                             <div class="leader-lvl">LVL ${u.global_level || 1}</div>
                         </div>
@@ -395,7 +411,7 @@
                 
                 if (feedReq.data.length === 0) {
                     const emptyTxt = window.translations?.['feed_empty'] || 'Пока нет событий...';
-                    feedList.innerHTML = `<div style="text-align: center; color: #666; font-size: 10px; font-weight: 700; padding: 10px;">${emptyTxt}</div>`;
+                    feedList.innerHTML = `<div style="text-align: center; color: #888; font-size: 11px; font-weight: 900; padding: 20px;">${emptyTxt}</div>`;
                 } else {
                     feedReq.data.forEach(ev => {
                         // Умный поиск нужных колонок, чтобы ничего не ломалось
