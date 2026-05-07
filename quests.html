@@ -182,7 +182,6 @@
     const user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // 🔥 ИСПРАВЛЕНИЕ: Вместо хардкода добавлены titleKey и descKey
     const QUESTS = [
         {
             id: 'days_online', icon: '🗓️', 
@@ -278,8 +277,9 @@
 
     async function initQuests() {
         try {
+            // Ждем пока отработает translator.js
             if (!window.translations) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 300));
             }
 
             const { data, error } = await sb.from('user_progress').select('*').eq('username', user).single();
@@ -297,6 +297,9 @@
 
             updateTopBalance();
             renderCards();
+
+            // После отрисовки пинаем translator.js чтобы он прошелся по новым элементам
+            if(window.translatePage) window.translatePage();
 
             document.getElementById('main-content').classList.add('ready');
         } catch (e) {
@@ -342,13 +345,6 @@
         const container = document.getElementById('quest-container');
         container.innerHTML = '';
 
-        // 🔥 ИСПРАВЛЕНИЕ: Вытягиваем переводы для общих кнопок и слов
-        const txtClaim = window.translations?.['quest_btn_claim'] || 'ЗАБРАТЬ';
-        const txtProg = window.translations?.['quest_btn_progress'] || 'В ПРОЦЕССЕ';
-        const txtDone = window.translations?.['quest_completed'] || 'ВЫПОЛНЕНО';
-        const txtPrefix = window.translations?.['quest_task_prefix'] || 'ТЕКУЩЕЕ ЗАДАНИЕ:';
-        const txtProgressLabel = window.translations?.['quest_progress'] || 'ПРОГРЕСС';
-
         QUESTS.forEach(q => {
             let claimedIndex = dbData.claimed_quests[q.id] || 0;
             let isFullyCompleted = claimedIndex >= q.stages.length;
@@ -360,13 +356,6 @@
             let percent = Math.min(100, (currentVal / stage.goal) * 100);
             let canClaim = currentVal >= stage.goal && !isFullyCompleted;
 
-            // 🔥 ИСПРАВЛЕНИЕ: Забираем переводы из БД для заголовка и описания
-            let qTitle = window.translations?.[q.titleKey] || q.defaultTitle;
-            let qDesc = window.translations?.[q.descKey] || q.defaultDesc;
-
-            let taskTemplate = window.translations?.[q.taskKey] || q.defaultTask;
-            let currentTaskText = taskTemplate.replace('{goal}', stage.goal);
-
             let dotsHtml = '';
             for (let i = 0; i < q.stages.length; i++) {
                 if (i < claimedIndex) dotsHtml += `<div class="stage-dot done"></div>`;
@@ -377,23 +366,24 @@
             let btnHtml = '';
             let progressHtml = '';
 
+            // 🔥 Везде проставили data-i18n для динамического перевода
             if (isFullyCompleted) {
-                btnHtml = `<div class="q-btn finished">✔️ ${txtDone}</div>`;
+                btnHtml = `<div class="q-btn finished">✔️ <span data-i18n="quest_completed">ВЫПОЛНЕНО</span></div>`;
                 progressHtml = `
                     <div class="q-progress-container">
                         <div class="q-progress-bar"><div class="q-progress-fill" style="width: 100%; background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,0.5);"></div></div>
                     </div>`;
             } else {
                 let btnClass = canClaim ? 'q-btn ready' : 'q-btn';
-                let btnText = canClaim ? txtClaim : txtProg;
+                let btnKey = canClaim ? 'quest_btn_claim' : 'quest_btn_progress';
+                let btnDef = canClaim ? 'ЗАБРАТЬ' : 'В ПРОЦЕССЕ';
                 let onClick = canClaim ? `onclick="claimReward('${q.id}', ${claimedIndex})"` : '';
                 
-                btnHtml = `<button class="${btnClass}" id="btn-${q.id}" ${onClick}>${btnText}</button>`;
+                btnHtml = `<button class="${btnClass}" id="btn-${q.id}" ${onClick} data-i18n="${btnKey}">${btnDef}</button>`;
                 
-                // 🔥 ИСПРАВЛЕНИЕ: txtProgressLabel вместо жестко вшитого "ПРОГРЕСС"
                 progressHtml = `
                     <div class="q-progress-container">
-                        <div class="q-progress-text"><span>${txtProgressLabel}</span> <span>${currentVal} / ${stage.goal}</span></div>
+                        <div class="q-progress-text"><span data-i18n="quest_progress">ПРОГРЕСС</span> <span>${currentVal} / ${stage.goal}</span></div>
                         <div class="q-progress-bar"><div class="q-progress-fill" style="width: ${percent}%"></div></div>
                     </div>`;
             }
@@ -407,15 +397,15 @@
                     <div class="q-header">
                         <div class="q-icon">${q.icon}</div>
                         <div class="q-info">
-                            <div class="q-title">${qTitle}</div>
-                            <div class="q-desc">${qDesc}</div>
+                            <div class="q-title" data-i18n="${q.titleKey}">${q.defaultTitle}</div>
+                            <div class="q-desc" data-i18n="${q.descKey}">${q.defaultDesc}</div>
                         </div>
                     </div>
                     
                     ${!isFullyCompleted ? `
                     <div class="q-current-task">
-                        <span class="q-task-label">${txtPrefix}</span>
-                        ${currentTaskText}
+                        <span class="q-task-label" data-i18n="quest_task_prefix">ТЕКУЩЕЕ ЗАДАНИЕ:</span>
+                        <span data-i18n="${q.taskKey}" data-goal="${stage.goal}">${q.defaultTask.replace('{goal}', stage.goal)}</span>
                     </div>` : ''}
 
                     <div class="q-stages">${dotsHtml}</div>
@@ -482,10 +472,13 @@
             
             updateTopBalance();
             renderCards();
+            if(window.translatePage) window.translatePage(); // Обновляем перевод после рендера
 
         } catch (e) {
             console.error("Ошибка при связи с сервером:", e);
             if (tg) tg.showAlert("🌐 Ошибка сети. Попробуйте позже.");
+            else alert("Критическая ошибка сервера! Проверь консоль (F12).");
+            
             btn.innerText = originalText;
             btn.style.pointerEvents = 'auto';
         }
