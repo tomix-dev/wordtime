@@ -8,6 +8,26 @@ let currentLang = localStorage.getItem('appLang') || 'rus';
 
 window.translations = {};
 
+// 🔥 ВЫНЕСЛИ ЛОГИКУ В ГЛОБАЛЬНУЮ ФУНКЦИЮ
+window.translatePage = function() {
+    if (!window.translations || Object.keys(window.translations).length === 0) return;
+
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        let text = window.translations[key];
+        
+        if (text) {
+            // Если у элемента есть атрибут data-goal, заменяем {goal} на цифру
+            if (el.hasAttribute('data-goal')) {
+                text = text.replace('{goal}', el.getAttribute('data-goal'));
+            }
+            // Используем innerHTML для тегов вроде <span> и <br>
+            el.innerHTML = text; 
+        }
+    });
+};
+
 async function initTranslations() {
     try {
         const { data, error } = await t_sb
@@ -17,15 +37,12 @@ async function initTranslations() {
         if (error) throw error;
 
         data.forEach(item => {
-            window.translations[item.key] = item[currentLang];
+            // Фолбэк: если вдруг на укр пусто, подставит русское, чтобы не было 'undefined'
+            window.translations[item.key] = item[currentLang] || item.rus || item.key;
         });
 
-        const elements = document.querySelectorAll('[data-i18n]');
-        elements.forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            // ИСПРАВЛЕНИЕ: innerText заменено на innerHTML
-            if (window.translations[key]) el.innerHTML = window.translations[key];
-        });
+        // Запускаем первый проход перевода для статических элементов страницы
+        window.translatePage();
 
         document.dispatchEvent(new Event('translationsReady'));
     } catch (err) {
