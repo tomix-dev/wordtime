@@ -519,7 +519,7 @@
             setTimeout(() => cUI.classList.remove('show'), 1000);
 
             if (currentCombo % 10 === 0 && user) {
-                sb.from('live_feed').insert({ username: user, event_type: 'speed_combo', event_val: currentCombo }).then();
+                sb.from('live_feed').insert({ username: user, event_type: 'ninja_combo', event_val: currentCombo }).then();
             }
         }
     }
