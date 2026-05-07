@@ -66,7 +66,8 @@
         .miss-warning.show { opacity: 1; transform: translate(-50%, -5px); }
 
         /* --- ТАБ-БАР --- */
-        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        /* 🔥 Z-index выставлен на 3000, чтобы перекрывать экран старта (у него 2000) */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 3000; pointer-events: none; }
         .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: 0.3s; flex: 1; position: relative; }
         .tab-icon { font-size: 20px; margin-bottom: 4px; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
@@ -191,9 +192,9 @@
     
     const LANG = localStorage.getItem('wt_lang') === 'ukr' ? 'ukr' : 'rus';
     
-    // Динамические тексты для JS (подтянем из БД)
+    // 🔥 Заменили дефолтный текст на 25 УРОВЕНЬ
     let dynLocales = {
-        ninja_req_lvl: "НУЖЕН 30 УРОВЕНЬ",
+        ninja_req_lvl: "НУЖЕН 25 УРОВЕНЬ",
         ninja_play: "ИГРАТЬ",
         ninja_save: "СОХРАНЕНИЕ...",
         ninja_again: "ИГРАТЬ СНОВА",
@@ -250,12 +251,11 @@
         return boostEnd && parseInt(boostEnd) > Date.now();
     }
 
-    // --- ИНИЦИАЛИЗАЦИЯ (СТРОГО 5+ УРОВЕНЬ + ДИНАМИЧЕСКИЕ ЛОКАЛИ) ---
+    // --- ИНИЦИАЛИЗАЦИЯ (СТРОГО 25+ УРОВЕНЬ) ---
     async function initGame() {
         document.getElementById('start-loader').style.display = 'block';
         
         try {
-            // Подтягиваем динамические тексты чисто для JS
             const { data: uiData } = await sb.from('interface_text').select('key, rus, ukr').in('key', ['ninja_req_lvl', 'ninja_play', 'ninja_save', 'ninja_again', 'ninja_miss']);
             if (uiData) {
                 uiData.forEach(row => { dynLocales[row.key] = row[LANG] || row.rus; });
@@ -268,7 +268,8 @@
             document.getElementById('start-loader').style.display = 'none';
             btn.style.display = 'block';
 
-            if (playerLvl < 30) {
+            // 🔥 Проверка на 25 уровень
+            if (playerLvl < 25) {
                 btn.innerText = dynLocales.ninja_req_lvl;
                 btn.disabled = true;
                 return;
@@ -505,6 +506,12 @@
         score += 10; sessionSparks += 10; sessionExp += hasBoost ? 4 : 2; 
         currentCombo++; missedCount = 0; 
         
+        // --- СОХРАНЕНИЕ МАКС. КОМБО ДЛЯ КВЕСТА ---
+        let maxCombo = parseInt(localStorage.getItem('wt_max_ninja_combo')) || 0;
+        if (currentCombo > maxCombo) {
+            localStorage.setItem('wt_max_ninja_combo', currentCombo);
+        }
+        
         if (currentPair) usedWords.push(currentPair.eng);
 
         document.getElementById('ui-score').innerText = score;
@@ -521,11 +528,6 @@
             if (currentCombo % 10 === 0 && user) {
                 sb.from('live_feed').insert({ username: user, event_type: 'ninja_combo', event_val: currentCombo }).then();
             }
-            // Сохраняем макс. комбо для квестов
-let maxCombo = parseInt(localStorage.getItem('wt_max_ninja_combo')) || 0;
-if (currentCombo > maxCombo) {
-    localStorage.setItem('wt_max_ninja_combo', currentCombo);
-}
         }
     }
 
