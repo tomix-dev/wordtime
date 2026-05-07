@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WordTime — Neon Ninja</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --surface: rgba(15, 15, 15, 0.7); --border: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(212, 175, 55, 0.2); --gold: #D4AF37; --gold-light: #FFD700;
+            --text-main: #ffffff; --text-muted: #888888; --green: #00ff88; --red: #ff4b4b; --blue: #00bfff;
+        }
+
+        html, body { 
+            overflow: hidden; height: 100vh; width: 100vw; 
+            background: var(--bg); color: var(--text-main); 
+            font-family: 'Montserrat', sans-serif; position: fixed; 
+            touch-action: none; overscroll-behavior: none;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        .cyber-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(5,5,5,0) 60%, rgba(212,175,55,0.05) 100%), var(--bg); }
+        .vignette { position: fixed; inset: 0; background: radial-gradient(circle at center, transparent 40%, #000 130%); z-index: -1; }
+        .neon-grid {
+            position: fixed; bottom: 0; left: -50%; width: 200%; height: 50%;
+            background-image: linear-gradient(rgba(212,175,55,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.1) 1px, transparent 1px);
+            background-size: 40px 40px; transform: perspective(200px) rotateX(60deg); z-index: -2;
+            mask-image: linear-gradient(to top, rgba(0,0,0,1) 10%, rgba(0,0,0,0));
+            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 10%, rgba(0,0,0,0));
+        }
+
+        #gameCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+
+        /* --- HUD ИГРЫ --- */
+        .game-hud { position: fixed; top: 0; left: 0; width: 100%; padding: 15px 20px; z-index: 100; display: flex; justify-content: space-between; align-items: flex-start; background: linear-gradient(to bottom, rgba(0,0,0,0.8) 20%, transparent); pointer-events: none; }
+        .hud-left { display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 8px 14px; border-radius: 14px; color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; backdrop-filter: blur(10px); }
+        .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); color: #fff; }
+
+        .rewards-pnl { display: flex; gap: 6px; flex-wrap: wrap; }
+        .rew-badge { background: rgba(0,0,0,0.6); border: 1px solid var(--border); border-radius: 10px; padding: 4px 8px; font-size: 10px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 4px; }
+        .rew-badge span { font-size: 12px; }
+        .boost-badge { color: var(--gold); border-color: rgba(212, 175, 55, 0.5); text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); display: none; }
+
+        .hud-right { text-align: right; }
+        .score-label { font-size: 9px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .score-val { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.4); margin-bottom: 5px;}
+        .lives-pnl { display: flex; gap: 3px; justify-content: flex-end; }
+        .life-heart { font-size: 14px; color: var(--red); filter: drop-shadow(0 0 8px var(--red)); transition: 0.3s; }
+        .life-heart.lost { opacity: 0.2; filter: grayscale(1); }
+
+        /* --- ПАНЕЛЬ ЗАДАНИЯ --- */
+        .quest-pnl { position: fixed; bottom: 120px; left: 0; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
+        .quest-glass-card { background: var(--surface); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; padding: 12px 25px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: inline-block; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .quest-glass-card.pulse { transform: scale(1.1); border-color: var(--blue); box-shadow: 0 0 30px rgba(0, 191, 255, 0.4); }
+        .quest-label { font-size: 8px; color: var(--gold); font-weight: 800; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 3px; }
+        .quest-glass-card.pulse .quest-label { color: var(--blue); }
+        .quest-word { font-size: 20px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(212,175,55,0.5); transition: 0.2s; }
+        .quest-glass-card.pulse .quest-word { text-shadow: 0 0 15px var(--blue); }
+        .combo-text { font-size: 10px; color: var(--green); font-weight: 900; position: absolute; top: -15px; right: -10px; text-shadow: 0 0 10px var(--green); opacity: 0; transition: 0.3s; }
+        .combo-text.show { opacity: 1; transform: translateY(-5px); }
+        .miss-warning { font-size: 9px; color: var(--red); font-weight: 900; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); opacity: 0; transition: 0.3s; text-shadow: 0 0 10px var(--red); white-space: nowrap; }
+        .miss-warning.show { opacity: 1; transform: translate(-50%, -5px); }
+
+        /* --- ТАБ-БАР --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: 0.3s; flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2; }
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; z-index: 2;}
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .tab-item.active::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 45px; height: 45px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; z-index: 0; }
+
+        /* --- ОВЕРЛЕИ --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.4s; }
+        .overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-card { background: var(--surface); border: 1px solid var(--border); padding: 30px 20px; border-radius: 24px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .mod-title { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        
+        .rule-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; text-align: left; }
+        .rule-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid var(--border); }
+        .rule-icon { font-size: 20px; width: 30px; text-align: center; }
+        .rule-text { font-size: 10px; color: #ccc; font-weight: 700; line-height: 1.4; }
+        .rule-text span { color: var(--gold); font-weight: 900; }
+        
+        .res-score-val { font-size: 54px; font-weight: 900; color: #fff; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        .res-farmed { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+        .res-farmed div { font-size: 12px; font-weight: 900; }
+        
+        .mod-btn { background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; padding: 16px 30px; border-radius: 16px; color: #000; width: 100%; font-size: 13px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); }
+        .mod-btn:active { transform: scale(0.95); }
+        .mod-btn:disabled { background: #333; color: #666; box-shadow: none; pointer-events: none; }
+
+        .loader { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; display: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="cyber-bg"></div>
+<div class="vignette"></div>
+<div class="neon-grid"></div>
+
+<canvas id="gameCanvas"></canvas>
+
+<div class="game-hud">
+    <div class="hud-left">
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="back-btn"><span style="font-size: 12px;">◀</span> <span data-i18n="ninja_modes">РЕЖИМЫ</span></a>
+        <div class="rewards-pnl">
+            <div class="rew-badge"><span>🧠</span> <b id="ui-sess-sparks">0</b></div>
+            <div class="rew-badge"><span>⭐</span> <b id="ui-sess-exp">0</b></div>
+            <div class="rew-badge boost-badge" id="ui-boost-badge"><span>⚡</span> <b>x2 EXP</b></div>
+        </div>
+    </div>
+    <div class="hud-right">
+        <div class="score-label" data-i18n="ninja_score">СЧЕТ</div>
+        <div class="score-val" id="ui-score">0</div>
+        <div class="lives-pnl" id="ui-lives">
+            <span class="life-heart">♥</span><span class="life-heart">♥</span><span class="life-heart">♥</span>
+            <span class="life-heart">♥</span><span class="life-heart">♥</span>
+        </div>
+    </div>
+</div>
+
+<div class="quest-pnl">
+    <div class="quest-glass-card" id="quest-card">
+        <div class="combo-text" id="ui-combo">x5 COMBO!</div>
+        <div class="miss-warning" id="ui-miss">...</div>
+        <div class="quest-label" data-i18n="ninja_quest">ПЕРЕВЕДИ И РАЗРЕЖЬ:</div>
+        <div class="quest-word" id="ui-quest-word">...</div>
+    </div>
+</div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="javascript:void(0)" onclick="fadeNavigate('main.html')" class="tab-item"><span class="tab-icon">🏠</span><span class="tab-label" data-i18n="tab_main">Главная</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('mode.html')" class="tab-item active"><span class="tab-icon">🎮</span><span class="tab-label" data-i18n="tab_play">Играть</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('profile.html')" class="tab-item"><span class="tab-icon">👤</span><span class="tab-label" data-i18n="tab_prof">Профиль</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('quests.html')" class="tab-item"><span class="tab-icon">📜</span><span class="tab-label" data-i18n="tab_quests">Квесты</span></a>
+        <a href="javascript:void(0)" onclick="fadeNavigate('settings.html')" class="tab-item"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tab_settings">Настройки</span></a>
+    </div>
+</div>
+
+<div class="overlay show" id="start-screen">
+    <div class="modal-card">
+        <div class="mod-title">NEON NINJA</div>
+        
+        <div class="rule-grid">
+            <div class="rule-item">
+                <div class="rule-icon">⚔️</div>
+                <div class="rule-text" data-i18n="ninja_rule1">Разрежь фигуру с <span>ПРАВИЛЬНЫМ</span> переводом. Ошибка = минус жизнь.</div>
+            </div>
+            <div class="rule-item">
+                <div class="rule-icon">⚠️</div>
+                <div class="rule-text" data-i18n="ninja_rule2">Пропустил 3 правильных слова подряд — <span>КОНЕЦ ИГРЫ</span>.</div>
+            </div>
+            <div class="rule-item">
+                <div class="rule-icon">🏆</div>
+                <div class="rule-text" data-i18n="ninja_rule3">За верный срез: <span>+10 ИСКР</span> и <span>+2 EXP</span>.</div>
+            </div>
+        </div>
+
+        <div class="loader" id="start-loader"></div>
+        <button class="mod-btn" id="start-btn" onclick="startGame()" style="display: none;" data-i18n="ninja_loading">ЗАГРУЗКА...</button>
+    </div>
+</div>
+
+<div class="overlay" id="end-screen">
+    <div class="modal-card">
+        <div class="mod-title" style="color:var(--red);">GAME OVER</div>
+        <div class="res-score-label" data-i18n="ninja_your_score" style="font-size:10px; color:#aaa; font-weight:800; margin-bottom:5px;">ТВОЙ СЧЕТ</div>
+        <div class="res-score-val" id="res-score">0</div>
+        <div class="res-farmed">
+            <div style="color:var(--blue);">+<span id="res-sparks">0</span> 🧠</div>
+            <div style="color:var(--gold);">+<span id="res-exp">0</span> ⭐</div>
+        </div>
+        <button class="mod-btn" id="restart-btn" onclick="restartGame()" data-i18n="ninja_save">СОХРАНЕНИЕ...</button>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+    const user = localStorage.getItem('wt_user');
+    
+    const LANG = localStorage.getItem('wt_lang') === 'ukr' ? 'ukr' : 'rus';
+    
+    // Динамические тексты для JS (подтянем из БД)
+    let dynLocales = {
+        ninja_req_lvl: "НУЖЕН 30 УРОВЕНЬ",
+        ninja_play: "ИГРАТЬ",
+        ninja_save: "СОХРАНЕНИЕ...",
+        ninja_again: "ИГРАТЬ СНОВА",
+        ninja_miss: "ПРОПУСК!"
+    };
+
+    function fadeNavigate(url) {
+        if (window.location.href.includes(url)) return;
+        document.body.style.transition = "opacity 0.4s";
+        document.body.style.opacity = "0";
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        setTimeout(() => { window.location.href = url; }, 400); 
+    }
+
+    // --- КАНВАС И РЕСАЙЗ ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // --- СОСТОЯНИЕ ИГРЫ ---
+    let gameState = 'start'; 
+    let score = 0, lives = 5, missedCount = 0; 
+    let sessionExp = 0, sessionSparks = 0, currentCombo = 0;
+    
+    let fruits = [], particles = [], bladePath = [];
+    let currentPair = null, wrongWords = [];
+    let wordsDB = [], usedWords = [];
+
+    const PHYSICS = { gravity: 0.045 }; 
+    const COLORS = {
+        neutral: { line: '#00bfff', fill: 'rgba(0, 191, 255, 0.1)', glow: 'rgba(0, 191, 255, 0.5)' },
+        green: { line: '#00ff88', fill: 'rgba(0, 255, 136, 0.1)', glow: 'rgba(0, 255, 136, 0.5)' },
+        red: { line: '#ff4b4b', fill: 'rgba(255, 75, 75, 0.1)', glow: 'rgba(255, 75, 75, 0.5)' },
+        blade: { line: '#fff', glow: 'rgba(0, 191, 255, 0.8)' }
+    };
+
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
+        this.beginPath(); this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r); this.closePath();
+        return this;
+    }
+
+    function isBoostActive() {
+        const boostEnd = localStorage.getItem('wt_boost_exp');
+        return boostEnd && parseInt(boostEnd) > Date.now();
+    }
+
+    // --- ИНИЦИАЛИЗАЦИЯ (СТРОГО 5+ УРОВЕНЬ + ДИНАМИЧЕСКИЕ ЛОКАЛИ) ---
+    async function initGame() {
+        document.getElementById('start-loader').style.display = 'block';
+        
+        try {
+            // Подтягиваем динамические тексты чисто для JS
+            const { data: uiData } = await sb.from('interface_text').select('key, rus, ukr').in('key', ['ninja_req_lvl', 'ninja_play', 'ninja_save', 'ninja_again', 'ninja_miss']);
+            if (uiData) {
+                uiData.forEach(row => { dynLocales[row.key] = row[LANG] || row.rus; });
+            }
+
+            const { data: uData } = await sb.from('user_progress').select('global_level').eq('username', user).single();
+            const playerLvl = uData?.global_level || 1;
+            
+            const btn = document.getElementById('start-btn');
+            document.getElementById('start-loader').style.display = 'none';
+            btn.style.display = 'block';
+
+            if (playerLvl < 30) {
+                btn.innerText = dynLocales.ninja_req_lvl;
+                btn.disabled = true;
+                return;
+            }
+
+            let wData = null;
+            const res1 = await sb.from('words').select('eng, rus, ukr, level').gte('level', 5);
+            
+            if (res1.error || !res1.data || res1.data.length < 5) {
+                const res2 = await sb.from('words').select('eng, rus, ukr');
+                wData = res2.data;
+            } else {
+                wData = res1.data;
+            }
+
+            if (wData && wData.length > 5) {
+                wordsDB = wData;
+            } else {
+                throw new Error("Empty DB");
+            }
+
+            btn.innerText = dynLocales.ninja_play;
+            btn.disabled = false;
+
+        } catch (e) { 
+            console.error("Init Error", e); 
+            wordsDB = [
+                { eng: "APPLE", rus: "ЯБЛОКО", ukr: "ЯБЛУКО" }, { eng: "TIME", rus: "ВРЕМЯ", ukr: "ЧАС" }, 
+                { eng: "HOUSE", rus: "ДОМ", ukr: "БУДИНОК" }, { eng: "WATER", rus: "ВОДА", ukr: "ВОДА" },
+                { eng: "NINJA", rus: "НИНДЗЯ", ukr: "НІНДЗЯ" }, { eng: "GAME", rus: "ИГРА", ukr: "ГРА" }
+            ];
+            
+            const btn = document.getElementById('start-btn');
+            document.getElementById('start-loader').style.display = 'none';
+            btn.style.display = 'block';
+            btn.innerText = dynLocales.ninja_play;
+            btn.disabled = false;
+        }
+    }
+    initGame();
+
+    // --- СВАЙП И ВВОД ---
+    let isMouseDown = false;
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function startSwipe(e) {
+        if (gameState !== 'playing') return;
+        isMouseDown = true; bladePath = [];
+        bladePath.push({ ...getMousePos(e), t: Date.now() });
+    }
+
+    function continueSwipe(e) {
+        if (!isMouseDown || gameState !== 'playing') return;
+        bladePath.push({ ...getMousePos(e), t: Date.now() });
+        if (bladePath.length > 15) bladePath.shift();
+        if (bladePath.length > 2) checkSlice(bladePath[bladePath.length-2], bladePath[bladePath.length-1]);
+    }
+
+    function endSwipe() {
+        isMouseDown = false;
+        setTimeout(() => { if (!isMouseDown) bladePath = []; }, 100); 
+    }
+
+    canvas.addEventListener('mousedown', startSwipe);
+    canvas.addEventListener('mousemove', continueSwipe);
+    window.addEventListener('mouseup', endSwipe);
+    canvas.addEventListener('touchstart', (e) => startSwipe(e), {passive:false});
+    canvas.addEventListener('touchmove', (e) => continueSwipe(e), {passive:false});
+    window.addEventListener('touchend', endSwipe);
+
+    // --- ИГРОВЫЕ КЛАССЫ ---
+    class Fruit {
+        constructor(text, isCorrect, x, y, vx, vy) {
+            this.id = Date.now() + Math.random();
+            this.text = text; this.isCorrect = isCorrect;
+            this.color = COLORS.neutral; 
+            
+            this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+            this.fontSize = width < 400 ? 16 : 22; 
+            
+            ctx.font = `900 ${this.fontSize}px Montserrat`;
+            this.boxW = ctx.measureText(this.text).width + 40; 
+            this.boxH = this.fontSize + 24; 
+            
+            this.rotation = (Math.random() - 0.5) * 0.4; 
+            this.rotSpeed = (Math.random() - 0.5) * 0.02;
+            this.state = 'alive'; this.slicedParts = []; this.opacity = 1;
+        }
+
+        update() {
+            if (this.state === 'alive') {
+                this.vy += PHYSICS.gravity; 
+                this.x += this.vx; this.y += this.vy;
+                this.rotation += this.rotSpeed;
+
+                if (this.y > height - 50 && this.vy > 0) { 
+                    if (this.isCorrect && gameState === 'playing') registerMiss();
+                    return false; 
+                }
+            } else if (this.state === 'sliced') {
+                this.slicedParts.forEach(p => {
+                    p.vy += PHYSICS.gravity * 1.5; p.x += p.vx; p.y += p.vy; p.rotation += p.rotSpeed;
+                });
+                this.opacity -= 0.04; 
+                if (this.opacity <= 0) return false; 
+            }
+            return true;
+        }
+
+        draw() {
+            ctx.save(); ctx.globalAlpha = this.opacity;
+            if (this.state === 'alive') {
+                ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
+                ctx.shadowColor = this.color.glow; ctx.shadowBlur = 15;
+                ctx.strokeStyle = this.color.line; ctx.fillStyle = this.color.fill; ctx.lineWidth = 1.5;
+                
+                ctx.roundRect(-this.boxW/2, -this.boxH/2, this.boxW, this.boxH, 15);
+                ctx.fill(); ctx.stroke();
+
+                ctx.font = `900 ${this.fontSize}px Montserrat`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff'; ctx.shadowBlur = 5; ctx.fillText(this.text, 0, 0);
+            } else {
+                this.slicedParts.forEach(p => {
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rotation); ctx.globalAlpha = this.opacity;
+                    ctx.shadowColor = this.color.glow; ctx.shadowBlur = 10;
+                    ctx.fillStyle = this.color.fill; ctx.strokeStyle = this.color.line; ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    if (p.isLeft) ctx.roundRect(-this.boxW/2, -this.boxH/2, this.boxW/2 + 5, this.boxH, 15);
+                    else ctx.roundRect(0, -this.boxH/2, this.boxW/2, this.boxH, 15);
+                    ctx.fill(); ctx.stroke(); ctx.restore();
+                });
+            }
+            ctx.restore();
+        }
+
+        slice(bladeVx) {
+            if(window.navigator.vibrate) window.navigator.vibrate([20, 50]);
+            this.state = 'sliced';
+            this.color = this.isCorrect ? COLORS.green : COLORS.red;
+
+            const vx1 = bladeVx * 0.1 - 2 + (Math.random()-0.5);
+            const vx2 = bladeVx * 0.2 + 2 + (Math.random()-0.5);
+            this.slicedParts = [
+                { x: this.x - 10, y: this.y, vx: vx1, vy: this.vy - 2, rotation: this.rotation - 0.1, rotSpeed: -0.05, isLeft: true },
+                { x: this.x + 10, y: this.y, vx: vx2, vy: this.vy - 1, rotation: this.rotation + 0.1, rotSpeed: 0.05, isLeft: false }
+            ];
+            for(let i=0; i<6; i++) particles.push(new Particle(this.x, this.y, this.color.line));
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x; this.y = y;
+            this.vx = (Math.random() - 0.5) * 8; this.vy = (Math.random() - 0.5) * 8 - 2;
+            this.size = Math.random() * 3 + 1.5; this.color = color;
+            this.life = 1.0; this.decay = Math.random() * 0.04 + 0.02;
+        }
+        update() { this.x += this.vx; this.vy += PHYSICS.gravity; this.y += this.vy; this.life -= this.decay; return this.life > 0; }
+        draw() { ctx.save(); ctx.globalAlpha = this.life; ctx.fillStyle = this.color; ctx.shadowColor = this.color; ctx.shadowBlur = 10; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+    }
+
+    // --- ЛОГИКА ИГРЫ ---
+    function nextRound() {
+        let pool = wordsDB.filter(w => !usedWords.includes(w.eng));
+        if (pool.length < 3) { usedWords = []; pool = [...wordsDB]; }
+
+        pool.sort(() => 0.5 - Math.random());
+        currentPair = pool[0];
+        
+        let wrongPool = wordsDB.filter(w => w.eng !== currentPair.eng);
+        wrongPool.sort(() => 0.5 - Math.random());
+        wrongWords = [wrongPool[0], wrongPool[1]];
+        
+        const qCard = document.getElementById('quest-card');
+        document.getElementById('ui-quest-word').innerText = currentPair[LANG];
+        
+        qCard.classList.remove('pulse');
+        void qCard.offsetWidth; 
+        qCard.classList.add('pulse');
+    }
+
+    function spawnWave() {
+        if (gameState !== 'playing') return;
+        nextRound(); 
+        
+        const startY = height + 20; 
+        let lanes = [0, 1, 2].sort(() => 0.5 - Math.random());
+
+        const spawnWordInLane = (word, isCorrect, laneIndex) => {
+            const minX = width * (0.05 + laneIndex * 0.3); 
+            const maxX = width * (0.35 + laneIndex * 0.3);
+            const startX = minX + Math.random() * (maxX - minX); 
+            const targetX = startX + (Math.random() - 0.5) * 20; 
+            const peakHeight = height * (0.55 + Math.random() * 0.15); 
+            const vy = -Math.sqrt(2 * PHYSICS.gravity * peakHeight);
+            const timeToPeak = -vy / PHYSICS.gravity;
+            const vx = (targetX - startX) / timeToPeak; 
+
+            fruits.push(new Fruit(word, isCorrect, startX, startY, vx, vy));
+        };
+
+        spawnWordInLane(currentPair.eng, true, lanes[0]);
+        spawnWordInLane(wrongWords[0].eng, false, lanes[1]);
+        spawnWordInLane(wrongWords[1].eng, false, lanes[2]);
+    }
+
+    let waveInterval;
+    function startWaveTimer() {
+        clearInterval(waveInterval);
+        waveInterval = setInterval(spawnWave, 3500); 
+    }
+
+    function checkSlice(p1, p2) {
+        const bladeVx = p2.x - p1.x;
+        fruits.forEach(f => {
+            if (f.state !== 'alive') return;
+            if (p2.x > f.x - f.boxW/2 && p2.x < f.x + f.boxW/2 && p2.y > f.y - f.boxH/2 && p2.y < f.y + f.boxH/2) {
+                f.slice(bladeVx);
+                if (f.isCorrect) processCorrect();
+                else lostLife(); 
+            }
+        });
+    }
+
+    function processCorrect() {
+        const hasBoost = isBoostActive();
+        
+        score += 10; sessionSparks += 10; sessionExp += hasBoost ? 4 : 2; 
+        currentCombo++; missedCount = 0; 
+        
+        if (currentPair) usedWords.push(currentPair.eng);
+
+        document.getElementById('ui-score').innerText = score;
+        document.getElementById('ui-sess-sparks').innerText = sessionSparks;
+        document.getElementById('ui-sess-exp').innerText = sessionExp;
+        document.getElementById('ui-miss').classList.remove('show');
+
+        if (currentCombo > 2) {
+            const cUI = document.getElementById('ui-combo');
+            cUI.innerText = `x${currentCombo} COMBO!`;
+            cUI.classList.add('show');
+            setTimeout(() => cUI.classList.remove('show'), 1000);
+
+            if (currentCombo % 10 === 0 && user) {
+                sb.from('live_feed').insert({ username: user, event_type: 'speed_combo', event_val: currentCombo }).then();
+            }
+        }
+    }
+
+    function registerMiss() {
+        missedCount++;
+        const mUI = document.getElementById('ui-miss');
+        
+        if (missedCount >= 3) { 
+            mUI.classList.remove('show');
+            endGame(); 
+        } else {
+            mUI.innerText = `${dynLocales.ninja_miss} (${missedCount}/3)`;
+            mUI.classList.add('show');
+            setTimeout(() => mUI.classList.remove('show'), 1500);
+        }
+        currentCombo = 0;
+    }
+
+    function lostLife() {
+        if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+        lives--; currentCombo = 0; missedCount = 0;
+        
+        const hearts = document.querySelectorAll('.life-heart');
+        hearts.forEach((h, i) => { if (i >= lives) h.classList.add('lost'); });
+
+        document.body.style.boxShadow = `inset 0 0 100px ${COLORS.red.line}`;
+        setTimeout(() => { document.body.style.boxShadow = 'none'; }, 200);
+
+        if (lives <= 0) endGame();
+    }
+
+    // --- УПРАВЛЕНИЕ МЕНЮ ---
+    function startGame() {
+        document.getElementById('start-screen').classList.remove('show');
+        
+        if (isBoostActive()) {
+            document.getElementById('ui-boost-badge').style.display = 'flex';
+        } else {
+            document.getElementById('ui-boost-badge').style.display = 'none';
+        }
+
+        score = 0; lives = 5; sessionExp = 0; sessionSparks = 0; currentCombo = 0; missedCount = 0;
+        document.getElementById('ui-score').innerText = '0';
+        document.getElementById('ui-sess-sparks').innerText = '0';
+        document.getElementById('ui-sess-exp').innerText = '0';
+        document.querySelectorAll('.life-heart').forEach(h => h.classList.remove('lost'));
+        
+        usedWords = []; fruits = []; particles = []; bladePath = [];
+        gameState = 'playing';
+        nextRound(); startWaveTimer();
+        if(!window.drawLoopStarted) { requestAnimationFrame(draw); window.drawLoopStarted = true; }
+    }
+
+    async function endGame() {
+        gameState = 'gameover';
+        clearInterval(waveInterval);
+        bladePath = []; isMouseDown = false;
+        
+        document.getElementById('res-score').innerText = score;
+        document.getElementById('res-sparks').innerText = sessionSparks;
+        document.getElementById('res-exp').innerText = sessionExp;
+        document.getElementById('end-screen').classList.add('show');
+        
+        const btn = document.getElementById('restart-btn');
+        btn.innerText = dynLocales.ninja_save;
+        btn.disabled = true;
+
+        if (user && (sessionExp > 0 || sessionSparks > 0)) {
+            try {
+                let sSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
+                localStorage.setItem('wt_sparks', sSparks + sessionSparks);
+
+                const { data } = await sb.from('user_progress').select('global_exp, wp_exp').eq('username', user).single();
+                let gExp = (data?.global_exp || 0) + sessionExp;
+                let wpExp = (data?.wp_exp || 0) + sessionExp;
+                
+                await sb.from('user_progress').update({ global_exp: gExp, wp_exp: wpExp }).eq('username', user);
+            } catch (e) { console.error("Sync Error"); }
+        }
+
+        btn.innerText = dynLocales.ninja_again;
+        btn.disabled = false;
+    }
+
+    function restartGame() {
+        document.getElementById('end-screen').classList.remove('show');
+        startGame();
+    }
+
+    // --- РЕНДЕР 60FPS ---
+    function draw() {
+        if(gameState !== 'playing' && fruits.length === 0 && particles.length === 0) {
+            requestAnimationFrame(draw); return;
+        }
+        ctx.clearRect(0, 0, width, height);
+
+        if (bladePath.length > 2) {
+            ctx.save(); ctx.shadowColor = COLORS.blade.glow; ctx.shadowBlur = 20;
+            ctx.strokeStyle = COLORS.blade.line; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.beginPath(); ctx.moveTo(bladePath[0].x, bladePath[0].y);
+            const now = Date.now();
+            for (let i = 1; i < bladePath.length; i++) {
+                const age = now - bladePath[i].t;
+                ctx.lineWidth = Math.max(0, 8 * (1 - age / 150)); 
+                ctx.lineTo(bladePath[i].x, bladePath[i].y);
+            }
+            ctx.stroke(); ctx.restore();
+        }
+
+        particles = particles.filter(p => p.update());
+        particles.forEach(p => p.draw());
+
+        fruits = fruits.filter(f => f.update());
+        fruits.forEach(f => f.draw());
+
+        requestAnimationFrame(draw);
+    }
+</script>
+</body>
+</html>
