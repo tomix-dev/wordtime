@@ -32,7 +32,7 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-       /* --- ТАБ-БАР (УЛУЧШЕННЫЙ ДИЗАЙН) --- */
+        /* --- ТАБ-БАР --- */
         .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
         .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); transition: opacity 0.5s ease; }
         .tab-bar.ready { opacity: 1; }
@@ -41,7 +41,6 @@
         .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); }
         .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
         
-        /* Активная вкладка */
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
         .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
@@ -91,7 +90,7 @@
         .q-task-label { font-size: 8px; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 3px; }
 
         /* ЭТАПЫ (Точечки) */
-        .q-stages { display: flex; gap: 6px; margin-bottom: 15px; }
+        .q-stages { display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; }
         .stage-dot { width: 10px; height: 10px; border-radius: 50%; background: #222; border: 1px solid #444; transition: 0.3s; }
         .stage-dot.done { background: var(--green); border-color: var(--green); box-shadow: 0 0 8px rgba(0, 255, 136, 0.5); }
         .stage-dot.active { background: var(--gold); border-color: var(--gold-light); box-shadow: 0 0 8px rgba(212, 175, 55, 0.5); }
@@ -102,17 +101,17 @@
         .q-progress-bar { width: 100%; height: 8px; background: rgba(0,0,0,0.6); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
         .q-progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(212,175,55,0.4); }
 
-        /* НИЖНЯЯ ПАНЕЛЬ (Награды и Кнопка) */
+        /* НИЖНЯЯ ПАНЕЛЬ */
         .q-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 15px; }
-        .q-rewards { display: flex; gap: 8px; }
-        .reward-tag { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 5px; }
+        .q-rewards { display: flex; gap: 8px; flex-wrap: wrap; max-width: 60%; }
+        .reward-tag { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 10px; font-size: 10px; font-weight: 900; display: flex; align-items: center; gap: 5px; }
         .r-coin { color: var(--coin); }
         .r-exp { color: var(--gold); }
 
         .q-btn { 
             background: #222; border: 1px solid #444; color: #888; font-weight: 900; font-size: 10px; 
-            padding: 12px 20px; border-radius: 14px; text-transform: uppercase; letter-spacing: 1.5px; 
-            transition: 0.3s;
+            padding: 12px 16px; border-radius: 14px; text-transform: uppercase; letter-spacing: 1px; 
+            transition: 0.3s; white-space: nowrap; flex-shrink: 0;
         }
         .q-btn.ready { background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; color: #000; box-shadow: 0 5px 15px rgba(212,175,55,0.3); cursor: pointer; }
         .q-btn.ready:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(212,175,55,0.4); }
@@ -158,7 +157,6 @@
         </div>
     </div>
 
-    <!-- КНОПКА МАГАЗИНА -->
     <div class="shop-banner" onclick="fadeNavigate('shop.html')">
         <div class="sb-left">
             <div class="sb-icon">🛍️</div>
@@ -179,21 +177,21 @@
     const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
     const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
     const sb = supabase.createClient(S_URL, S_KEY);
-    const tg = window.Telegram?.WebApp; // Для уведомлений
+    const tg = window.Telegram?.WebApp;
 
     const user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // Конфиг всех квестов (оставляем для рендера)
+    // КОНФИГ КВЕСТОВ (ВСЕ НАГРАДЫ УРЕЗАНЫ В 2 РАЗА + ДОБАВЛЕНЫ НОВЫЕ)
     const QUESTS = [
         {
             id: 'days_online', icon: '🗓️', 
             title: 'СТАРОЖИЛА ПРОЕКТА', desc: 'Будь с нами каждый день и забирай награды.',
             taskKey: 'quest_task_days', defaultTask: 'Пробыть на проекте {goal} дней',
             stages: [
-                { goal: 7, c: 100, x: 200 },
-                { goal: 14, c: 300, x: 500 },
-                { goal: 30, c: 1000, x: 1500 }
+                { goal: 7, c: 50, x: 100 },
+                { goal: 14, c: 150, x: 250 },
+                { goal: 30, c: 500, x: 750 }
             ]
         },
         {
@@ -201,11 +199,32 @@
             title: 'ГЛОБАЛЬНОЕ ПРЕВОСХОДСТВО', desc: 'Повышай свой глобальный уровень аккаунта.',
             taskKey: 'quest_task_global', defaultTask: 'Достигнуть {goal} уровня аккаунта',
             stages: [
-                { goal: 25, c: 200, x: 0 },
-                { goal: 50, c: 500, x: 0 },
-                { goal: 100, c: 1200, x: 0 },
-                { goal: 150, c: 2500, x: 0 },
-                { goal: 200, c: 5000, x: 0 }
+                { goal: 25, c: 100, x: 0 },
+                { goal: 50, c: 250, x: 0 },
+                { goal: 100, c: 600, x: 0 },
+                { goal: 150, c: 1250, x: 0 },
+                { goal: 200, c: 2500, x: 0 }
+            ]
+        },
+        {
+            id: 'wp_level', icon: '🎫', 
+            title: 'WORDPASS ЭЛИТА', desc: 'Прокачивай уровни в боевом пропуске.',
+            taskKey: 'quest_task_wp', defaultTask: 'Достигнуть {goal} уровня в WordPass',
+            stages: [
+                { goal: 10, c: 100, x: 200 },
+                { goal: 20, c: 250, x: 500 },
+                { goal: 30, c: 500, x: 1000 }
+            ]
+        },
+        {
+            id: 'farm_buy', icon: '🏭', 
+            title: 'МАГНАТ ФЕРМ', desc: 'Покупай и улучшай майнинг фермы.',
+            taskKey: 'quest_task_farm', defaultTask: 'Купить ферму V-{goal}',
+            stages: [
+                { goal: 1, c: 50, x: 100 },
+                { goal: 2, c: 150, x: 300 },
+                { goal: 3, c: 300, x: 600 },
+                { goal: 4, c: 750, x: 1500 }
             ]
         },
         {
@@ -213,10 +232,10 @@
             title: 'МАСТЕР ПАР', desc: 'Достигни крутых высот в режиме "Найди пару".',
             taskKey: 'quest_task_pair', defaultTask: 'Достигнуть {goal} уровня в Найди пару',
             stages: [
-                { goal: 50, c: 150, x: 300 },
-                { goal: 100, c: 400, x: 800 },
-                { goal: 150, c: 900, x: 1500 },
-                { goal: 200, c: 2000, x: 3000 }
+                { goal: 50, c: 75, x: 150 },
+                { goal: 100, c: 200, x: 400 },
+                { goal: 150, c: 450, x: 750 },
+                { goal: 200, c: 1000, x: 1500 }
             ]
         },
         {
@@ -224,10 +243,10 @@
             title: 'ДЕТЕКТОР ЛЖИ', desc: 'Прокачай свои инстинкты в режиме True/False.',
             taskKey: 'quest_task_tf', defaultTask: 'Достигнуть {goal} уровня в True/False',
             stages: [
-                { goal: 25, c: 100, x: 200 },
-                { goal: 75, c: 350, x: 700 },
-                { goal: 150, c: 800, x: 1600 },
-                { goal: 250, c: 2000, x: 4000 }
+                { goal: 25, c: 50, x: 100 },
+                { goal: 75, c: 175, x: 350 },
+                { goal: 150, c: 400, x: 800 },
+                { goal: 250, c: 1000, x: 2000 }
             ]
         },
         {
@@ -235,9 +254,30 @@
             title: 'СПИДРАННЕР', desc: 'Пройди уровни на время в режиме Speed Rush.',
             taskKey: 'quest_task_rush', defaultTask: 'Пройти {goal} раундов в Speed Rush',
             stages: [
-                { goal: 10, c: 150, x: 300 },
-                { goal: 20, c: 400, x: 800 },
-                { goal: 30, c: 1000, x: 2000 }
+                { goal: 10, c: 75, x: 150 },
+                { goal: 20, c: 200, x: 400 },
+                { goal: 30, c: 500, x: 1000 }
+            ]
+        },
+        {
+            id: 'tower_height', icon: '🏢', 
+            title: 'НЕОНОВЫЙ АРХИТЕКТОР', desc: 'Строй самую высокую башню в Neon Stacker.',
+            taskKey: 'quest_task_tower', defaultTask: 'Построить башню из {goal} блоков',
+            stages: [
+                { goal: 10, c: 50, x: 100 },
+                { goal: 25, c: 125, x: 250 },
+                { goal: 50, c: 300, x: 600 },
+                { goal: 75, c: 600, x: 1200 }
+            ]
+        },
+        {
+            id: 'ninja_combo', icon: '⚔️', 
+            title: 'МАСТЕР КАТАНЫ', desc: 'Делай безумные комбо в Neon Ninja.',
+            taskKey: 'quest_task_ninja', defaultTask: 'Сделать комбо x{goal} в Neon Ninja',
+            stages: [
+                { goal: 20, c: 50, x: 100 },
+                { goal: 40, c: 150, x: 300 },
+                { goal: 60, c: 400, x: 800 }
             ]
         },
         {
@@ -245,16 +285,27 @@
             title: 'ГЕНЕРАТОР ИДЕЙ', desc: 'Накопи искры на балансе в Brain Clicker.',
             taskKey: 'quest_task_sparks', defaultTask: 'Накопить {goal} искр в Brain Clicker',
             stages: [
-                { goal: 10000, c: 100, x: 200 },
-                { goal: 50000, c: 500, x: 1000 },
-                { goal: 100000, c: 1500, x: 3000 }
+                { goal: 10000, c: 50, x: 100 },
+                { goal: 50000, c: 250, x: 500 },
+                { goal: 100000, c: 750, x: 1500 }
+            ]
+        },
+        {
+            id: 'invite_friends', icon: '🤝', 
+            title: 'АМБАССАДОР', desc: 'Приглашай друзей по своей ссылке.',
+            taskKey: 'quest_task_invite', defaultTask: 'Пригласить {goal} друзей',
+            stages: [
+                { goal: 1, c: 100, x: 200 },
+                { goal: 5, c: 250, x: 500 },
+                { goal: 10, c: 500, x: 1000 },
+                { goal: 25, c: 1250, x: 2500 }
             ]
         }
     ];
 
     let dbData = null;
     let localData = {};
-    let isProcessing = false; // Защита от спам-кликов
+    let isProcessing = false;
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -278,9 +329,12 @@
             if(!dbData.claimed_quests) dbData.claimed_quests = {};
             if(dbData.coins === undefined || dbData.coins === null) dbData.coins = 0;
 
-            // Обновляем локальные данные для квестов, которых нет в основной БД
+            // Локальные данные для квестов (если они не пишутся в БД)
             localData.sparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
             localData.tfLevel = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
+            localData.towerHeight = parseInt(localStorage.getItem('wt_max_tower')) || 0;
+            localData.ninjaCombo = parseInt(localStorage.getItem('wt_max_ninja_combo')) || 0;
+            localData.farmTier = parseInt(localStorage.getItem('wt_farm_tier')) || 0;
 
             updateTopBalance();
             renderCards();
@@ -296,7 +350,7 @@
         document.getElementById('ui-exp').innerText = dbData.global_exp;
     }
 
-    // Визуальный расчет прогресса (для отображения на сайте)
+    // Расчет прогресса (с учетом БД и локальных фоллбэков)
     function getCurrentValueForQuest(id) {
         switch(id) {
             case 'days_online':
@@ -304,14 +358,24 @@
                 return Math.max(1, Math.floor((new Date() - createdDate) / 86400000));
             case 'global_level':
                 return dbData.global_level || 1;
+            case 'wp_level':
+                return dbData.wp_level || 1; // Убедись, что колонка существует в БД!
+            case 'farm_buy':
+                return dbData.farm_tier || localData.farmTier || 0;
             case 'pair_level':
                 return dbData.current_level || 1;
             case 'tf_level':
                 return localData.tfLevel;
             case 'rush_rounds':
                 return dbData.rush_level || 1;
+            case 'tower_height':
+                return dbData.max_tower || localData.towerHeight || 0;
+            case 'ninja_combo':
+                return dbData.max_ninja_combo || localData.ninjaCombo || 0;
             case 'sparks_farm':
                 return localData.sparks;
+            case 'invite_friends':
+                return dbData.refs_count || dbData.referrals_count || 0;
             default: return 0;
         }
     }
@@ -402,7 +466,6 @@
         });
     }
 
-    // 🛡️ ТЕПЕРЬ НАГРАДЫ ВЫДАЕТ СЕРВЕР
     window.claimReward = async function(questId, stageIndex) {
         if(isProcessing) return;
         isProcessing = true;
@@ -414,13 +477,15 @@
         btn.innerText = '⏳...';
         btn.style.pointerEvents = 'none';
 
-        // Собираем прогресс для "клиентских" квестов (чтобы сервер знал результат)
+        // Отправляем клиентский прогресс для квестов без БД
         let clientProgress = 0;
-        if (questId === 'sparks_farm') clientProgress = parseInt(localStorage.getItem('wt_sparks')) || 0;
-        if (questId === 'tf_level') clientProgress = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
+        if (questId === 'sparks_farm') clientProgress = localData.sparks;
+        if (questId === 'tf_level') clientProgress = localData.tfLevel;
+        if (questId === 'tower_height') clientProgress = localData.towerHeight;
+        if (questId === 'ninja_combo') clientProgress = localData.ninjaCombo;
+        if (questId === 'farm_buy') clientProgress = localData.farmTier;
 
         try {
-            // Обращаемся к твоей новой Edge Function
             const res = await fetch('https://byyscovhwjmjbjooqolc.supabase.co/functions/v1/complete-quest', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -435,7 +500,6 @@
             const data = await res.json();
 
             if (data.error) {
-                // Используем showAlert если Telegram WebApp доступен, иначе alert
                 if (tg) tg.showAlert("❌ Ошибка: " + data.error);
                 else alert("Ошибка: " + data.error);
 
@@ -445,7 +509,6 @@
                 return;
             }
 
-            // УСПЕХ! Обновляем данные на основе ответа сервера
             dbData.global_exp = data.newExp;
             dbData.global_level = data.newLvl;
             dbData.coins = data.newCoins;
