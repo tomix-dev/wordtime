@@ -18,6 +18,7 @@
             --red: #ff4b4b;
             --blue: #00bfff;
             --purple: #b026ff;
+            --coin: #00d2ff;
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
@@ -39,7 +40,7 @@
 
         .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0); background-size: 32px 32px; z-index: -1; }
 
-        /* --- ЗОЛОТАЯ КАРТОЧКА КОШЕЛЬКА С АНИМАЦИЕЙ --- */
+        /* --- ЗОЛОТАЯ КАРТОЧКА КОШЕЛЬКА --- */
         .wallet-card {
             background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(10, 10, 10, 0.95));
             border: 1px solid var(--gold);
@@ -68,15 +69,17 @@
         .wallet-label { font-size: 9px; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px;}
         .wallet-val { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(212, 175, 55, 0.5); line-height: 1;}
         
+        /* 🔥 НОВАЯ КНОПКА ПОПОЛНЕНИЯ */
         .topup-btn {
             position: relative; z-index: 1;
             background: linear-gradient(45deg, var(--gold), var(--gold-light));
             color: #000;
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            font-size: 24px;
+            padding: 10px 16px;
+            border-radius: 14px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             font-weight: 900;
             display: flex;
             align-items: center;
@@ -91,8 +94,8 @@
         .tab-bar.ready { opacity: 1; }
         
         .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; position: relative; }
-        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); }
-        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; transition: 0.3s; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2;}
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; z-index: 2;}
         
         .tab-item.active { color: var(--gold); transform: translateY(-4px); }
         .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
@@ -102,85 +105,97 @@
 
         /* --- ВЕРХНЯЯ ЧАСТЬ (ПРОФИЛЬ) --- */
         .profile-header { text-align: center; margin-top: 15px; margin-bottom: 20px; }
-        .username { font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; color: #fff; }
+        .username { font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         
-        /* Ряд для бейджей (Уровень + Огонек) */
-        .badges-row { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        /* 🔥 НОВЫЙ РЯД ДЛЯ ВСЕХ БЕЙДЖЕЙ */
+        .badges-row { 
+            display: flex; justify-content: center; align-items: center; gap: 8px; 
+            margin-bottom: 20px; flex-wrap: wrap; 
+        }
         
-        .level-badge { 
-            background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); 
-            padding: 6px 15px; border-radius: 12px; font-size: 12px; font-weight: 900; color: var(--gold-light);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); 
+        .top-badge {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid var(--glass-border);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
         }
 
+        .level-badge { border-color: var(--gold); color: var(--gold-light); background: rgba(212, 175, 55, 0.1); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .coin-badge { border-color: rgba(0, 210, 255, 0.3); color: #fff; background: rgba(0, 210, 255, 0.05); }
+        .spark-badge { border-color: rgba(0, 191, 255, 0.3); color: #fff; background: rgba(0, 191, 255, 0.05); }
+
         /* --- СИСТЕМА СЕРИИ (ОГОНЕК) --- */
-        .streak-badge {
-            display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.05); 
-            border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; 
-            font-weight: 900; font-size: 13px; transition: 0.3s;
-        }
-        .streak-icon { font-size: 14px; transition: 0.3s; filter: grayscale(1); opacity: 0.3; }
+        .streak-badge { transition: 0.3s; }
+        .streak-icon { font-size: 13px; transition: 0.3s; filter: grayscale(1); opacity: 0.3; }
         .streak-count { color: #555; }
         
         .streak-badge.s-1 { background: rgba(255, 215, 0, 0.1); border-color: var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
         .streak-badge.s-1 .streak-icon { filter: grayscale(0); opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); }
         .streak-badge.s-1 .streak-count { color: var(--gold-light); }
-
         .streak-badge.s-7 { background: rgba(255, 140, 0, 0.1); border-color: #ff8c00; box-shadow: 0 0 10px rgba(255, 140, 0, 0.2); }
         .streak-badge.s-7 .streak-icon { filter: grayscale(0) hue-rotate(-20deg) saturate(200%) drop-shadow(0 0 8px #ff8c00); opacity: 1; }
         .streak-badge.s-7 .streak-count { color: #ff8c00; }
-
         .streak-badge.s-14 { background: rgba(255, 75, 75, 0.1); border-color: var(--red); box-shadow: 0 0 10px rgba(255, 75, 75, 0.3); }
         .streak-badge.s-14 .streak-icon { filter: grayscale(0) hue-rotate(-50deg) saturate(300%) drop-shadow(0 0 10px var(--red)); opacity: 1; }
         .streak-badge.s-14 .streak-count { color: var(--red); }
-
         .streak-badge.s-30 { background: rgba(0, 191, 255, 0.1); border-color: var(--blue); box-shadow: 0 0 10px rgba(0, 191, 255, 0.3); }
         .streak-badge.s-30 .streak-icon { filter: grayscale(0) hue-rotate(180deg) saturate(200%) drop-shadow(0 0 10px var(--blue)); opacity: 1; }
         .streak-badge.s-30 .streak-count { color: var(--blue); }
-
         .streak-badge.s-45 { background: rgba(0, 255, 136, 0.1); border-color: var(--green); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
         .streak-badge.s-45 .streak-icon { filter: grayscale(0) hue-rotate(90deg) saturate(200%) drop-shadow(0 0 10px var(--green)); opacity: 1; }
         .streak-badge.s-45 .streak-count { color: var(--green); }
-
         .streak-badge.s-60 { background: rgba(176, 38, 255, 0.1); border-color: var(--purple); box-shadow: 0 0 15px rgba(176, 38, 255, 0.4); }
         .streak-badge.s-60 .streak-icon { filter: grayscale(0) hue-rotate(260deg) saturate(200%) drop-shadow(0 0 15px var(--purple)); opacity: 1; transform: scale(1.1); }
         .streak-badge.s-60 .streak-count { color: #d884ff; text-shadow: 0 0 10px var(--purple); }
 
         /* --- EXP BAR --- */
-        .exp-container { width: 80%; margin: 0 auto; text-align: center; }
-        .exp-text { font-size: 9px; color: #888; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; }
-        .exp-bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
-        .exp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
+        .exp-container { width: 85%; margin: 0 auto; text-align: center; }
+        .exp-text { font-size: 9px; color: #888; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+        .exp-bar-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.6); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .exp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(212, 175, 55, 0.6); }
 
-        /* --- ПЕРСОНАЖ (ЦЕНТР ЭКРАНА) --- */
+        /* 🔥 СВЕЧЕНИЕ ПЕРСОНАЖА (ЦЕНТР ЭКРАНА) */
         .character-showcase { 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            margin-bottom: 25px; position: relative; padding: 20px 0 10px 0;
+            margin-bottom: 30px; position: relative; padding: 25px 0 15px 0;
         }
         .character-bg {
-            position: absolute; width: 250px; height: 250px; border-radius: 50%; top: 10px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
-            z-index: 0; animation: pulseGlow 3s infinite alternate;
+            position: absolute; width: 280px; height: 280px; border-radius: 50%; top: 0px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.25) 0%, rgba(212, 175, 55, 0.1) 40%, transparent 70%);
+            z-index: 0; animation: pulseGoldGlow 3s infinite alternate; filter: blur(8px);
+        }
+        @keyframes pulseGoldGlow {
+            0% { opacity: 0.6; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 60px rgba(255, 215, 0, 0.3); }
         }
         .character-avatar {
-            width: 180px; height: 180px; background: #0a0a0a; border: 2px solid var(--glass-border);
-            border-radius: 30px; display: flex; justify-content: center; align-items: center;
-            font-size: 80px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+            width: 190px; height: 190px; background: #0a0a0a; 
+            border: 2px solid var(--gold);
+            border-radius: 35px; display: flex; justify-content: center; align-items: center;
+            font-size: 85px; 
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(212, 175, 55, 0.2); 
             z-index: 1; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             user-select: none; overflow: hidden; 
         }
         .character-avatar:active { transform: scale(0.95); }
         .character-title {
-            margin-top: 20px; font-size: 14px; font-weight: 900; color: #fff;
+            margin-top: 22px; font-size: 15px; font-weight: 900; color: #fff;
             text-transform: uppercase; letter-spacing: 2px; z-index: 1;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.8); text-align: center;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); text-align: center;
         }
 
         /* --- ПРОГРЕСС СЛЕДУЮЩЕГО ПИТОМЦА --- */
-        .pet-progress-container { width: 60%; max-width: 250px; margin-top: 15px; text-align: center; z-index: 1; }
-        .pet-prog-text { font-size: 8px; color: #aaa; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-        .pet-prog-bg { width: 100%; height: 4px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
-        .pet-prog-fill { height: 100%; background: linear-gradient(90deg, var(--green), #00ffcc); width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.4); }
+        .pet-progress-container { width: 65%; max-width: 250px; margin-top: 18px; text-align: center; z-index: 1; }
+        .pet-prog-text { font-size: 9px; color: #bbb; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .pet-prog-bg { width: 100%; height: 5px; background: rgba(0,0,0,0.6); border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden; }
+        .pet-prog-fill { height: 100%; background: linear-gradient(90deg, var(--green), #00ffcc); width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
 
         /* --- КНОПКИ КАЛЕНДАРЯ И ИНВЕНТАРЯ --- */
         .profile-actions {
@@ -199,12 +214,6 @@
         .calendar-btn .action-icon { filter: drop-shadow(0 0 8px var(--green)); }
         .inventory-btn .action-icon { filter: drop-shadow(0 0 8px var(--gold)); }
 
-        /* --- КРАТКАЯ СТАТИСТИКА --- */
-        .mini-stats { display: flex; justify-content: space-around; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px; backdrop-filter: blur(10px); margin-bottom: 30px; }
-        .m-stat { display: flex; flex-direction: column; align-items: center; }
-        .m-stat span:first-child { font-size: 8px; color: #666; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        .m-stat span:last-child { font-size: 14px; font-weight: 900; color: #fff; }
-
         /* --- КИБЕР-ФЕРМА БАННЕР --- */
         .cyber-farm-banner {
             display: flex; justify-content: space-between; align-items: center;
@@ -217,9 +226,9 @@
         .cyber-farm-banner::before {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
             background: radial-gradient(circle, rgba(176, 38, 255, 0.15) 0%, transparent 60%);
-            animation: rotateGlow 10s linear infinite; pointer-events: none;
+            animation: rotateGlowPurple 10s linear infinite; pointer-events: none;
         }
-        @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
+        @keyframes rotateGlowPurple { 100% { transform: rotate(360deg); } }
         
         .cyber-farm-banner:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(176, 38, 255, 0.3); }
         .cf-left { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
@@ -228,16 +237,8 @@
         .cf-desc { font-size: 9px; font-weight: 800; color: #d884ff; text-transform: uppercase; letter-spacing: 1px; }
         .cf-arrow { font-size: 18px; color: var(--purple); font-weight: 900; position: relative; z-index: 1; text-shadow: 0 0 10px var(--purple); }
 
-        /* --- ДАННЫЕ АККАУНТА --- */
-        .section-title { font-size: 10px; color: var(--gold); letter-spacing: 3px; text-align: center; margin-bottom: 15px; font-weight: 900; text-transform: uppercase; }
-        .acc-info-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); margin-bottom: 35px; }
-        .acc-info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .acc-info-row:first-child { padding-top: 0; }
-        .acc-info-row:last-child { padding-bottom: 0; border-bottom: none; }
-        .acc-label { font-size: 9px; color: #888; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .acc-val { font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; }
-
         /* --- ДОСТИЖЕНИЯ --- */
+        .section-title { font-size: 10px; color: var(--gold); letter-spacing: 3px; text-align: center; margin-bottom: 15px; font-weight: 900; text-transform: uppercase; }
         .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; margin-bottom: 40px; }
         .ach-box { aspect-ratio: 1/1; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.3s; padding-top: 5px; }
         .ach-emoji { font-size: 26px; margin-bottom: 6px; filter: grayscale(1); opacity: 0.2; transition: 0.3s; }
@@ -270,7 +271,6 @@
         .lvl-up-btn { background: linear-gradient(45deg, var(--gold), var(--gold-light)); border: none; color: #000; font-size: 12px; font-weight: 900; padding: 15px 30px; border-radius: 15px; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
         .lvl-up-btn:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4); }
 
-        @keyframes pulseGlow { 0% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
@@ -307,12 +307,19 @@
     <div class="profile-header">
         <div class="username" id="user-name">...</div>
         
-        <!-- ОГОНЕК И УРОВЕНЬ -->
         <div class="badges-row">
-            <div class="level-badge" id="level-badge">LVL 1</div>
-            <div class="streak-badge" id="streak-badge">
+            <div class="top-badge level-badge" id="level-badge">LVL 1</div>
+            <div class="top-badge streak-badge" id="streak-badge">
                 <span class="streak-icon">🔥</span>
                 <span class="streak-count" id="streak-count"></span>
+            </div>
+            <div class="top-badge coin-badge">
+                <span style="color: var(--coin); font-size: 14px;">⏳</span>
+                <span id="top-coins">0</span>
+            </div>
+            <div class="top-badge spark-badge">
+                <span style="color: var(--blue); font-size: 14px;">🧠</span>
+                <span id="top-sparks">0</span>
             </div>
         </div>
 
@@ -333,7 +340,6 @@
         </div>
     </div>
 
-    <!-- КНОПКИ КАЛЕНДАРЯ И ИНВЕНТАРЯ -->
     <div class="profile-actions">
         <button class="action-btn calendar-btn" onclick="fadeNavigate('calendar.html')">
             <span class="action-icon">📅</span>
@@ -345,7 +351,6 @@
         </button>
     </div>
 
-    <!-- ЗОЛОТАЯ КАРТОЧКА КОШЕЛЬКА С АНИМАЦИЕЙ -->
     <div class="wallet-card" onclick="fadeNavigate('topup.html')">
         <div class="wallet-info">
             <div class="wallet-icon">⏳</div>
@@ -354,25 +359,9 @@
                 <div class="wallet-val" id="wallet-coins">0</div>
             </div>
         </div>
-        <button class="topup-btn">+</button>
+        <button class="topup-btn" data-i18n="btn_topup">ПОПОЛНИТЬ</button>
     </div>
 
-    <div class="mini-stats">
-        <div class="m-stat">
-            <span data-i18n="stat_days">ДНЕЙ В ИГРЕ</span>
-            <span id="user-days">0</span>
-        </div>
-        <div class="m-stat" style="border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border); padding: 0 20px;">
-            <span data-i18n="stat_pairs">НАЙДЕНО ПАР</span>
-            <span id="total-pairs">0</span>
-        </div>
-        <div class="m-stat">
-            <span data-i18n="stat_sparks">ИСКР</span>
-            <span id="total-sparks">0</span>
-        </div>
-    </div>
-
-    <!-- БАННЕР КИБЕР-ФЕРМЫ -->
     <div class="cyber-farm-banner" onclick="fadeNavigate('farm.html')">
         <div class="cf-left">
             <div class="cf-icon">⚡</div>
@@ -384,31 +373,8 @@
         <div class="cf-arrow">▶</div>
     </div>
 
-    <!-- ДАННЫЕ АККАУНТА -->
-    <h3 class="section-title" data-i18n="acc_info_title">ДАННЫЕ АККАУНТА</h3>
-    <div class="acc-info-card">
-        <div class="acc-info-row">
-            <span class="acc-label" data-i18n="acc_name">НИКНЕЙМ</span>
-            <span class="acc-val" id="acc-nickname">...</span>
-        </div>
-        <div class="acc-info-row">
-            <span class="acc-label" data-i18n="acc_reg">РЕГИСТРАЦИЯ</span>
-            <span class="acc-val" id="acc-regdate">...</span>
-        </div>
-        <div class="acc-info-row">
-            <span class="acc-label" data-i18n="acc_status">СТАТУС</span>
-            <span class="acc-val" id="acc-status-val" style="color: var(--green);">АКТИВЕН</span>
-        </div>
-        <div class="acc-info-row">
-            <span class="acc-label" data-i18n="acc_role">РОЛЬ</span>
-            <span class="acc-val" id="acc-role">PLAYER</span>
-        </div>
-    </div>
-
-    <!-- ЭВОЛЮЦИЯ -->
     <h3 class="section-title" data-i18n="achievements_title">ЭВОЛЮЦИЯ</h3>
     <div class="ach-grid" id="ach-container">
-        <!-- 15 стадий эволюции питомцев -->
         <div class="ach-box" id="ach-1"><span class="ach-emoji">🥚</span><span class="ach-txt">1 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-1"></div></div></div>
         <div class="ach-box" id="ach-10"><span class="ach-emoji">🐱</span><span class="ach-txt">10 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-10"></div></div></div>
         <div class="ach-box" id="ach-25"><span class="ach-emoji">😼</span><span class="ach-txt">25 LVL</span><div class="ach-prog"><div class="ach-prog-fill" id="ach-fill-25"></div></div></div>
@@ -427,7 +393,6 @@
     </div>
 </main>
 
-<!-- ОВЕРЛЕЙ НОВОГО УРОВНЯ -->
 <div class="lvl-up-overlay" id="lvl-up-overlay">
     <div class="lvl-up-card">
         <div class="lvl-up-icon">🌟</div>
@@ -447,7 +412,6 @@
 
     const displayName = localStorage.getItem('wt_display_name') || user;
     document.getElementById('user-name').innerText = displayName.toUpperCase();
-    document.getElementById('acc-nickname').innerText = displayName.toUpperCase();
 
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
@@ -498,10 +462,7 @@
             avatarImg.style.boxShadow = "0 0 40px rgba(255, 215, 0, 0.8)";
         } else if (level >= 150) {
             avatarImg.style.borderColor = "var(--gold)";
-            avatarImg.style.boxShadow = "0 0 20px rgba(212, 175, 55, 0.3)";
-        } else {
-            avatarImg.style.borderColor = "var(--glass-border)";
-            avatarImg.style.boxShadow = "0 20px 40px rgba(0,0,0,0.6)";
+            avatarImg.style.boxShadow = "0 0 30px rgba(212, 175, 55, 0.6)";
         }
     }
 
@@ -568,7 +529,6 @@
         });
     }
 
-    // --- ЛОГИКА ОВЕРЛЕЯ УРОВНЯ ---
     function checkLevelUp(currentDbLvl) {
         let savedLvl = localStorage.getItem('wt_last_global_lvl');
         if (!savedLvl) {
@@ -596,14 +556,12 @@
         document.getElementById('lvl-up-overlay').classList.remove('show');
     }
 
-    // --- ЛОГИКА ОГОНЬКА (СЕРИИ) ---
     function updateStreakUI(currentStreak, lastPlayedStr) {
         const streakBadge = document.getElementById('streak-badge');
         const streakCount = document.getElementById('streak-count');
         
         let streak = currentStreak || 0;
 
-        // Проверяем, не сгорела ли серия (разница больше 1 дня)
         if (lastPlayedStr) {
             const today = new Date();
             today.setHours(0, 0, 0, 0); 
@@ -622,7 +580,7 @@
             streak = 0;
         }
 
-        streakBadge.className = 'streak-badge'; 
+        streakBadge.className = 'top-badge streak-badge'; 
         if (streak === 0) {
             streakCount.innerText = '';
         } else {
@@ -645,45 +603,22 @@
             const { data: p } = await sb.from('user_progress').select('*').eq('username', user).single();
 
             if(p) {
-                const regDate = new Date(p.created_at);
-                const today = new Date();
-                const diffDays = Math.max(1, Math.ceil(Math.abs(today - regDate) / (1000 * 60 * 60 * 24))); 
-                
                 const gLvl = p.global_level || 1;
                 const gExp = p.global_exp || 0;
-                const neededExp = gLvl * 10;
-                const totalPairs = p.total_pairs_found || 0;
+                let neededExp = Math.floor(100 * Math.pow(1.15, gLvl - 1));
                 const localSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
 
                 checkLevelUp(gLvl);
                 
                 document.getElementById('wallet-coins').innerText = p.coins || 0;
+                document.getElementById('top-coins').innerText = p.coins || 0;
+                document.getElementById('top-sparks').innerText = localSparks;
+                
                 document.getElementById('level-badge').innerText = `LVL ${gLvl}`;
                 document.getElementById('exp-text').innerText = `${gExp} / ${neededExp} EXP`;
                 document.getElementById('exp-fill').style.width = `${(gExp / neededExp) * 100}%`;
 
                 updateStreakUI(p.current_streak, p.last_played_date);
-
-                document.getElementById('user-days').innerText = diffDays;
-                document.getElementById('total-pairs').innerText = totalPairs;
-                document.getElementById('total-sparks').innerText = localSparks;
-
-                const day = String(regDate.getDate()).padStart(2, '0');
-                const month = String(regDate.getMonth() + 1).padStart(2, '0');
-                const year = regDate.getFullYear();
-                document.getElementById('acc-regdate').innerText = `${day}.${month}.${year}`;
-
-                const statusEl = document.getElementById('acc-status-val');
-                statusEl.innerText = window.translations && window.translations['acc_status_active'] ? window.translations['acc_status_active'] : 'АКТИВЕН';
-
-                const role = p.role || 'Player';
-                const roleEl = document.getElementById('acc-role');
-                const roleKey = `role_${role.toLowerCase()}`;
-                roleEl.innerText = window.translations && window.translations[roleKey] ? window.translations[roleKey] : role.toUpperCase();
-                
-                if (role === 'Admin') roleEl.style.color = 'var(--red)';
-                else if (role === 'Tester') roleEl.style.color = 'var(--blue)';
-                else roleEl.style.color = 'var(--gold-light)';
 
                 updateAvatar(gLvl);
                 updatePetProgress(gLvl);
