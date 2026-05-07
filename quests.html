@@ -182,124 +182,84 @@
     const user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // КОНФИГ КВЕСТОВ (ВСЕ НАГРАДЫ УРЕЗАНЫ В 2 РАЗА + ДОБАВЛЕНЫ НОВЫЕ)
+    // 🔥 ИСПРАВЛЕНИЕ: Вместо хардкода добавлены titleKey и descKey
     const QUESTS = [
         {
             id: 'days_online', icon: '🗓️', 
-            title: 'СТАРОЖИЛА ПРОЕКТА', desc: 'Будь с нами каждый день и забирай награды.',
+            titleKey: 'q_days_title', defaultTitle: 'СТАРОЖИЛА ПРОЕКТА', 
+            descKey: 'q_days_desc', defaultDesc: 'Будь с нами каждый день и забирай награды.',
             taskKey: 'quest_task_days', defaultTask: 'Пробыть на проекте {goal} дней',
-            stages: [
-                { goal: 7, c: 50, x: 100 },
-                { goal: 14, c: 150, x: 250 },
-                { goal: 30, c: 500, x: 750 }
-            ]
+            stages: [ { goal: 7, c: 50, x: 100 }, { goal: 14, c: 150, x: 250 }, { goal: 30, c: 500, x: 750 } ]
         },
         {
             id: 'global_level', icon: '🌟', 
-            title: 'ГЛОБАЛЬНОЕ ПРЕВОСХОДСТВО', desc: 'Повышай свой глобальный уровень аккаунта.',
+            titleKey: 'q_global_title', defaultTitle: 'ГЛОБАЛЬНОЕ ПРЕВОСХОДСТВО', 
+            descKey: 'q_global_desc', defaultDesc: 'Повышай свой глобальный уровень аккаунта.',
             taskKey: 'quest_task_global', defaultTask: 'Достигнуть {goal} уровня аккаунта',
-            stages: [
-                { goal: 25, c: 100, x: 0 },
-                { goal: 50, c: 250, x: 0 },
-                { goal: 100, c: 600, x: 0 },
-                { goal: 150, c: 1250, x: 0 },
-                { goal: 200, c: 2500, x: 0 }
-            ]
+            stages: [ { goal: 25, c: 100, x: 0 }, { goal: 50, c: 250, x: 0 }, { goal: 100, c: 600, x: 0 }, { goal: 150, c: 1250, x: 0 }, { goal: 200, c: 2500, x: 0 } ]
         },
         {
             id: 'wp_level', icon: '🎫', 
-            title: 'WORDPASS ЭЛИТА', desc: 'Прокачивай уровни в боевом пропуске.',
+            titleKey: 'q_wp_title', defaultTitle: 'WORDPASS ЭЛИТА', 
+            descKey: 'q_wp_desc', defaultDesc: 'Прокачивай уровни в боевом пропуске.',
             taskKey: 'quest_task_wp', defaultTask: 'Достигнуть {goal} уровня в WordPass',
-            stages: [
-                { goal: 10, c: 100, x: 200 },
-                { goal: 20, c: 250, x: 500 },
-                { goal: 30, c: 500, x: 1000 }
-            ]
+            stages: [ { goal: 10, c: 100, x: 200 }, { goal: 20, c: 250, x: 500 }, { goal: 30, c: 500, x: 1000 } ]
         },
         {
             id: 'farm_buy', icon: '🏭', 
-            title: 'МАГНАТ ФЕРМ', desc: 'Покупай и улучшай майнинг фермы.',
+            titleKey: 'q_farm_title', defaultTitle: 'МАГНАТ ФЕРМ', 
+            descKey: 'q_farm_desc', defaultDesc: 'Покупай и улучшай майнинг фермы.',
             taskKey: 'quest_task_farm', defaultTask: 'Купить ферму V-{goal}',
-            stages: [
-                { goal: 1, c: 50, x: 100 },
-                { goal: 2, c: 150, x: 300 },
-                { goal: 3, c: 300, x: 600 },
-                { goal: 4, c: 750, x: 1500 }
-            ]
+            stages: [ { goal: 1, c: 50, x: 100 }, { goal: 2, c: 150, x: 300 }, { goal: 3, c: 300, x: 600 }, { goal: 4, c: 750, x: 1500 } ]
         },
         {
             id: 'pair_level', icon: '🎴', 
-            title: 'МАСТЕР ПАР', desc: 'Достигни крутых высот в режиме "Найди пару".',
+            titleKey: 'q_pair_title', defaultTitle: 'МАСТЕР ПАР', 
+            descKey: 'q_pair_desc', defaultDesc: 'Достигни крутых высот в режиме "Найди пару".',
             taskKey: 'quest_task_pair', defaultTask: 'Достигнуть {goal} уровня в Найди пару',
-            stages: [
-                { goal: 50, c: 75, x: 150 },
-                { goal: 100, c: 200, x: 400 },
-                { goal: 150, c: 450, x: 750 },
-                { goal: 200, c: 1000, x: 1500 }
-            ]
+            stages: [ { goal: 50, c: 75, x: 150 }, { goal: 100, c: 200, x: 400 }, { goal: 150, c: 450, x: 750 }, { goal: 200, c: 1000, x: 1500 } ]
         },
         {
             id: 'tf_level', icon: '⚖️', 
-            title: 'ДЕТЕКТОР ЛЖИ', desc: 'Прокачай свои инстинкты в режиме True/False.',
+            titleKey: 'q_tf_title', defaultTitle: 'ДЕТЕКТОР ЛЖИ', 
+            descKey: 'q_tf_desc', defaultDesc: 'Прокачай свои инстинкты в режиме True/False.',
             taskKey: 'quest_task_tf', defaultTask: 'Достигнуть {goal} уровня в True/False',
-            stages: [
-                { goal: 25, c: 50, x: 100 },
-                { goal: 75, c: 175, x: 350 },
-                { goal: 150, c: 400, x: 800 },
-                { goal: 250, c: 1000, x: 2000 }
-            ]
+            stages: [ { goal: 25, c: 50, x: 100 }, { goal: 75, c: 175, x: 350 }, { goal: 150, c: 400, x: 800 }, { goal: 250, c: 1000, x: 2000 } ]
         },
         {
             id: 'rush_rounds', icon: '🔥', 
-            title: 'СПИДРАННЕР', desc: 'Пройди уровни на время в режиме Speed Rush.',
+            titleKey: 'q_rush_title', defaultTitle: 'СПИДРАННЕР', 
+            descKey: 'q_rush_desc', defaultDesc: 'Пройди уровни на время в режиме Speed Rush.',
             taskKey: 'quest_task_rush', defaultTask: 'Пройти {goal} раундов в Speed Rush',
-            stages: [
-                { goal: 10, c: 75, x: 150 },
-                { goal: 20, c: 200, x: 400 },
-                { goal: 30, c: 500, x: 1000 }
-            ]
+            stages: [ { goal: 10, c: 75, x: 150 }, { goal: 20, c: 200, x: 400 }, { goal: 30, c: 500, x: 1000 } ]
         },
         {
             id: 'tower_height', icon: '🏢', 
-            title: 'НЕОНОВЫЙ АРХИТЕКТОР', desc: 'Строй самую высокую башню в Neon Stacker.',
+            titleKey: 'q_tower_title', defaultTitle: 'НЕОНОВЫЙ АРХИТЕКТОР', 
+            descKey: 'q_tower_desc', defaultDesc: 'Строй самую высокую башню в Neon Stacker.',
             taskKey: 'quest_task_tower', defaultTask: 'Построить башню из {goal} блоков',
-            stages: [
-                { goal: 10, c: 50, x: 100 },
-                { goal: 25, c: 125, x: 250 },
-                { goal: 50, c: 300, x: 600 },
-                { goal: 75, c: 600, x: 1200 }
-            ]
+            stages: [ { goal: 10, c: 50, x: 100 }, { goal: 25, c: 125, x: 250 }, { goal: 50, c: 300, x: 600 }, { goal: 75, c: 600, x: 1200 } ]
         },
         {
             id: 'ninja_combo', icon: '⚔️', 
-            title: 'МАСТЕР КАТАНЫ', desc: 'Делай безумные комбо в Neon Ninja.',
+            titleKey: 'q_ninja_title', defaultTitle: 'МАСТЕР КАТАНЫ', 
+            descKey: 'q_ninja_desc', defaultDesc: 'Делай безумные комбо в Neon Ninja.',
             taskKey: 'quest_task_ninja', defaultTask: 'Сделать комбо x{goal} в Neon Ninja',
-            stages: [
-                { goal: 20, c: 50, x: 100 },
-                { goal: 40, c: 150, x: 300 },
-                { goal: 60, c: 400, x: 800 }
-            ]
+            stages: [ { goal: 20, c: 50, x: 100 }, { goal: 40, c: 150, x: 300 }, { goal: 60, c: 400, x: 800 } ]
         },
         {
             id: 'sparks_farm', icon: '🧠', 
-            title: 'ГЕНЕРАТОР ИДЕЙ', desc: 'Накопи искры на балансе в Brain Clicker.',
+            titleKey: 'q_sparks_title', defaultTitle: 'ГЕНЕРАТОР ИДЕЙ', 
+            descKey: 'q_sparks_desc', defaultDesc: 'Накопи искры на балансе в Brain Clicker.',
             taskKey: 'quest_task_sparks', defaultTask: 'Накопить {goal} искр в Brain Clicker',
-            stages: [
-                { goal: 10000, c: 50, x: 100 },
-                { goal: 50000, c: 250, x: 500 },
-                { goal: 100000, c: 750, x: 1500 }
-            ]
+            stages: [ { goal: 10000, c: 50, x: 100 }, { goal: 50000, c: 250, x: 500 }, { goal: 100000, c: 750, x: 1500 } ]
         },
         {
             id: 'invite_friends', icon: '🤝', 
-            title: 'АМБАССАДОР', desc: 'Приглашай друзей по своей ссылке.',
+            titleKey: 'q_invite_title', defaultTitle: 'АМБАССАДОР', 
+            descKey: 'q_invite_desc', defaultDesc: 'Приглашай друзей по своей ссылке.',
             taskKey: 'quest_task_invite', defaultTask: 'Пригласить {goal} друзей',
-            stages: [
-                { goal: 1, c: 100, x: 200 },
-                { goal: 5, c: 250, x: 500 },
-                { goal: 10, c: 500, x: 1000 },
-                { goal: 25, c: 1250, x: 2500 }
-            ]
+            stages: [ { goal: 1, c: 100, x: 200 }, { goal: 5, c: 250, x: 500 }, { goal: 10, c: 500, x: 1000 }, { goal: 25, c: 1250, x: 2500 } ]
         }
     ];
 
@@ -329,7 +289,6 @@
             if(!dbData.claimed_quests) dbData.claimed_quests = {};
             if(dbData.coins === undefined || dbData.coins === null) dbData.coins = 0;
 
-            // Локальные данные для квестов (если они не пишутся в БД)
             localData.sparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
             localData.tfLevel = parseInt(localStorage.getItem('wt_tf_lvl')) || 1;
             localData.towerHeight = parseInt(localStorage.getItem('wt_max_tower')) || 0;
@@ -350,7 +309,6 @@
         document.getElementById('ui-exp').innerText = dbData.global_exp;
     }
 
-    // Расчет прогресса (с учетом БД и локальных фоллбэков)
     function getCurrentValueForQuest(id) {
         switch(id) {
             case 'days_online':
@@ -359,7 +317,7 @@
             case 'global_level':
                 return dbData.global_level || 1;
             case 'wp_level':
-                return dbData.wp_level || 1; // Убедись, что колонка существует в БД!
+                return dbData.wp_level || 1;
             case 'farm_buy':
                 return dbData.farm_tier || localData.farmTier || 0;
             case 'pair_level':
@@ -384,10 +342,12 @@
         const container = document.getElementById('quest-container');
         container.innerHTML = '';
 
+        // 🔥 ИСПРАВЛЕНИЕ: Вытягиваем переводы для общих кнопок и слов
         const txtClaim = window.translations?.['quest_btn_claim'] || 'ЗАБРАТЬ';
         const txtProg = window.translations?.['quest_btn_progress'] || 'В ПРОЦЕССЕ';
         const txtDone = window.translations?.['quest_completed'] || 'ВЫПОЛНЕНО';
         const txtPrefix = window.translations?.['quest_task_prefix'] || 'ТЕКУЩЕЕ ЗАДАНИЕ:';
+        const txtProgressLabel = window.translations?.['quest_progress'] || 'ПРОГРЕСС';
 
         QUESTS.forEach(q => {
             let claimedIndex = dbData.claimed_quests[q.id] || 0;
@@ -399,6 +359,10 @@
             
             let percent = Math.min(100, (currentVal / stage.goal) * 100);
             let canClaim = currentVal >= stage.goal && !isFullyCompleted;
+
+            // 🔥 ИСПРАВЛЕНИЕ: Забираем переводы из БД для заголовка и описания
+            let qTitle = window.translations?.[q.titleKey] || q.defaultTitle;
+            let qDesc = window.translations?.[q.descKey] || q.defaultDesc;
 
             let taskTemplate = window.translations?.[q.taskKey] || q.defaultTask;
             let currentTaskText = taskTemplate.replace('{goal}', stage.goal);
@@ -426,9 +390,10 @@
                 
                 btnHtml = `<button class="${btnClass}" id="btn-${q.id}" ${onClick}>${btnText}</button>`;
                 
+                // 🔥 ИСПРАВЛЕНИЕ: txtProgressLabel вместо жестко вшитого "ПРОГРЕСС"
                 progressHtml = `
                     <div class="q-progress-container">
-                        <div class="q-progress-text"><span>ПРОГРЕСС</span> <span>${currentVal} / ${stage.goal}</span></div>
+                        <div class="q-progress-text"><span>${txtProgressLabel}</span> <span>${currentVal} / ${stage.goal}</span></div>
                         <div class="q-progress-bar"><div class="q-progress-fill" style="width: ${percent}%"></div></div>
                     </div>`;
             }
@@ -442,8 +407,8 @@
                     <div class="q-header">
                         <div class="q-icon">${q.icon}</div>
                         <div class="q-info">
-                            <div class="q-title">${q.title}</div>
-                            <div class="q-desc">${q.desc}</div>
+                            <div class="q-title">${qTitle}</div>
+                            <div class="q-desc">${qDesc}</div>
                         </div>
                     </div>
                     
@@ -477,7 +442,6 @@
         btn.innerText = '⏳...';
         btn.style.pointerEvents = 'none';
 
-        // Отправляем клиентский прогресс для квестов без БД
         let clientProgress = 0;
         if (questId === 'sparks_farm') clientProgress = localData.sparks;
         if (questId === 'tf_level') clientProgress = localData.tfLevel;
