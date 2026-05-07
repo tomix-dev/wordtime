@@ -250,7 +250,11 @@
         if (score >= 3) {
             try { await sb.from('live_feed').insert([{ username: user, event_type: 'tower', event_val: score.toString() }]); } catch (e) {}
         }
-
+// Сохраняем макс. высоту башни
+let bestTower = parseInt(localStorage.getItem('wt_max_tower')) || 0;
+if (currentScore > bestTower) { // currentScore — это сколько этажей построили
+    localStorage.setItem('wt_max_tower', currentScore);
+}
         if (!dbData || earnedExp === 0) return;
 
         // 🏆 ВНЕДРЕНИЕ ОПЫТА В БАТЛ ПАСС
