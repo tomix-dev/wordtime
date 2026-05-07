@@ -350,7 +350,7 @@
         }, 1500);
     }
 
-    // 🛡️ ПОКУПКА ФЕРМ ЧЕРЕЗ СЕРВЕР
+  // 🛡️ ПОКУПКА ФЕРМ ЧЕРЕЗ СЕРВЕР
     async function buyFarm(farmId) {
         if(isProcessing) return;
         isProcessing = true;
@@ -369,6 +369,13 @@
             if (data.error) {
                 alert("Ошибка: " + data.error);
             } else {
+                // 🔥 ВНЕДРЕНИЕ МАГНАТА (ДЛЯ КВЕСТОВ)
+                const boughtTier = parseInt(farmId.replace('v', '')); 
+                let currentMaxTier = parseInt(localStorage.getItem('wt_farm_tier')) || 0;
+                if (boughtTier > currentMaxTier) {
+                    localStorage.setItem('wt_farm_tier', boughtTier);
+                }
+
                 // Если при покупке сервер автособрал искры, плюсуем их
                 if (data.claimedSparks > 0) {
                     let currentSparks = parseInt(localStorage.getItem('wt_sparks')) || 0;
