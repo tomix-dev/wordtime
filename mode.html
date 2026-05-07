@@ -16,6 +16,7 @@
             --glass-border: rgba(212, 175, 55, 0.2);
             --green: #00ff88; 
             --red: #ff4b4b;
+            --blue: #00bfff;
             
             /* Новые цвета для карточек */
             --surface: #0a0a0a;
@@ -86,7 +87,7 @@
         .mode-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 2px; }
         .mode-desc { font-size: 10px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
         
-        /* Стильный бейдж */
+        /* Стильные бейджи */
         .badge { 
             position: absolute; top: 0; right: 0; 
             background: linear-gradient(45deg, var(--gold), var(--gold-light)); color: #000; 
@@ -95,6 +96,8 @@
             box-shadow: -2px 2px 15px rgba(212,175,55,0.3); 
         }
         .badge.new { background: linear-gradient(45deg, var(--green), #00cc66); box-shadow: -2px 2px 15px rgba(0,255,136,0.2); }
+        /* Новый эпический бейдж для Ниндзи */
+        .badge.epic { background: linear-gradient(45deg, var(--blue), var(--green)); color: #000; box-shadow: -2px 2px 15px rgba(0, 191, 255, 0.4); }
 
         /* --- ЗАБЛОКИРОВАННАЯ КАРТОЧКА (ЭФФЕКТ СТЕКЛА) --- */
         .mode-card.locked { 
@@ -168,7 +171,7 @@
     const user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // Конфиг режимов игры
+    // Конфиг режимов игры (Neon Ninja добавлен!)
     const MODES = [
         {
             id: 'find', url: 'find.html', reqLvl: 1,
@@ -189,16 +192,22 @@
             badge: null
         },
         {
-            id: 'brain', url: 'brain.html', reqLvl: 20,
+            id: 'brain', url: 'brain.html', reqLvl: 15,
             icon: '🧠', titleKey: 'mode_brain_title', descKey: 'mode_brain_desc',
             defaultTitle: 'BRAIN CLICKER', defaultDesc: 'Кликай и сражайся с боссами',
             badge: null
         },
         {
-            id: 'tower', url: 'tower.html', reqLvl: 30,
+            id: 'tower', url: 'tower.html', reqLvl: 20,
             icon: '🏢', titleKey: 'mode_tower_title', descKey: 'mode_tower_desc',
             defaultTitle: 'NEON STACKER', defaultDesc: 'Строй башню из слов и лови баланс',
-            badge: 'NEW'
+            badge: null
+        },
+        {
+            id: 'ninja', url: 'ninja.html', reqLvl: 25,
+            icon: '⚔️', titleKey: 'mode_ninja_title', descKey: 'mode_ninja_desc',
+            defaultTitle: 'NEON NINJA', defaultDesc: 'Разрезай правильные переводы на лету.',
+            badge: 'EPIC' // Уникальный бейдж
         }
     ];
 
@@ -252,6 +261,8 @@
             let badgeHtml = '';
             if (mode.badge === 'NEW') {
                 badgeHtml = `<span class="badge new" data-i18n="badge_new">${window.translations?.['badge_new'] || 'NEW'}</span>`;
+            } else if (mode.badge === 'EPIC') {
+                badgeHtml = `<span class="badge epic">NEW ⚡ x2 EXP</span>`;
             } else if (mode.badge) {
                 badgeHtml = `<span class="badge">${mode.badge}</span>`;
             }
