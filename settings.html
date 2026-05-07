@@ -119,7 +119,6 @@
 
     <div class="settings-container">
         
-        <!-- РЕФЕРАЛЬНАЯ СИСТЕМА -->
         <div class="ref-card">
             <div class="ref-header">
                 <span class="ref-title" data-i18n="settings_ref_label">ПРИГЛАСИ ДРУГА</span>
@@ -144,7 +143,6 @@
             </div>
         </div>
 
-        <!-- ПРОМОКОДЫ -->
         <div class="settings-group">
             <span class="group-label" data-i18n="settings_promo_label">ПРОМОКОД</span>
             <div class="input-wrapper">
@@ -155,19 +153,17 @@
             </div>
         </div>
 
-        <!-- СМЕНА ИМЕНИ -->
         <div class="settings-group">
             <span class="group-label" data-i18n="settings_name_label">ИГРОВОЕ ИМЯ</span>
             <div class="input-wrapper">
                 <div class="input-row">
                     <input type="text" id="display-name-input" class="styled-input" placeholder="Имя..." minlength="4" maxlength="16" pattern="[a-zA-Z0-9]+">
-                    <button class="save-btn" id="save-name-btn" onclick="saveName()" data-i18n="settings_save_btn">СОХРАНИТЬ</button>
+                    <button class="save-btn" id="save-name-btn" onclick="saveName()" data-i18n="settings_save_btn_paid">СМЕНИТЬ (50 ⏳)</button>
                 </div>
-                <div class="input-hint" data-i18n="settings_name_hint">От 4 до 16 символов (A-Z, 0-9). Изменить можно раз в 24 часа.</div>
+                <div class="input-hint" data-i18n="settings_name_hint_paid">Цена: 50 ⏳. От 4 до 16 символов (A-Z, 0-9). Изменить можно раз в 24 часа.</div>
             </div>
         </div>
 
-        <!-- КОМПАКТНЫЙ ЯЗЫК -->
         <div class="settings-group">
             <span class="group-label" data-i18n="settings_lang_label">ЯЗЫК ИНТЕРФЕЙСА</span>
             <div class="lang-toggle-wrapper">
@@ -176,7 +172,6 @@
             </div>
         </div>
 
-        <!-- ВЫХОД -->
         <button class="logout-btn" id="logout-btn" onclick="logout()" data-i18n="logout_btn">ВЫЙТИ ИЗ АККАУНТА</button>
     </div>
 </main>
@@ -251,7 +246,6 @@
         }, 2000);
     }
 
-    // --- ОБНОВЛЕННАЯ СЕРВЕРНАЯ ЛОГИКА ПРОМОКОДОВ ---
     async function applyPromo() {
         const inputEl = document.getElementById('promo-input');
         const btnEl = document.getElementById('promo-btn');
@@ -281,7 +275,6 @@
                 throw new Error(errMsg);
             }
 
-            // Обрабатываем Искры локально, так как сервер их только подтверждает
             if (data.reward_type === 'sparks') {
                 let s = parseInt(localStorage.getItem('wt_sparks')) || 0;
                 localStorage.setItem('wt_sparks', s + data.reward_amount);
@@ -305,7 +298,7 @@
         }
     }
 
-    // --- ЛОГИКА СМЕНЫ ИМЕНИ ---
+    // --- ОБНОВЛЕННАЯ ЛОГИКА СМЕНЫ ИМЕНИ (СНЯТИЕ COINS) ---
     async function saveName() {
         const inputEl = document.getElementById('display-name-input');
         const btnEl = document.getElementById('save-name-btn');
@@ -318,9 +311,11 @@
         const msgHours = window.translations ? (window.translations['msg_hours_short'] || 'Ч.') : 'Ч.';
         const msgRegex = window.translations ? (window.translations['msg_only_eng'] || 'ТОЛЬКО A-Z (4-16)') : 'ТОЛЬКО A-Z (4-16)';
         const msgTaken = window.translations ? (window.translations['msg_name_taken'] || 'ИМЯ ЗАНЯТО') : 'ИМЯ ЗАНЯТО';
+        const msgNoCoins = window.translations ? (window.translations['msg_no_coins'] || 'МАЛО ⏳') : 'МАЛО ⏳'; // Перевод для ошибки
         const msgErr = window.translations ? (window.translations['msg_error'] || 'ОШИБКА') : 'ОШИБКА';
         const msgOk = window.translations ? (window.translations['msg_ok'] || 'ОК!') : 'ОК!';
 
+        // 1. Проверка кулдауна
         const lastChange = localStorage.getItem('wt_last_name_change');
         if (lastChange) {
             const now = new Date().getTime();
@@ -334,6 +329,7 @@
             }
         }
 
+        // 2. Валидация формата
         const nameRegex = /^[a-zA-Z0-9]{4,16}$/;
         if (!nameRegex.test(newName)) {
             if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
@@ -346,12 +342,34 @@
         btnEl.disabled = true;
 
         try {
-            const { error } = await sb.from('user_progress').update({ username: newName }).eq('username', user);
-            if (error) {
-                if (error.code === '23505') throw new Error('TAKEN');
-                throw error;
+            // 3. Проверяем баланс напрямую из БД
+            const { data: userData, error: fetchError } = await sb
+                .from('user_progress')
+                .select('coins')
+                .eq('username', user)
+                .single();
+                
+            if (fetchError) throw fetchError;
+
+            const currentCoins = userData.coins || 0;
+            if (currentCoins < 50) {
+                if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+                showButtonError(btnEl, msgNoCoins, originalText);
+                return;
+            }
+
+            // 4. Обновляем имя И снимаем 50 коинов одновременно
+            const { error: updateError } = await sb.from('user_progress').update({ 
+                username: newName,
+                coins: currentCoins - 50 
+            }).eq('username', user);
+            
+            if (updateError) {
+                if (updateError.code === '23505') throw new Error('TAKEN');
+                throw updateError;
             }
             
+            // 5. Локальное обновление
             localStorage.setItem('wt_user', newName);
             localStorage.setItem('wt_last_name_change', new Date().getTime().toString());
             user = newName;
