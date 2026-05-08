@@ -56,3 +56,13 @@ function setLanguage(lang) {
 }
 
 document.addEventListener('DOMContentLoaded', initTranslations);
+// --- ГЛОБАЛЬНАЯ ОЗВУЧКА СЛОВ ---
+window.speakWord = function(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // сбрасываем прошлую озвучку, если игрок быстро кликает
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US'; // Американское произношение (можно 'en-GB' для британского)
+        utterance.rate = 0.9;     // Чуть замедляем для понятности
+        window.speechSynthesis.speak(utterance);
+    }
+};
