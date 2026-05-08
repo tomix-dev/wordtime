@@ -18,10 +18,13 @@
             --blue: #00bfff;
             --purple: #b026ff;
             --red: #ff4b4b;
+            --event-red: #FF2A55; /* Цвет для ивента */
         }
 
         html { overflow-y: scroll; scroll-behavior: smooth; height: 100%; background: var(--bg); }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        .tabular { font-variant-numeric: tabular-nums; }
 
         body { 
             background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
@@ -94,7 +97,32 @@
         .leader-lvl { background: linear-gradient(45deg, rgba(212, 175, 55, 0.2), transparent); color: var(--gold-light); padding: 5px 12px; border-radius: 12px; font-weight: 900; font-size: 11px; border: 1px solid var(--gold); box-shadow: inset 0 0 10px rgba(212,175,55,0.1); }
         .pet-mini-icon { font-size: 16px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
 
-        /* --- КНОПКА WORD PASS (СТАТИЧНАЯ, НО С БЛИКОМ) --- */
+        /* --- БАННЕР ИВЕНТА "ВТОРОЙ ПУЛЬС" --- */
+        .event-banner-link {
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(135deg, rgba(40, 5, 10, 0.9), rgba(10, 2, 5, 0.95));
+            border: 1px solid var(--event-red); border-radius: 24px; padding: 22px;
+            margin-bottom: 15px; cursor: pointer; transition: 0.3s;
+            position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 42, 85, 0.15);
+        }
+        .event-banner-link::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255, 42, 85, 0.15) 0%, transparent 60%);
+            animation: pulseEventBanner 3s infinite alternate; z-index: 0; pointer-events: none;
+        }
+        @keyframes pulseEventBanner { 0% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
+        .event-banner-link:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(255, 42, 85, 0.3); }
+
+        .event-link-left { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
+        .event-link-icon { font-size: 36px; filter: drop-shadow(0 0 15px var(--event-red)); }
+        
+        .event-link-title { font-size: 18px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 6px; text-shadow: 0 0 15px rgba(255, 42, 85, 0.6); }
+        .event-link-desc { font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+        .event-link-desc b { color: var(--event-red); font-size: 12px; background: rgba(255, 42, 85, 0.1); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(255, 42, 85, 0.3); text-shadow: 0 0 10px rgba(255, 42, 85, 0.5); }
+        .event-link-arrow { font-size: 20px; color: var(--event-red); font-weight: 900; position: relative; z-index: 1; text-shadow: 0 0 15px var(--event-red); }
+
+        /* --- КНОПКА WORD PASS --- */
         .wp-banner-link {
             display: flex; justify-content: space-between; align-items: center;
             background: linear-gradient(135deg, rgba(40, 30, 0, 0.9), rgba(10, 10, 10, 0.95));
@@ -103,8 +131,6 @@
             position: relative; overflow: hidden;
             box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3), inset 0 0 15px rgba(212, 175, 55, 0.1);
         }
-
-        /* Эффект пролетающего глянцевого блика */
         .wp-banner-link::after {
             content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
@@ -114,9 +140,8 @@
         @keyframes wpShimmer {
             0% { left: -100%; }
             20% { left: 200%; }
-            100% { left: 200%; } /* Пауза между бликами */
+            100% { left: 200%; } 
         }
-
         .wp-banner-link:active { transform: scale(0.95); box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4); }
         
         .wp-link-left { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
@@ -155,7 +180,6 @@
         .feed-val { color: var(--gold-light); font-weight: 900; text-shadow: 0 0 5px rgba(212,175,55,0.4); }
         .feed-time { font-size: 9px; color: #666; font-weight: 900; flex-shrink: 0; margin-left: 10px; }
 
-        /* Специфичные цвета иконок с красивым неоном */
         .icon-lvl { background: rgba(212, 175, 55, 0.15); border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
         .icon-pet { background: rgba(176, 38, 255, 0.15); border-color: var(--purple); box-shadow: 0 0 15px rgba(176, 38, 255, 0.2); }
         .icon-rush { background: rgba(255, 75, 75, 0.15); border-color: var(--red); box-shadow: 0 0 15px rgba(255, 75, 75, 0.2); }
@@ -199,7 +223,6 @@
         <h1 class="brand-logo">WordTime</h1>
     </div>
 
-    <!-- ГЛОБАЛЬНАЯ СТАТИСТИКА -->
     <div class="stats-grid">
         <div class="stat-card">
             <span class="stat-label" data-i18n="info_users">ИГРОКОВ</span>
@@ -211,7 +234,6 @@
         </div>
     </div>
 
-    <!-- ТОП ИГРОКОВ -->
     <div class="section-header">
         <div class="line"></div>
         <h2 class="section-title" data-i18n="top_players_title">ЗАЛ СЛАВЫ</h2>
@@ -219,10 +241,22 @@
     </div>
 
     <div class="leaderboard" id="leaderboard-list">
-        <!-- Список лидеров -->
+        </div>
+    
+    <div class="event-banner-link" onclick="fadeNavigate('event.html')">
+        <div class="event-link-left">
+            <div class="event-link-icon">🩸</div>
+            <div>
+                <div class="event-link-title" data-i18n="ev_intro_title">ВТОРОЙ ПУЛЬС</div>
+                <div class="event-link-desc">
+                    <span data-i18n="ev_timer_prefix">ДО КОНЦА:</span>
+                    <b id="main-event-timer" class="tabular">00:00:00</b>
+                </div>
+            </div>
+        </div>
+        <div class="event-link-arrow">▶</div>
     </div>
     
-    <!-- БАННЕР WORD PASS -->
     <div class="wp-banner-link" onclick="fadeNavigate('wordpass.html')">
         <div class="wp-link-left">
             <div class="wp-link-icon">🏆</div>
@@ -234,7 +268,6 @@
         <div class="wp-link-arrow">▶</div>
     </div>
     
-    <!-- ЛЕНТА СОБЫТИЙ -->
     <div class="section-header">
         <div class="line"></div>
         <h2 class="section-title" data-i18n="live_feed_title">ЛЕНТА СОБЫТИЙ</h2>
@@ -242,7 +275,6 @@
     </div>
     
     <div class="live-feed-container" id="live-feed-list">
-        <!-- События загружаются сюда -->
         <div style="text-align: center; color: #888; font-size: 11px; font-weight: 900; padding: 20px; letter-spacing: 2px;">ЗАГРУЗКА...</div>
     </div>
 </main>
@@ -274,7 +306,6 @@
         return '👑';
     }
 
-    // Динамический перевод времени из базы
     function timeAgo(dateString) {
         const date = new Date(dateString);
         const now = new Date();
@@ -291,11 +322,10 @@
         return `${Math.floor(diffInSeconds / 86400)} ${tDays}`;
     }
 
-    // Динамический рендер событий из базы
     function renderFeedItem(username, type, val, createdAt) {
         let iconHtml = '';
         let textHtml = '';
-        let userDiv = `<div class="feed-user">${username}</div>`; // По умолчанию никнейм показываем
+        let userDiv = `<div class="feed-user">${username}</div>`; 
 
         if (type === 'lvl_up') {
             iconHtml = `<div class="feed-icon icon-lvl">⭐</div>`;
@@ -319,13 +349,11 @@
             iconHtml = `<div class="feed-icon icon-game">🏢</div>`;
             textHtml = (window.translations?.['feed_tower'] || 'Построил башню в <span class="feed-val">{val}</span> блоков!').replace('{val}', val);
         } else if (type === 'ninja_combo') {
-        iconHtml = `<div class="feed-icon icon-game">⚔️</div>`;
-        textHtml = (window.translations?.['feed_ninja_combo'] || 'Оформил комбо <span class="feed-val">x{val}</span> в Neon Ninja!').replace('{val}', val);
+            iconHtml = `<div class="feed-icon icon-game">⚔️</div>`;
+            textHtml = (window.translations?.['feed_ninja_combo'] || 'Оформил комбо <span class="feed-val">x{val}</span> в Neon Ninja!').replace('{val}', val);
         } else if (type === 'echo_lvl') {
             iconHtml = `<div class="feed-icon" style="background: rgba(0, 255, 136, 0.15); border-color: var(--green); box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);">🔊</div>`;
             textHtml = (window.translations?.['feed_echo_lvl'] || 'Дошел до <span class="feed-val">{val}</span> уровня в Neon Echo!').replace('{val}', val);
-            
-        // --- НОВЫЕ СОБЫТИЯ WORD PASS ---
         } else if (type === 'live_wp_lvl') {
             iconHtml = `<div class="feed-icon" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.3); text-shadow: 0 0 10px var(--gold);">🏆</div>`;
             let rawText = window.translations?.['live_wp_lvl'] || '🎯 <b>{user}</b> достиг <b>{lvl} уровня</b> Word Pass!';
@@ -420,7 +448,6 @@
                     feedList.innerHTML = `<div style="text-align: center; color: #888; font-size: 11px; font-weight: 900; padding: 20px;">${emptyTxt}</div>`;
                 } else {
                     feedReq.data.forEach(ev => {
-                        // Умный поиск нужных колонок, чтобы ничего не ломалось
                         let eType = ev.event_type || ev.action;
                         let eVal = ev.event_val || ev.value;
                         feedList.innerHTML += renderFeedItem(ev.username, eType, eVal, ev.created_at);
@@ -436,6 +463,27 @@
             document.getElementById('main-hub').classList.add('ready');
         }
     }
+
+    // --- ТАЙМЕР ИВЕНТА ---
+    function updateMainEventTimer() {
+        const eventEnd = new Date('2026-05-15T21:08:00Z').getTime();
+        const now = Date.now();
+        const diff = eventEnd - now;
+        
+        const timerEl = document.getElementById('main-event-timer');
+        if (!timerEl) return;
+        
+        if(diff <= 0) { timerEl.innerText = "ЗАВЕРШЕНО"; return; }
+        
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+        const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+        const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+        
+        timerEl.innerText = `${d}Д ${h}:${m}:${s}`;
+    }
+    setInterval(updateMainEventTimer, 1000);
+    updateMainEventTimer();
 
     document.addEventListener('translationsReady', loadHubData);
     if (window.translations && Object.keys(window.translations).length > 0) {
