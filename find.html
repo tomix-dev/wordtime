@@ -223,6 +223,19 @@
     let isBoostActive = false;
     let boostTimerInterval = null;
 
+    // --- ГЛОБАЛЬНАЯ ОЗВУЧКА ---
+    // Эту функцию в идеале перенести в translator.js, но пока она здесь, 
+    // чтобы всё работало сразу внутри этого файла.
+    window.speakWord = function(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.9;     
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
     function fadeNavigate(url) {
         if (window.location.href.includes(url)) return;
         const main = document.querySelector('main');
@@ -317,7 +330,13 @@
     function createCard(text, id, type) {
         const d = document.createElement('div');
         d.className = 'card'; d.innerText = text; d.dataset.id = id;
-        d.onclick = () => selectCard(d, type);
+        d.onclick = () => {
+            // 🔥 Вызываем озвучку только если кликнули на английскую карточку
+            if (type === 'eng') {
+                window.speakWord(text);
+            }
+            selectCard(d, type);
+        };
         return d;
     }
 
