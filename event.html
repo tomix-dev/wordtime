@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WordTime — Second Pulse</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translator.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Хай-тек рубиновый стиль */
+            --bg: #050203;
+            --red-main: #FF2A55;   /* Яркий, дорогой малиново-красный */
+            --red-dark: #99002B;   /* Глубокий для теней */
+            --red-glow: rgba(255, 42, 85, 0.3);
+            --surface: rgba(25, 10, 15, 0.65);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(255, 42, 85, 0.4);
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --gold: #D4AF37;
+        }
+
+        html, body { overflow: hidden; height: 100%; background: var(--bg); color: var(--text-main); font-family: 'Montserrat', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        .tabular { font-variant-numeric: tabular-nums; }
+
+        /* Элегантный фон */
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(ellipse at top, rgba(255, 42, 85, 0.15) 0%, transparent 60%), var(--bg);
+        }
+        .bg-pattern::after {
+            content: ''; position: absolute; inset: 0;
+            background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+
+        main { width: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; height: 100dvh; padding-bottom: 110px; }
+
+        /* --- ШАПКА --- */
+        .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; margin-top: 5px; }
+        .back-btn { 
+            display: inline-flex; align-items: center; gap: 8px; background: var(--surface); 
+            border: 1px solid var(--border); padding: 10px 16px; border-radius: 16px; 
+            color: #d1d1d6; font-size: 10px; font-weight: 800; text-transform: uppercase; 
+            backdrop-filter: blur(15px); transition: 0.2s; text-decoration: none; letter-spacing: 1px;
+        }
+        .back-btn:active { transform: scale(0.95); background: rgba(255, 42, 85, 0.15); color: #fff; border-color: var(--border-active); }
+        .timer-badge { background: rgba(255, 42, 85, 0.1); border: 1px solid var(--border-active); padding: 8px 14px; border-radius: 14px; font-size: 11px; font-weight: 900; color: var(--red-main); box-shadow: 0 0 20px rgba(255, 42, 85, 0.2); letter-spacing: 1px; }
+
+        /* --- БАЛАНС И HUD --- */
+        .balance-container { text-align: center; margin-top: 10px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+        .balance-label { font-size: 10px; color: var(--red-main); font-weight: 900; letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 15px var(--red-glow); margin-bottom: 5px; }
+        .balance-val { font-size: 52px; font-weight: 900; color: #fff; text-shadow: 0 10px 30px rgba(255, 42, 85, 0.3); line-height: 1; letter-spacing: 2px; }
+        
+        .stats-hud {
+            display: inline-flex; gap: 20px; background: var(--surface); border: 1px solid var(--border);
+            padding: 12px 24px; border-radius: 20px; backdrop-filter: blur(20px); margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .stat-item { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+        .stat-item b { color: #fff; font-size: 13px; text-shadow: 0 0 10px rgba(255,255,255,0.3); display: inline-block; width: 2ch; text-align: left; }
+        .stat-item .icon { font-size: 14px; filter: drop-shadow(0 0 5px var(--red-main)); }
+
+        /* --- КОНТЕЙНЕР ВКЛАДОК --- */
+        .tab-content { flex: 1; position: relative; overflow: hidden; margin-top: 20px; }
+        .view { position: absolute; inset: 0; padding: 0 20px 180px; overflow-y: auto; opacity: 0; pointer-events: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: scale(0.97) translateY(10px); }
+        .view.active { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); }
+        .view::-webkit-scrollbar { display: none; }
+
+        /* --- ВКЛАДКА 1: КЛИКЕР --- */
+        .clicker-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .heart-container { position: relative; width: 240px; height: 240px; display: flex; align-items: center; justify-content: center; margin-bottom: 40px; }
+        .heart-glow { position: absolute; inset: 0; background: radial-gradient(circle, var(--red-glow) 0%, transparent 65%); border-radius: 50%; animation: pulseGlow 2s infinite alternate; z-index: 1; filter: blur(20px); }
+        @keyframes pulseGlow { 0% { opacity: 0.5; transform: scale(0.85); } 100% { opacity: 1; transform: scale(1.15); } }
+        
+        .heart-btn {
+            width: 140px; height: 140px; background: linear-gradient(135deg, #ff4d79, var(--red-main));
+            position: relative; z-index: 2; box-shadow: inset -5px -5px 20px rgba(0,0,0,0.4), inset 5px 5px 20px rgba(255,255,255,0.4), 0 15px 40px rgba(255, 42, 85, 0.4);
+            transition: transform 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+            clip-path: path('M 70 140 C 70 140 0 90 0 40 C 0 15 25 0 50 0 C 65 0 70 15 70 15 C 70 15 75 0 90 0 C 115 0 140 15 140 40 C 140 90 70 140 70 140 Z');
+        }
+        
+        .energy-wrapper { width: 100%; max-width: 280px; background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; border-radius: 20px; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .energy-text { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 900; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase; }
+        .energy-text .en-val { color: #fff; font-size: 12px; }
+        .energy-text .en-val span:first-child { color: var(--red-main); }
+        .energy-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+        .energy-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--red-dark), var(--red-main)); box-shadow: 0 0 15px var(--red-glow); transition: width 0.3s ease; }
+
+        .floating-text { position: absolute; color: #fff; font-size: 26px; font-weight: 900; text-shadow: 0 5px 20px var(--red-main); pointer-events: none; animation: floatUpText 0.8s ease-out forwards; z-index: 10; }
+        @keyframes floatUpText { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-70px) scale(1.1); } }
+
+        /* --- ВКЛАДКА 2: УЛУЧШЕНИЯ --- */
+        .upg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 18px 20px; margin-bottom: 14px; display: flex; align-items: center; gap: 18px; backdrop-filter: blur(20px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: 0.2s; }
+        .upg-card:active { transform: scale(0.98); border-color: var(--border-active); }
+        .upg-icon { font-size: 26px; width: 54px; height: 54px; background: linear-gradient(135deg, rgba(255, 42, 85, 0.15), rgba(0,0,0,0.5)); border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); box-shadow: inset 0 0 20px rgba(255, 42, 85, 0.05); flex-shrink: 0; }
+        .upg-info { flex: 1; }
+        .upg-title { font-size: 13px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; }
+        .upg-lvl { font-size: 9px; color: var(--red-main); font-weight: 900; margin-bottom: 6px; letter-spacing: 2px; }
+        .upg-desc { font-size: 9px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
+        .upg-btn { background: linear-gradient(45deg, var(--red-main), #ff4d79); border: none; padding: 12px 20px; border-radius: 14px; color: #fff; font-weight: 900; font-size: 11px; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 42, 85, 0.3); transition: 0.2s; white-space: nowrap; }
+        .upg-btn:active { transform: scale(0.95); box-shadow: 0 4px 10px rgba(255, 42, 85, 0.4); }
+        .upg-btn.max { background: rgba(255,255,255,0.05); color: #666; box-shadow: none; pointer-events: none; border: 1px solid rgba(255,255,255,0.05); }
+
+        /* Стильный блок автофарма */
+        .flask-container { background: linear-gradient(180deg, var(--surface), rgba(5,2,3,0.9)); border: 1px solid var(--border-active); border-radius: 24px; padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 40px rgba(255, 42, 85, 0.05); backdrop-filter: blur(20px); }
+        .flask-left { display: flex; flex-direction: column; align-items: flex-start; text-align: left; flex: 1; }
+        .flask-title { font-size: 12px; font-weight: 900; color: var(--red-main); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 8px; text-shadow: 0 0 10px var(--red-glow); }
+        .flask-stats { font-size: 22px; font-weight: 900; margin-bottom: 16px; display: flex; align-items: baseline; gap: 4px; color: #fff; }
+        .flask-stats span { color: var(--text-muted); font-size: 11px; font-weight: 700; }
+        .flask-btn { background: #fff; border: none; padding: 12px 24px; border-radius: 14px; color: #000; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 8px 20px rgba(255,255,255,0.2); transition: 0.2s; width: 100%; }
+        .flask-btn:active { transform: scale(0.95); background: #f0f0f0; }
+        
+        .flask-visual { width: 50px; height: 75px; border: 2px solid rgba(255,255,255,0.2); border-top: none; border-radius: 0 0 25px 25px; position: relative; overflow: hidden; background: rgba(0,0,0,0.5); flex-shrink: 0; box-shadow: inset 0 5px 15px rgba(0,0,0,0.8); }
+        .flask-visual::before { content:''; position:absolute; top:-6px; left:-4px; right:-4px; height:6px; border: 2px solid rgba(255,255,255,0.2); border-radius: 3px; }
+        .flask-liquid { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, var(--red-dark), var(--red-main)); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 -5px 20px var(--red-glow); }
+
+        /* --- ВКЛАДКА 3: НАГРАДЫ --- */
+        .rewards-list { display: flex; flex-direction: column; gap: 16px; position: relative; padding-bottom: 20px; }
+        .rewards-list::before { content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.08); z-index: 0; }
+        
+        .reward-item { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; opacity: 0.5; transition: 0.3s; }
+        .reward-item.unlocked { opacity: 1; }
+        .reward-item.current { opacity: 1; transform: translateX(8px); }
+        
+        .rw-node { width: 50px; height: 50px; background: #050203; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: 0.3s; z-index: 2; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
+        .reward-item.unlocked .rw-node { border-color: var(--red-main); background: rgba(255, 42, 85, 0.15); box-shadow: 0 0 20px var(--red-glow); }
+        .reward-item.current .rw-node { border-color: #fff; background: var(--red-main); box-shadow: 0 0 25px rgba(255, 42, 85, 0.5); }
+        
+        .rw-content { background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; border-radius: 20px; flex: 1; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(15px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .reward-item.current .rw-content { border-color: var(--border-active); background: rgba(255, 42, 85, 0.08); }
+        
+        .rw-info h4 { font-size: 12px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
+        .rw-info p { font-size: 9px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        .rw-price { font-size: 11px; font-weight: 900; color: var(--red-main); background: rgba(255, 42, 85, 0.1); padding: 8px 14px; border-radius: 12px; border: 1px solid var(--border); }
+        .reward-item.unlocked .rw-price { color: #00ff88; background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.2); } 
+        .rw-btn { background: #fff; border: none; padding: 10px 16px; border-radius: 12px; color: #000; font-weight: 900; font-size: 10px; cursor: pointer; box-shadow: 0 5px 15px rgba(255,255,255,0.2); text-transform: uppercase; transition: 0.2s; letter-spacing: 1px; }
+        .rw-btn:active { transform: scale(0.95); }
+
+        /* --- ВНУТРЕННЯЯ НАВИГАЦИЯ --- */
+        .event-nav { 
+            position: fixed; bottom: 125px; left: 50%; transform: translateX(-50%);
+            display: flex; justify-content: center; gap: 8px; z-index: 100;
+            background: rgba(15, 5, 8, 0.85); border: 1px solid rgba(255,255,255,0.08); padding: 8px;
+            border-radius: 24px; backdrop-filter: blur(25px); width: 90%; max-width: 380px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+        }
+        .nav-btn {
+            flex: 1; background: transparent; border: none; padding: 14px 0;
+            border-radius: 16px; color: var(--text-muted); font-size: 10px; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 1.5px; transition: 0.3s; cursor: pointer;
+        }
+        .nav-btn.active { background: rgba(255, 42, 85, 0.15); color: #fff; box-shadow: inset 0 0 15px rgba(255, 42, 85, 0.15); border: 1px solid var(--border-active); }
+
+        /* --- ТАБ-БАР ОСНОВНОЙ --- */
+        .tab-bar-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 25px; z-index: 1000; pointer-events: none; }
+        .tab-bar { pointer-events: auto; width: 95%; max-width: 400px; height: 65px; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 22px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.9); }
+        .tab-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #555; transition: 0.3s; flex: 1; position: relative; }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; filter: grayscale(100%) opacity(0.6); transform: scale(0.9); z-index: 2;}
+        .tab-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; z-index: 2;}
+        .tab-item.active { color: var(--gold); transform: translateY(-4px); }
+        .tab-item.active .tab-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 4px 6px rgba(212, 175, 55, 0.5)); transform: scale(1.15); }
+        .tab-item.active .tab-label { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+
+        /* --- ОВЕРЛЕИ --- */
+        .overlay { position: fixed; inset: 0; background: rgba(5,2,3,0.95); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(20px); }
+        .overlay.show { opacity: 1; pointer-events: auto; }
+        
+        .modal-card { background: rgba(20,8,12,0.9); border: 1px solid var(--border-active); padding: 40px 30px; border-radius: 30px; text-align: center; width: 85%; max-width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(255, 42, 85, 0.08); transform: translateY(20px); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .overlay.show .modal-card { transform: translateY(0); }
+        
+        .mod-icon { font-size: 60px; filter: drop-shadow(0 15px 20px rgba(0,0,0,0.6)); margin-bottom: 25px; }
+        .mod-title { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase; }
+        .mod-text { font-size: 12px; color: #aaa; font-weight: 600; line-height: 1.6; margin-bottom: 35px; padding: 0 10px; }
+        .mod-text span { color: var(--red-main); font-weight: 900; letter-spacing: 1px; }
+        
+        .mod-btn { background: #fff; color: #000; border: none; padding: 18px 30px; border-radius: 16px; font-weight: 900; font-size: 12px; letter-spacing: 2px; box-shadow: 0 10px 25px rgba(255,255,255,0.15); cursor: pointer; transition: 0.2s; text-transform: uppercase; width: 100%; }
+        .mod-btn:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
+
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<div class="overlay" id="intro-screen">
+    <div class="modal-card">
+        <div class="mod-icon">🩸</div>
+        <div class="mod-title" data-i18n="ev_intro_title">ВТОРОЙ ПУЛЬС</div>
+        <div class="mod-text" data-i18n="ev_intro_text">Участвуй в глобальном ивенте и получи эксклюзивную <span>ФЕРМУ V2</span>, коины и кейсы!<br><br>Добывай пульс, улучшай энергоблок и забирай награды.</div>
+        <button class="mod-btn" onclick="closeIntro()" data-i18n="btn_lets_go">ПОГНАЛИ</button>
+    </div>
+</div>
+
+<div class="overlay" id="completed-screen">
+    <div class="modal-card">
+        <div class="mod-icon">👑</div>
+        <div class="mod-title" data-i18n="ev_comp_title">ИВЕНТ ПРОЙДЕН</div>
+        <div class="mod-text" data-i18n="ev_comp_text">Ты забрал все награды и доказал, что достоин звания Свободного Человека. Возвращайся к основным режимам!</div>
+        <button class="mod-btn" onclick="window.location.href='main.html'" data-i18n="btn_to_main">НА ГЛАВНУЮ</button>
+    </div>
+</div>
+
+<main id="event-main">
+    <div class="header">
+        <a href="main.html" class="back-btn">◀ <span data-i18n="btn_home">НА ГЛАВНУЮ</span></a>
+        <div class="timer-badge tabular" id="event-timer">00:00:00</div>
+    </div>
+
+    <div class="balance-container">
+        <div class="balance-label" data-i18n="ev_pulse_balance">БАЛАНС ПУЛЬСА</div>
+        <div class="balance-val tabular" id="ui-balance">0</div>
+        
+        <div class="stats-hud tabular">
+            <div class="stat-item"><span class="icon">⚡</span> <span data-i18n="ev_stat_power">СИЛА:</span> <b id="ui-hud-click">1</b></div>
+            <div class="stat-item"><span class="icon">🧪</span> <span data-i18n="ev_stat_auto">СИНТЕЗ:</span> <b id="ui-hud-auto">0</b><span style="text-transform:lowercase; font-size: 9px; opacity:0.7;">/мин</span></div>
+        </div>
+    </div>
+
+    <div class="tab-content">
+        <div class="view active" id="view-clicker">
+            <div class="clicker-view">
+                <div class="heart-container" id="heart-container">
+                    <div class="heart-glow"></div>
+                    <div class="heart-btn" id="heart-btn"></div>
+                </div>
+
+                <div class="energy-wrapper tabular">
+                    <div class="energy-text">
+                        <span data-i18n="ev_energy_label">ЭНЕРГИЯ</span>
+                        <span class="en-val"><span id="ui-en-curr">100</span> / <span id="ui-en-max">100</span></span>
+                    </div>
+                    <div class="energy-bar"><div class="energy-fill" id="ui-en-fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-upgrades">
+            <div class="flask-container tabular">
+                <div class="flask-left">
+                    <div class="flask-title" data-i18n="ev_flask_title">СИНТЕЗАТОР</div>
+                    <div class="flask-stats"><span style="color:#fff; display:inline-block; width: 3ch; text-align:right;" id="ui-flask-amount">0</span> <span>/ <span id="ui-flask-cap">60</span></span></div>
+                    <button class="flask-btn" onclick="collectFlask()" data-i18n="ev_btn_collect">СОБРАТЬ</button>
+                </div>
+                <div class="flask-visual"><div class="flask-liquid" id="ui-flask-fill"></div></div>
+            </div>
+
+            <div class="upg-card tabular">
+                <div class="upg-icon">⚡</div>
+                <div class="upg-info">
+                    <div class="upg-title" data-i18n="ev_upg_click">СИЛА ПУЛЬСА</div>
+                    <div class="upg-lvl" id="lvl-click">УРОВЕНЬ 1 / 10</div>
+                    <div class="upg-desc" data-i18n="ev_upg_click_desc">Увеличивает добычу за одно касание.</div>
+                </div>
+                <button class="upg-btn" id="btn-upg-click" onclick="buyUpgrade('click')">50</button>
+            </div>
+
+            <div class="upg-card tabular">
+                <div class="upg-icon">🔋</div>
+                <div class="upg-info">
+                    <div class="upg-title" data-i18n="ev_upg_en">ЭНЕРГОБЛОК</div>
+                    <div class="upg-lvl" id="lvl-en">УРОВЕНЬ 1 / 5</div>
+                    <div class="upg-desc" data-i18n="ev_upg_en_desc">Увеличивает максимальный запас энергии.</div>
+                </div>
+                <button class="upg-btn" id="btn-upg-en" onclick="buyUpgrade('energy')">100</button>
+            </div>
+
+            <div class="upg-card tabular">
+                <div class="upg-icon">🧪</div>
+                <div class="upg-info">
+                    <div class="upg-title" data-i18n="ev_upg_auto">АПГРЕЙД СИНТЕЗА</div>
+                    <div class="upg-lvl" id="lvl-auto">УРОВЕНЬ 0 / 10</div>
+                    <div class="upg-desc" data-i18n="ev_upg_auto_desc">Автоматически добывает пульс каждую минуту.</div>
+                </div>
+                <button class="upg-btn" id="btn-upg-auto" onclick="buyUpgrade('auto')">200</button>
+            </div>
+        </div>
+
+        <div class="view tabular" id="view-rewards">
+            <div class="rewards-list" id="rewards-list">
+                </div>
+        </div>
+    </div>
+</main>
+
+<div class="event-nav" id="event-nav">
+    <button class="nav-btn active" onclick="switchTab('clicker')" data-i18n="ev_tab_farm">ФАРМ</button>
+    <button class="nav-btn" onclick="switchTab('upgrades')" data-i18n="ev_tab_upg">АПГРЕЙДЫ</button>
+    <button class="nav-btn" onclick="switchTab('rewards')" data-i18n="ev_tab_rew">НАГРАДЫ</button>
+</div>
+
+<div class="tab-bar-container">
+    <div class="tab-bar">
+        <a href="main.html" class="tab-item active"><span class="tab-icon">🏠</span><span class="tab-label" data-i18n="tab_home">Главная</span></a>
+        <a href="mode.html" class="tab-item"><span class="tab-icon">🎮</span><span class="tab-label" data-i18n="tab_play">Играть</span></a>
+        <a href="profile.html" class="tab-item"><span class="tab-icon">👤</span><span class="tab-label" data-i18n="tab_profile">Профиль</span></a>
+        <a href="quests.html" class="tab-item"><span class="tab-icon">📜</span><span class="tab-label" data-i18n="tab_quests">Квесты</span></a>
+        <a href="settings.html" class="tab-item"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tab_settings">Настройки</span></a>
+    </div>
+</div>
+
+<script>
+    // --- ИНИЦИАЛИЗАЦИЯ SUPABASE ---
+    const S_URL = 'https://byyscovhwjmjbjooqolc.supabase.co';
+    const S_KEY = 'sb_publishable_5PFScQhSqxyMNKWUlMDdGw_34Mozf1j';
+    const sb = supabase.createClient(S_URL, S_KEY);
+    const user = localStorage.getItem('wt_user');
+    const appLang = localStorage.getItem('appLang') || 'rus';
+
+    // Флаг для блокировки кнопок во время запросов
+    let isProcessing = false;
+
+    // --- ПРОВЕРКА НА ТУТОРИАЛ ---
+    if (!localStorage.getItem('ev_intro_seen')) {
+        document.getElementById('intro-screen').classList.add('show');
+    }
+    function closeIntro() {
+        if(window.navigator.vibrate) window.navigator.vibrate(15);
+        localStorage.setItem('ev_intro_seen', 'true');
+        document.getElementById('intro-screen').classList.remove('show');
+    }
+
+    // --- ЭКОНОМИКА ---
+    const clickPrices = [0, 100, 300, 600, 1000, 1500, 2500, 4000, 6000, 9000];
+    const energyPrices = [0, 500, 1000, 2000, 4000];
+    const autoPrices = [200, 500, 1000, 2000, 3500, 5000, 7500, 10000, 15000, 20000];
+    const autoRates = [0, 1, 2, 4, 7, 10, 15, 20, 30, 40, 50]; 
+
+    const rewardsTrack = [
+        { price: 500, name: "100 COINS", icon: "🪙", type: "coins", val: 100 },
+        { price: 1500, name: "КЕЙС NORMAL", icon: "📦", type: "case_normal", val: 1 },
+        { price: 3000, name: "250 COINS", icon: "🪙", type: "coins", val: 250 },
+        { price: 5000, name: "КЕЙС STYLISH", icon: "🎒", type: "case_stylish", val: 1 },
+        { price: 8000, name: "500 COINS", icon: "🪙", type: "coins", val: 500 },
+        { price: 12000, name: "БУСТ x2 ОПЫТ", icon: "⚡", type: "boost", val: 24 },
+        { price: 18000, name: "750 COINS", icon: "🪙", type: "coins", val: 750 },
+        { price: 25000, name: "КЕЙС PREMIUM", icon: "💎", type: "case_premium", val: 1 },
+        { price: 35000, name: "1000 COINS", icon: "🪙", type: "coins", val: 1000 },
+        { price: 50000, name: "ФЕРМА V2", icon: "🏭", type: "farm_v2", val: 1 }
+    ];
+
+    let state = {
+        pulse: parseInt(localStorage.getItem('ev_pulse')) || 0,
+        energy: parseInt(localStorage.getItem('ev_energy')) || 100,
+        clickLvl: parseInt(localStorage.getItem('ev_clickLvl')) || 1,
+        energyLvl: parseInt(localStorage.getItem('ev_energyLvl')) || 1,
+        autoLvl: parseInt(localStorage.getItem('ev_autoLvl')) || 0,
+        lastCollect: parseInt(localStorage.getItem('ev_lastCollect')) || Date.now(),
+        rewardLvl: parseInt(localStorage.getItem('ev_rewardLvl')) || 0
+    };
+
+    const maxEnergy = () => state.energyLvl * 100;
+    const clickPower = () => state.clickLvl;
+    const flaskCapacity = () => autoRates[state.autoLvl] * 60; 
+
+    // --- СИНХРОНИЗАЦИЯ С БАЗОЙ (Фоновая) ---
+    function syncEventToDB() {
+        if (!user) return;
+        sb.from('user_progress').update({
+            ev_pulse: state.pulse,
+            ev_click_lvl: state.clickLvl,
+            ev_energy_lvl: state.energyLvl,
+            ev_auto_lvl: state.autoLvl,
+            ev_reward_lvl: state.rewardLvl
+        }).eq('username', user).then(({error}) => {
+            if (error) console.error("Ошибка синхронизации:", error);
+        });
+    }
+
+    // ПРОВЕРКА НА ПРОХОЖДЕНИЕ ИВЕНТА
+    function checkCompletion() {
+        if (state.rewardLvl >= 10) {
+            document.getElementById('event-main').style.display = 'none';
+            document.getElementById('event-nav').style.display = 'none';
+            document.getElementById('completed-screen').classList.add('show');
+        }
+    }
+    checkCompletion();
+
+    // --- НАВИГАЦИЯ ---
+    function switchTab(tabId) {
+        if(window.navigator.vibrate) window.navigator.vibrate(10);
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById(`view-${tabId}`).classList.add('active');
+    }
+
+    function saveState() {
+        localStorage.setItem('ev_pulse', state.pulse);
+        localStorage.setItem('ev_energy', state.energy);
+        localStorage.setItem('ev_clickLvl', state.clickLvl);
+        localStorage.setItem('ev_energyLvl', state.energyLvl);
+        localStorage.setItem('ev_autoLvl', state.autoLvl);
+        localStorage.setItem('ev_lastCollect', state.lastCollect);
+        localStorage.setItem('ev_rewardLvl', state.rewardLvl);
+        updateUI();
+    }
+
+    // --- КЛИКЕР И АНТИ-МУЛЬТИТАП ---
+    const heartBtn = document.getElementById('heart-btn');
+    const heartContainer = document.getElementById('heart-container');
+
+    heartBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); 
+        if (e.touches.length > 1) return; 
+        handleHeartClick(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive: false});
+
+    heartBtn.addEventListener('mousedown', (e) => { handleHeartClick(e.clientX, e.clientY); });
+
+    function handleHeartClick(x, y) {
+        if (state.energy < clickPower()) return; 
+        
+        if(window.navigator.vibrate) window.navigator.vibrate(15);
+        
+        heartBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => heartBtn.style.transform = 'scale(1)', 80);
+
+        state.energy -= clickPower();
+        state.pulse += clickPower();
+        
+        const rect = heartContainer.getBoundingClientRect();
+        const drop = document.createElement('div');
+        drop.className = 'floating-text tabular';
+        drop.innerText = `+${clickPower()}`;
+        drop.style.left = `${x - rect.left + (Math.random()*20 - 10)}px`;
+        drop.style.top = `${y - rect.top - 20}px`;
+        heartContainer.appendChild(drop);
+        
+        setTimeout(() => drop.remove(), 800);
+        saveState();
+    }
+
+    // --- ИГРОВЫЕ ТАЙМЕРЫ ---
+    setInterval(() => {
+        if (state.energy < maxEnergy()) {
+            state.energy = Math.min(state.energy + 1, maxEnergy());
+            saveState(); // Локальное сохранение энергии
+        }
+        updateFlaskUI();
+    }, 1000);
+
+    function updateFlaskUI() {
+        if (state.autoLvl === 0) return;
+        const now = Date.now();
+        const minutesPassed = (now - state.lastCollect) / 60000;
+        const rate = autoRates[state.autoLvl];
+        
+        let accumulated = Math.floor(minutesPassed * rate);
+        if (accumulated > flaskCapacity()) accumulated = flaskCapacity(); 
+        
+        document.getElementById('ui-flask-amount').innerText = accumulated;
+        document.getElementById('ui-flask-cap').innerText = flaskCapacity();
+        document.getElementById('ui-flask-fill').style.height = `${(accumulated / flaskCapacity()) * 100}%`;
+    }
+
+    function collectFlask() {
+        const now = Date.now();
+        const minutesPassed = (now - state.lastCollect) / 60000;
+        const rate = autoRates[state.autoLvl];
+        
+        let accumulated = Math.floor(minutesPassed * rate);
+        if (accumulated > flaskCapacity()) accumulated = flaskCapacity();
+        
+        if (accumulated > 0) {
+            if(window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+            state.pulse += accumulated;
+            state.lastCollect = now;
+            saveState();
+            updateFlaskUI();
+            syncEventToDB(); // Синкаем пульс в БД
+        }
+    }
+
+    // --- МАГАЗИН И НАГРАДЫ ---
+    function buyUpgrade(type) {
+        if (isProcessing) return;
+        let bought = false;
+
+        if (type === 'click' && state.clickLvl < 10 && state.pulse >= clickPrices[state.clickLvl]) {
+            state.pulse -= clickPrices[state.clickLvl];
+            state.clickLvl++;
+            bought = true;
+        } else if (type === 'energy' && state.energyLvl < 5 && state.pulse >= energyPrices[state.energyLvl]) {
+            state.pulse -= energyPrices[state.energyLvl];
+            state.energyLvl++;
+            state.energy += 100; 
+            bought = true;
+        } else if (type === 'auto' && state.autoLvl < 10 && state.pulse >= autoPrices[state.autoLvl]) {
+            state.pulse -= autoPrices[state.autoLvl];
+            state.autoLvl++;
+            state.lastCollect = Date.now(); 
+            bought = true;
+        }
+
+        if (bought) {
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+            saveState();
+            syncEventToDB(); // Синкаем апгрейд в БД
+        }
+    }
+
+    // УМНАЯ ВЫДАЧА НАГРАД В БАЗУ ДАННЫХ
+    async function buyReward(index) {
+        if (state.rewardLvl !== index || isProcessing) return; 
+        const r = rewardsTrack[index];
+        
+        if (state.pulse >= r.price) {
+            isProcessing = true; // Блокируем клики, пока идет запрос
+
+            try {
+                // 1. Получаем инвентарь игрока
+                const { data: userData } = await sb.from('user_progress')
+                    .select('time_coins, cases, farm_v2_unlocked')
+                    .eq('username', user).single();
+                
+                let updates = {};
+
+                // 2. Начисляем награду в зависимости от типа
+                if (r.type === 'coins') {
+                    updates.time_coins = (userData?.time_coins || 0) + r.val;
+                } 
+                else if (r.type === 'boost') {
+                    let expiry = new Date();
+                    expiry.setHours(expiry.getHours() + 24);
+                    updates.boost_exp_until = expiry.toISOString();
+                }
+                else if (r.type === 'farm_v2') {
+                    updates.farm_v2_unlocked = true;
+                }
+                else if (r.type.startsWith('case_')) {
+                    let userCases = userData?.cases || { normal: 0, stylish: 0, premium: 0 };
+                    if (r.type === 'case_normal') userCases.normal += 1;
+                    if (r.type === 'case_stylish') userCases.stylish += 1;
+                    if (r.type === 'case_premium') userCases.premium += 1;
+                    updates.cases = userCases;
+                }
+
+                // 3. Обновляем локальный стейт
+                state.pulse -= r.price;
+                state.rewardLvl++;
+                
+                // Добавляем прогресс ивента в запрос
+                updates.ev_pulse = state.pulse;
+                updates.ev_reward_lvl = state.rewardLvl;
+
+                // 4. Отправляем всё вместе в Supabase одним запросом
+                await sb.from('user_progress').update(updates).eq('username', user);
+
+                if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+                saveState();
+                checkCompletion();
+
+            } catch (error) {
+                console.error("Ошибка при покупке награды:", error);
+                alert("Ошибка сети. Попробуй еще раз.");
+            } finally {
+                isProcessing = false;
+            }
+        }
+    }
+
+    // --- ОБНОВЛЕНИЕ UI ---
+    function updateUI() {
+        document.getElementById('ui-balance').innerText = state.pulse;
+        
+        // HUD
+        document.getElementById('ui-hud-click').innerText = clickPower();
+        document.getElementById('ui-hud-auto').innerText = autoRates[state.autoLvl];
+
+        // Энергия
+        document.getElementById('ui-en-curr').innerText = state.energy;
+        document.getElementById('ui-en-max').innerText = maxEnergy();
+        document.getElementById('ui-en-fill').style.width = `${(state.energy / maxEnergy()) * 100}%`;
+
+        // Кнопки
+        const btnC = document.getElementById('btn-upg-click');
+        document.getElementById('lvl-click').innerText = `УРОВЕНЬ ${state.clickLvl} / 10`;
+        if (state.clickLvl < 10) btnC.innerText = `${clickPrices[state.clickLvl]}`;
+        else { btnC.innerText = 'MAX'; btnC.classList.add('max'); }
+
+        const btnE = document.getElementById('btn-upg-en');
+        document.getElementById('lvl-en').innerText = `УРОВЕНЬ ${state.energyLvl} / 5`;
+        if (state.energyLvl < 5) btnE.innerText = `${energyPrices[state.energyLvl]}`;
+        else { btnE.innerText = 'MAX'; btnE.classList.add('max'); }
+
+        const btnA = document.getElementById('btn-upg-auto');
+        document.getElementById('lvl-auto').innerText = `УРОВЕНЬ ${state.autoLvl} / 10`;
+        if (state.autoLvl < 10) btnA.innerText = `${autoPrices[state.autoLvl]}`;
+        else { btnA.innerText = 'MAX'; btnA.classList.add('max'); }
+
+        renderRewards();
+    }
+
+    function renderRewards() {
+        const list = document.getElementById('rewards-list');
+        list.innerHTML = '';
+        
+        rewardsTrack.forEach((r, i) => {
+            let statusClass = '';
+            let btnHtml = '';
+            
+            if (i < state.rewardLvl) {
+                statusClass = 'unlocked';
+                btnHtml = `<div class="rw-price">✔ ПОЛУЧЕНО</div>`;
+            } else if (i === state.rewardLvl) {
+                statusClass = 'current';
+                btnHtml = `<button class="rw-btn" onclick="buyReward(${i})">${r.price} ПУЛЬСА</button>`;
+            } else {
+                btnHtml = `<div class="rw-price" style="color:#777; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.05);">${r.price} ПУЛЬСА</div>`;
+            }
+
+            list.innerHTML += `
+                <div class="reward-item ${statusClass}">
+                    <div class="rw-node">${r.icon}</div>
+                    <div class="rw-content">
+                        <div class="rw-info">
+                            <h4>${r.name}</h4>
+                            <p>УРОВЕНЬ ${i+1}</p>
+                        </div>
+                        ${btnHtml}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function updateTimer() {
+        // Ивент ровно на 7 дней. Заканчивается 15 мая 2026 года
+        const eventEnd = new Date('2026-05-15T21:08:00Z').getTime();
+        const now = Date.now();
+        const diff = eventEnd - now;
+        
+        if(diff <= 0) { document.getElementById('event-timer').innerText = "ЗАВЕРШЕНО"; return; }
+        
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+        const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+        const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+        
+        document.getElementById('event-timer').innerText = `${d}Д ${h}:${m}:${s}`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    updateUI();
+    updateFlaskUI();
+</script>
+</body>
+</html>
