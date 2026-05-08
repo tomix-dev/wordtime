@@ -321,7 +321,10 @@
         } else if (type === 'ninja_combo') {
         iconHtml = `<div class="feed-icon icon-game">⚔️</div>`;
         textHtml = (window.translations?.['feed_ninja_combo'] || 'Оформил комбо <span class="feed-val">x{val}</span> в Neon Ninja!').replace('{val}', val);
-        
+        } else if (type === 'echo_lvl') {
+            iconHtml = `<div class="feed-icon" style="background: rgba(0, 255, 136, 0.15); border-color: var(--green); box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);">🔊</div>`;
+            textHtml = (window.translations?.['feed_echo_lvl'] || 'Дошел до <span class="feed-val">{val}</span> уровня в Neon Echo!').replace('{val}', val);
+            
         // --- НОВЫЕ СОБЫТИЯ WORD PASS ---
         } else if (type === 'live_wp_lvl') {
             iconHtml = `<div class="feed-icon" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.3); text-shadow: 0 0 10px var(--gold);">🏆</div>`;
