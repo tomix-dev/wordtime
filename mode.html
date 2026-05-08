@@ -32,7 +32,7 @@
 
         body { 
             background-color: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
-            min-height: 100dvh; overflow-x: hidden; padding-bottom: 90px; 
+            min-height: 100dvh; overflow-x: hidden; padding-bottom: 120px; 
         }
 
         /* --- АНИМАЦИЯ --- */
@@ -171,7 +171,7 @@
     const user = localStorage.getItem('wt_user');
     if(!user) window.location.href = 'index.html';
 
-    // Конфиг режимов игры (Neon Ninja добавлен!)
+    // Конфиг режимов игры (Добавлен Neon Echo)
     const MODES = [
         {
             id: 'find', url: 'find.html', reqLvl: 1,
@@ -207,7 +207,13 @@
             id: 'ninja', url: 'ninja.html', reqLvl: 25,
             icon: '⚔️', titleKey: 'mode_ninja_title', descKey: 'mode_ninja_desc',
             defaultTitle: 'NEON NINJA', defaultDesc: 'Разрезай правильные переводы на лету.',
-            badge: 'EPIC' // Уникальный бейдж
+            badge: 'EPIC'
+        },
+        {
+            id: 'echo', url: 'echo.html', reqLvl: 25,
+            icon: '🔊', titleKey: 'mode_echo_title', descKey: 'mode_echo_desc',
+            defaultTitle: 'NEON ECHO', defaultDesc: 'Слушай произношение и находи слова.',
+            badge: 'NEW' // Зеленый бейдж
         }
     ];
 
